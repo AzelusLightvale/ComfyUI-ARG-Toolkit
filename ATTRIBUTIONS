@@ -1,0 +1,36 @@
+ATTRIBUTIONS
+------------
+
+This project uses third-party libraries and projects. Their licenses and attributions are provided below.
+
+MIT Licensed Projects
+----------------------
+- invisible-watermark (Copyright (c) 2021 ShieldMnt)
+  Source: https://github.com/ShieldMnt/invisible-watermark
+  Licensed under the MIT License.
+  Link to the license: https://opensource.org/license/MIT
+
+- secretpy (Copyright (c) 2021 Max Vetrov)
+  Source: https://github.com/tigertv/secretpy
+  Licensed under the MIT License.
+  Link to the license: https://opensource.org/license/MIT
+
+- encodeDecode (Copyright (c) 2020 Aayush): Portions of this project, especially morse_code.py, are based on or derived from code by Aayush.
+  Source: https://github.com/Aayush9029/encodeDecode
+  Licensed under the MIT License.
+  Link to the license: https://opensource.org/license/MIT
+
+BSD-3-Clause / Apache-2.0 Dual Licensed Projects
+-----------------------------------------------
+- cryptography (Copyright (c) Individual contributors)
+  Licensed under either Apache License 2.0 or BSD 3-Clause License.
+  Source: https://github.com/pyca/cryptography
+  Apache 2.0: https://www.apache.org/licenses/LICENSE-2.0
+  BSD-3-Clause: https://opensource.org/license/bsd-3-clause
+
+GPL-3.0 Licensed Projects
+-------------------------
+- stegano (Copyright (C) 2010-2025 Cédric Bonhomme)
+  Source: https://github.com/cedricbonhomme/Stegano
+  Licensed under the GNU General Public License version 3.
+  Link to the license: https://www.gnu.org/licenses/gpl-3.0.html
