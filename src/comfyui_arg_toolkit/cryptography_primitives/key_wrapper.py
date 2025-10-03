@@ -50,7 +50,7 @@ class WrapKeyNodes:
 
 
 class AESKeyWrap(WrapKeyNodes):
-    def aes_key_wrap(self, wrapping_key, secondary_key, mode):
+    def aeskeywrap(self, wrapping_key, secondary_key, mode):
         wrapping_key_bytes = bytes.fromhex(wrapping_key)
         secondary_key_bytes = bytes.fromhex(secondary_key)
 
@@ -58,26 +58,20 @@ class AESKeyWrap(WrapKeyNodes):
             wrapped_key = keywrap.aes_key_wrap(wrapping_key_bytes, secondary_key_bytes)
             return (wrapped_key.hex(),)
         else:  # Unwrap
-            unwrapped_key = keywrap.aes_key_unwrap(
-                wrapping_key_bytes, secondary_key_bytes
-            )
+            unwrapped_key = keywrap.aes_key_unwrap(wrapping_key_bytes, secondary_key_bytes)
             return (unwrapped_key.hex(),)
 
 
 class AESKeyWrapWithPadding(WrapKeyNodes):
-    def aes_key_wrap_with_padding(self, wrapping_key, secondary_key, mode):
+    def aeskeywrapwithpadding(self, wrapping_key, secondary_key, mode):
         wrapping_key_bytes = bytes.fromhex(wrapping_key)
         secondary_key_bytes = bytes.fromhex(secondary_key)
 
         if mode:  # Wrap
-            wrapped_key = keywrap.aes_key_wrap_with_padding(
-                wrapping_key_bytes, secondary_key_bytes
-            )
+            wrapped_key = keywrap.aes_key_wrap_with_padding(wrapping_key_bytes, secondary_key_bytes)
             return (wrapped_key.hex(),)
         else:  # Unwrap
-            unwrapped_key = keywrap.aes_key_unwrap_with_padding(
-                wrapping_key_bytes, secondary_key_bytes
-            )
+            unwrapped_key = keywrap.aes_key_unwrap_with_padding(wrapping_key_bytes, secondary_key_bytes)
             return (unwrapped_key.hex(),)
 
 
