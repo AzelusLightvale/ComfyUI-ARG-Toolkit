@@ -141,7 +141,7 @@ class Argon2id_Derive(KeyDerivationNodes):
             salt=salt,
             length=length,
             iterations=iterations,
-            parallel_lanes=parallel_lanes,
+            lanes=parallel_lanes,
             memory_cost=memory_cost,
             ad=ad,
             secret=secret,

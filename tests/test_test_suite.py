@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-
-import pytest
 import unicodedata
 from src.comfyui_arg_toolkit import ciphers
 from src.comfyui_arg_toolkit import utils
@@ -30,9 +27,7 @@ class TestCiphers:
         alphabet = "ENGLISH"
         key = 3
         encrypted_text = caesar_cipher.caesar(text, alphabet, key, True, False)
-        decrypted_text = caesar_cipher.caesar(
-            encrypted_text[0], alphabet, key, False, False
-        )
+        decrypted_text = caesar_cipher.caesar(encrypted_text[0], alphabet, key, False, False)
         assert decrypted_text[0] == text.lower().replace(" ", "")
 
     def test_vigenere_cipher(self):
@@ -41,9 +36,7 @@ class TestCiphers:
         alphabet = "ENGLISH"
         key = "KEY"
         encrypted_text = vigenere_cipher.vigenere(text, alphabet, key, True, False)
-        decrypted_text = vigenere_cipher.vigenere(
-            encrypted_text[0], alphabet, key, False, False
-        )
+        decrypted_text = vigenere_cipher.vigenere(encrypted_text[0], alphabet, key, False, False)
         assert decrypted_text[0] == text.lower().replace(" ", "")
 
     def test_adfgx_cipher(self):
@@ -52,9 +45,7 @@ class TestCiphers:
         alphabet = "abcdefghiklmnopqrstuvwxyz"  # 25 chars, no j
         key = "KEY"
         encrypted_text = adfgx_cipher.adfgx(text, alphabet, key, True, False)
-        decrypted_text = adfgx_cipher.adfgx(
-            encrypted_text[0], alphabet, key, False, False
-        )
+        decrypted_text = adfgx_cipher.adfgx(encrypted_text[0], alphabet, key, False, False)
         assert decrypted_text[0] == text.lower()
 
     def test_autokey_cipher(self):
@@ -63,9 +54,7 @@ class TestCiphers:
         alphabet = "ENGLISH"
         key = "KEY"
         encrypted_text = autokey_cipher.autokey(text, alphabet, key, True, False)
-        decrypted_text = autokey_cipher.autokey(
-            encrypted_text[0], alphabet, key, False, False
-        )
+        decrypted_text = autokey_cipher.autokey(encrypted_text[0], alphabet, key, False, False)
         assert decrypted_text[0] == text.lower().replace(" ", "")
 
     def test_beaufort_cipher(self):
@@ -74,9 +63,7 @@ class TestCiphers:
         alphabet = "ENGLISH"
         key = "KEY"
         encrypted_text = beaufort_cipher.beaufort(text, alphabet, key, True, False)
-        decrypted_text = beaufort_cipher.beaufort(
-            encrypted_text[0], alphabet, key, False, False
-        )
+        decrypted_text = beaufort_cipher.beaufort(encrypted_text[0], alphabet, key, False, False)
         assert decrypted_text[0] == text.lower().replace(" ", "")
 
     def test_caesarprog_cipher(self):
@@ -84,12 +71,8 @@ class TestCiphers:
         text = "Hello World"
         alphabet = "ENGLISH"
         key = 3
-        encrypted_text = caesarprogessive_cipher.caesarprogressive(
-            text, alphabet, key, True, False
-        )
-        decrypted_text = caesarprogessive_cipher.caesarprogressive(
-            encrypted_text[0], alphabet, key, False, False
-        )
+        encrypted_text = caesarprogessive_cipher.caesarprogressive(text, alphabet, key, True, False)
+        decrypted_text = caesarprogessive_cipher.caesarprogressive(encrypted_text[0], alphabet, key, False, False)
         assert decrypted_text[0] == text.lower().replace(" ", "")
 
     def test_rot13_cipher(self):
@@ -97,9 +80,7 @@ class TestCiphers:
         text = "Hello World"
         alphabet = "ENGLISH"
         encrypted_text = rot13_cipher.rot13(text, alphabet, 13, True, False)
-        decrypted_text = rot13_cipher.rot13(
-            encrypted_text[0], alphabet, 13, False, False
-        )
+        decrypted_text = rot13_cipher.rot13(encrypted_text[0], alphabet, 13, False, False)
         assert decrypted_text[0] == text.lower().replace(" ", "")
 
     def test_scytale_cipher(self):
@@ -108,9 +89,7 @@ class TestCiphers:
         alphabet = "ENGLISH"
         key = 4
         encrypted_text = scytale_cipher.scytale(text, alphabet, key, True, False)
-        decrypted_text = scytale_cipher.scytale(
-            encrypted_text[0], alphabet, key, False, False
-        )
+        decrypted_text = scytale_cipher.scytale(encrypted_text[0], alphabet, key, False, False)
         assert text.lower().replace(" ", "") in decrypted_text[0]
 
     def test_playfair_cipher(self):
@@ -119,9 +98,7 @@ class TestCiphers:
         alphabet = "abcdefghiklmnopqrstuvwxyz"  # 25 chars, no j
         key = "KEYWORD"
         encrypted_text = playfair_cipher.playfair(text, alphabet, key, True, False)
-        decrypted_text = playfair_cipher.playfair(
-            encrypted_text[0], alphabet, key, False, False
-        )
+        decrypted_text = playfair_cipher.playfair(encrypted_text[0], alphabet, key, False, False)
         # secretpy may add padding, so check for inclusion
         assert text.lower().replace(" ", "") in decrypted_text[0]
 
@@ -131,12 +108,8 @@ class TestCiphers:
         alphabet = "abcdefghiklmnopqrstuvwxyz"  # 25 chars, no j
         key_1 = "KEYONE"
         key_2 = "KEYTWO"
-        encrypted_text = foursquare_cipher.foursquare(
-            text, alphabet, key_1, key_2, True, False
-        )
-        decrypted_text = foursquare_cipher.foursquare(
-            encrypted_text[0], alphabet, key_1, key_2, False, False
-        )
+        encrypted_text = foursquare_cipher.foursquare(text, alphabet, key_1, key_2, True, False)
+        decrypted_text = foursquare_cipher.foursquare(encrypted_text[0], alphabet, key_1, key_2, False, False)
         # secretpy may add padding, so check for inclusion
         assert text.lower().replace(" ", "") in decrypted_text[0]
 
@@ -146,12 +119,8 @@ class TestCiphers:
         alphabet = "abcdefghiklmnopqrstuvwxyz"  # 25 chars, no j
         key_1 = "KEYONE"
         key_2 = "KEYTWO"
-        encrypted_text = twosquare_cipher.twosquare(
-            text, alphabet, key_1, key_2, True, False
-        )
-        decrypted_text = twosquare_cipher.twosquare(
-            encrypted_text[0], alphabet, key_1, key_2, False, False
-        )
+        encrypted_text = twosquare_cipher.twosquare(text, alphabet, key_1, key_2, True, False)
+        decrypted_text = twosquare_cipher.twosquare(encrypted_text[0], alphabet, key_1, key_2, False, False)
         # secretpy may add padding, so check for inclusion
         assert text.lower().replace(" ", "") in decrypted_text[0]
 
@@ -161,9 +130,7 @@ class TestCiphers:
         alphabet = "ENGLISH"
         key = "1337"
         encrypted_text = gronsfeld_cipher.gronsfeld(text, alphabet, key, True, False)
-        decrypted_text = gronsfeld_cipher.gronsfeld(
-            encrypted_text[0], alphabet, key, False, False
-        )
+        decrypted_text = gronsfeld_cipher.gronsfeld(encrypted_text[0], alphabet, key, False, False)
         assert decrypted_text[0] == text.lower().replace(" ", "")
 
     def test_trifid_cipher(self):
@@ -173,9 +140,7 @@ class TestCiphers:
         alphabet = "abcdefghijklmnopqrstuvwxyz."
         key = 5  # period
         encrypted_text = trifid_cipher.trifid(text, alphabet, key, True, False)
-        decrypted_text = trifid_cipher.trifid(
-            encrypted_text[0], alphabet, key, False, False
-        )
+        decrypted_text = trifid_cipher.trifid(encrypted_text[0], alphabet, key, False, False)
         assert decrypted_text[0] == text.lower()
 
     def test_zigzag_cipher(self):
@@ -196,10 +161,7 @@ class TestUtils:
         text = "Hello World"
         encoding = "utf-8"
         binary_text = string_to_binary.string2binary(text, encoding, "")
-        assert (
-            binary_text[0]
-            == "1001000 1100101 1101100 1101100 1101111 100000 1010111 1101111 1110010 1101100 1100100"
-        )
+        assert binary_text[0] == "1001000 1100101 1101100 1101100 1101111 100000 1010111 1101111 1110010 1101100 1100100"
 
     def test_binary_to_string(self):
         binary_to_string = utils.Binary2String()
@@ -278,9 +240,7 @@ class TestAuthEncrypt:
         nonce = "0" * 24
         associated_data = ""
         encrypted_text = chacha20poly1305.cc20(text, key, nonce, associated_data, True)
-        decrypted_text = chacha20poly1305.cc20(
-            encrypted_text[0], key, nonce, associated_data, False
-        )
+        decrypted_text = chacha20poly1305.cc20(encrypted_text[0], key, nonce, associated_data, False)
         assert decrypted_text[0] == text
 
     def test_aes_gcm(self):
@@ -289,12 +249,8 @@ class TestAuthEncrypt:
         key = "0" * 64
         nonce = "0" * 24
         associated_data = ""
-        encrypted_text = aes_gcm.aesauth(
-            text, key, nonce, associated_data, True, "AES-GCM", 16
-        )
-        decrypted_text = aes_gcm.aesauth(
-            encrypted_text[0], key, nonce, associated_data, False, "AES-GCM", 16
-        )
+        encrypted_text = aes_gcm.aesauth(text, key, nonce, associated_data, True, "AES-GCM", 16)
+        decrypted_text = aes_gcm.aesauth(encrypted_text[0], key, nonce, associated_data, False, "AES-GCM", 16)
         assert decrypted_text[0] == text
 
     def test_aes_ccm(self):
@@ -303,12 +259,8 @@ class TestAuthEncrypt:
         key = "0" * 64
         nonce = "0" * 24
         associated_data = ""
-        encrypted_text = aes_ccm.aesauth(
-            text, key, nonce, associated_data, True, "AES-CCM", 16
-        )
-        decrypted_text = aes_ccm.aesauth(
-            encrypted_text[0], key, nonce, associated_data, False, "AES-CCM", 16
-        )
+        encrypted_text = aes_ccm.aesauth(text, key, nonce, associated_data, True, "AES-CCM", 16)
+        decrypted_text = aes_ccm.aesauth(encrypted_text[0], key, nonce, associated_data, False, "AES-CCM", 16)
         assert decrypted_text[0] == text
 
 
@@ -318,10 +270,7 @@ class TestHashing:
         sha256 = hashing.SHA2()
         text = "Hello World"
         hashed_text = (sha256.sha2(key1=text, algorithm="SHA256"),)
-        assert (
-            hashed_text[0][0]
-            == "a591a6d40bf420404a011733cfb7b190d62c65bf0bcda32b57b277d9ad9f146e"
-        )
+        assert hashed_text[0][0] == "a591a6d40bf420404a011733cfb7b190d62c65bf0bcda32b57b277d9ad9f146e"
 
     def test_blake2b(self):
         blake2b = hashing.BLAKE2()
@@ -336,10 +285,7 @@ class TestHashing:
         sha3_256 = hashing.SHA3()
         text = "Hello World"
         hashed_text = (sha3_256.sha3(key1=text, algorithm="SHA3_256"),)
-        assert (
-            hashed_text[0][0]
-            == "e167f68d6563d75bb25f3aa49c29ef612d41352dc00606de7cbd630bb2665f51"
-        )
+        assert hashed_text[0][0] == "e167f68d6563d75bb25f3aa49c29ef612d41352dc00606de7cbd630bb2665f51"
 
     def test_sha1(self):
         sha1 = hashing.SHA1()
@@ -357,10 +303,7 @@ class TestHashing:
         sm3 = hashing.SM3()
         text = "Hello World"
         hashed_text = (sm3.sm3(key1=text, algorithm=None),)
-        assert (
-            hashed_text[0][0]
-            == "77015816143ee627f4fa410b6dad2bdb9fcbdf1e061a452a686b8711a484c5d7"
-        )
+        assert hashed_text[0][0] == "77015816143ee627f4fa410b6dad2bdb9fcbdf1e061a452a686b8711a484c5d7"
 
     def test_shake128(self):
         shake128 = hashing.SHAKE()
@@ -387,49 +330,37 @@ class TestMorseCode:
     def test_latin_morse_code(self):
         text = "Hello World"
         encoded_text = self.morse_code.MorseCode(text, True, "latin", ".", "-")
-        decoded_text = self.morse_code.MorseCode(
-            encoded_text[0], False, "latin", ".", "-"
-        )
+        decoded_text = self.morse_code.MorseCode(encoded_text[0], False, "latin", ".", "-")
         assert decoded_text[0].lower() == text.lower()
 
     def test_russian_morse_code(self):
         text = "Привет мир"
         encoded_text = self.morse_code.MorseCode(text, True, "russian", ".", "-")
-        decoded_text = self.morse_code.MorseCode(
-            encoded_text[0], False, "russian", ".", "-"
-        )
+        decoded_text = self.morse_code.MorseCode(encoded_text[0], False, "russian", ".", "-")
         assert decoded_text[0].lower() == text.lower()
 
     def test_arabic_morse_code(self):
         text = "مرحبا بالعالم"
         encoded_text = self.morse_code.MorseCode(text, True, "arabic", ".", "-")
-        decoded_text = self.morse_code.MorseCode(
-            encoded_text[0], False, "arabic", ".", "-"
-        )
+        decoded_text = self.morse_code.MorseCode(encoded_text[0], False, "arabic", ".", "-")
         assert decoded_text[0] == text
 
     def test_hebrew_morse_code(self):
         text = "שלום עולם"
         encoded_text = self.morse_code.MorseCode(text, True, "hebrew", ".", "-")
-        decoded_text = self.morse_code.MorseCode(
-            encoded_text[0], False, "hebrew", ".", "-"
-        )
+        decoded_text = self.morse_code.MorseCode(encoded_text[0], False, "hebrew", ".", "-")
         assert decoded_text[0] == "שלומ עולמ"
 
     def test_greek_morse_code(self):
         text = "Γειά σου Κόσμε"
         encoded_text = self.morse_code.MorseCode(text, True, "greek", ".", "-")
-        decoded_text = self.morse_code.MorseCode(
-            encoded_text[0], False, "greek", ".", "-"
-        )
+        decoded_text = self.morse_code.MorseCode(encoded_text[0], False, "greek", ".", "-")
         assert decoded_text[0] == "ΓΕΙΑ ΣΟΥ ΚΟΣΜΕ"
 
     def test_korean_morse_code(self):
         text = "안녕하세요"
         encoded_text = self.morse_code.MorseCode(text, True, "korean", ".", "-")
-        decoded_text = self.morse_code.MorseCode(
-            encoded_text[0], False, "korean", ".", "-"
-        )
+        decoded_text = self.morse_code.MorseCode(encoded_text[0], False, "korean", ".", "-")
         assert decoded_text[0] == "ㅇㅏㄴㄴㅕㅇㅎㅏㅅㅔㅇㅛ"
 
     def test_japanese_wabun_morse_code(self):
@@ -438,9 +369,7 @@ class TestMorseCode:
         print(f"Normalized text: {normalized_text}")
         encoded_text = self.morse_code.MorseCode(text, True, "japanese-wabun", ".", "-")
         print(f"Encoded text: {encoded_text}")
-        decoded_text = self.morse_code.MorseCode(
-            encoded_text[0], False, "japanese-wabun", ".", "-"
-        )
+        decoded_text = self.morse_code.MorseCode(encoded_text[0], False, "japanese-wabun", ".", "-")
         print(f"Decoded text: {decoded_text}")
         assert decoded_text == ("コンニチハ",)
 
@@ -449,7 +378,135 @@ class TestMorseCode:
         dot = "1"
         dash = "0"
         encoded_text = self.morse_code.MorseCode(text, True, "latin", dot, dash)
-        decoded_text = self.morse_code.MorseCode(
-            encoded_text[0], False, "latin", dot, dash
-        )
+        decoded_text = self.morse_code.MorseCode(encoded_text[0], False, "latin", dot, dash)
         assert decoded_text[0].lower() == text.lower()
+
+
+from src.comfyui_arg_toolkit.cryptography_primitives import const_time
+from src.comfyui_arg_toolkit.cryptography_primitives import kdf
+from src.comfyui_arg_toolkit.cryptography_primitives import key_wrapper
+from src.comfyui_arg_toolkit.cryptography_primitives import symm_padding
+from src.comfyui_arg_toolkit.cryptography_primitives import symmetrical_encrypt
+
+
+class TestConstantTimeCompare:
+    def test_compare_equal(self):
+        compare = const_time.ConstantTimeCompare()
+        a = "deadbeef"
+        b = "deadbeef"
+        result = compare.compare(a, b)
+        assert result[0] is True
+
+    def test_compare_not_equal(self):
+        compare = const_time.ConstantTimeCompare()
+        a = "deadbeef"
+        b = "cafebabe"
+        result = compare.compare(a, b)
+        assert result[0] is False
+
+
+class TestKeyDerivation:
+    def test_argon2id_derive_verify(self):
+        derive = kdf.Argon2id_Derive()
+        verify = kdf.Argon2id_Verify()
+
+        message = "Hello World"
+        salt = "00" * 16
+
+        derived_key = derive.argon2id_derive(message, 32, salt, 1, 4, 65536, "", "", True)
+
+        verified = verify.argon2id_verify(message, 32, salt, 1, 4, 65536, "", "", True, derived_key[0])
+
+        assert verified[0] is True
+
+    def test_pbkdf2hmac_derive_verify(self):
+        derive = kdf.PBKDF2HMAC_Derive()
+        verify = kdf.PBKDF2HMAC_Verify()
+
+        message = "Hello World"
+        salt = "00" * 16
+
+        derived_key = derive.pbkdf2hmac_derive(message, 32, salt, 1000, "SHA256")
+
+        verified = verify.pbkdf2hmac_verify(message, 32, salt, 1000, "SHA256", derived_key[0])
+
+        assert verified[0] is True
+
+    def test_scrypt_derive_verify(self):
+        derive = kdf.Scrypt_Derive()
+        verify = kdf.Scrypt_Verify()
+
+        message = "Hello World"
+        salt = "00" * 16
+
+        derived_key = derive.scrypt_derive(message, 32, salt, 14, 8, 1)
+
+        verified = verify.scrypt_verify(message, 32, salt, 14, 8, 1, derived_key[0])
+
+        assert verified[0] is True
+
+
+class TestKeyWrapper:
+    def test_aeskeywrap(self):
+        wrapper = key_wrapper.AESKeyWrap()
+        wrapping_key = "00" * 32
+        key_to_wrap = "11" * 16
+
+        wrapped_key = wrapper.aeskeywrap(wrapping_key, key_to_wrap, True)
+        unwrapped_key = wrapper.aeskeywrap(wrapping_key, wrapped_key[0], False)
+
+        assert unwrapped_key[0] == key_to_wrap
+
+    def test_aeskeywrapwithpadding(self):
+        wrapper = key_wrapper.AESKeyWrapWithPadding()
+        wrapping_key = "00" * 32
+        key_to_wrap = "11" * 20  # Not a multiple of 8
+
+        wrapped_key = wrapper.aeskeywrapwithpadding(wrapping_key, key_to_wrap, True)
+        unwrapped_key = wrapper.aeskeywrapwithpadding(wrapping_key, wrapped_key[0], False)
+
+        assert unwrapped_key[0] == key_to_wrap
+
+
+class TestSymmetricalPadding:
+    def test_pkcs7_padding(self):
+        padding_node = symm_padding.PaddingNode()
+        data = "Hello World"
+
+        padded_data = padding_node.padding(data, 128, "PKCS7", True)
+        unpadded_data = padding_node.padding(padded_data[0], 128, "PKCS7", False)
+
+        assert unpadded_data[0] == data
+
+    def test_ansix923_padding(self):
+        padding_node = symm_padding.PaddingNode()
+        data = "Hello World"
+
+        padded_data = padding_node.padding(data, 128, "ANSIX923", True)
+        unpadded_data = padding_node.padding(padded_data[0], 128, "ANSIX923", False)
+
+        assert unpadded_data[0] == data
+
+
+class TestSymmetricalEncryption:
+    def test_aes_cbc_encryption_decryption(self):
+        enc_dec = symmetrical_encrypt.EncryptDecrypt()
+
+        text = "Hello World"
+        key = "00" * 32
+        iv = "11" * 16
+
+        # Pad the text first
+        padding_node = symm_padding.PaddingNode()
+        padded_text = padding_node.padding(text, 128, "PKCS7", True)
+
+        encrypted_text = enc_dec.encryptdecrypt(padded_text[0], key, iv, "", "AES", "CBC", True, 16, "")
+
+        decrypted_text_hex = enc_dec.encryptdecrypt(encrypted_text[0], key, iv, "", "AES", "CBC", False, 16, "")
+        print(f"Type: {type(decrypted_text_hex[0])}")
+        print(f"Value: {repr(decrypted_text_hex[0])}")
+
+        # Unpad the decrypted text
+        unpadded_data = padding_node.padding(decrypted_text_hex[0], 128, "PKCS7", False)
+
+        assert unpadded_data[0] == text

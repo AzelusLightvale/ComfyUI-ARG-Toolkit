@@ -39,16 +39,52 @@ class PaddingNode:
 
     def padding(self, padding_data, block_size, algorithm, mode):
         padder = getattr(padding, algorithm)(block_size)
+
+        def to_bytes(data):
+            if isinstance(data, bytes):
+                return data
+            elif isinstance(data, str):
+                # Try hex first
+                try:
+                    if all(c in "0123456789abcdefABCDEF" for c in data) and len(data) % 2 == 0:
+                        return bytes.fromhex(data)
+                except:
+                    pass
+                # Try base64
+                try:
+                    import base64
+
+                    if all(c in "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=" for c in data):
+                        return base64.b64decode(data)
+                except:
+                    pass
+                # Otherwise treat as string
+                return data.encode("utf-8")
+            else:
+                raise ValueError(f"Unsupported data type: {type(data)}")
+
+        # Always return hex for crypto operations
+        def to_hex(data_bytes):
+            return (data_bytes.hex(),)
+
         if mode:
+            data_bytes = to_bytes(padding_data)
             padder = padder.padder()
-            padded_data = padder.update(padding_data.encode("utf-8"))
+            padded_data = padder.update(data_bytes)
             padded_data += padder.finalize()
-            return (padded_data.hex(),)
+            return to_hex(padded_data)
         else:
+            data_bytes = to_bytes(padding_data)
             padder = padder.unpadder()
-            unpadded_data = padder.update(bytes.fromhex(padding_data))
+            unpadded_data = padder.update(data_bytes)
             unpadded_data += padder.finalize()
-            return (unpadded_data.decode("utf-8"),)
+
+            # For unpadding, try to return string if it's valid text, otherwise hex
+            try:
+                decoded = unpadded_data.decode("utf-8")
+                return (decoded,)
+            except UnicodeDecodeError:
+                return to_hex(unpadded_data)
 
 
 NODE_CLASS_MAPPINGS = {
