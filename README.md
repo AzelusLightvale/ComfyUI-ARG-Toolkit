@@ -21,7 +21,7 @@ Might also double as a poor-man's cryptanalysis and steganography lab
 - (Planned) Historical encoding and encrypting formats (Kansas City System, SNOW, SSTV,...) made user-friendly and available through a node interface.
 - (Planned) Recreations of historical cipher machines (Enigma, Lorenz, M-209,...) within ComfyUI.
 - (Planned) Audio spectrogram analysis tools.
-- (Planned) Generative steganography moels
+- (Planned) Generative steganography models
 - (Far Future plans) Post-quantum cryptography tools.
 
 # Testing methodology
