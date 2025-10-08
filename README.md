@@ -2,14 +2,7 @@
 
 A collection of ComfyUI nodes meant mostly for doing cryptography, steganography, encryption, decryption, and everything needed to both make and solve ARGs (Alternative Reality Games) and secret messages hidden within text or images (and hopefully audio) without ever leaving ComfyUI.
 
-Might also double as a poor-man's cryptanalysis lab or a method to perform and document cryptographic encryption/decryption methods used that can be tested directly, fully offline and local.
-
-This project is a work of random inspiration, and mostly acts as a learning experience on coding for me in general, so forgive me if the code sucks.
-
-Note that the description of this repository will sometimes shift from serious and formal to casual and personal at random times.
-
-> [!NOTE]
-> This projected was created with a [cookiecutter](https://github.com/Comfy-Org/cookiecutter-comfy-extension) template. However, many parts of this repository purposefully deviates from this templates.
+Might also double as a poor-man's cryptanalysis and steganography lab
 
 ## Quickstart
 
@@ -23,13 +16,17 @@ Note that the description of this repository will sometimes shift from serious a
 - Classic ciphers and cryptography techniques (Caesar, Playfair, Vigénere, Foursquare,...) - powered by [`secretpy`](https://github.com/tigertv/secretpy).
 - Image steganography and invisible watermarking tools - powered by [`stegano`](https://github.com/cedricbonhomme/Stegano) and [`invisible-watermark`](https://github.com/ShieldMnt/invisible-watermark/).
 - Bitwise operators and string converters for use with other ciphers.
-- (WIP) Modern cryptographic and encryption tools and functions - powered by [`cryptography`](https://github.com/pyca/cryptography).
+- Multi-language Morse code encoder and decoder.
+- (WIP) Modern cryptographic encryption tools and functions - powered by [`cryptography`](https://github.com/pyca/cryptography).
 - (Planned) Historical encoding and encrypting formats (Kansas City System, SNOW, SSTV,...) made user-friendly and available through a node interface.
 - (Planned) Recreations of historical cipher machines (Enigma, Lorenz, M-209,...) within ComfyUI.
 - (Planned) Audio spectrogram analysis tools.
+- (Planned) Generative steganography moels
 - (Far Future plans) Post-quantum cryptography tools.
 
-#
+# Testing methodology
+
+Since this project started as an amateur project, the test files only cover the functions and most common use cases, not the edge cases or any automated testing yet.
 
 # Others
 
@@ -49,11 +46,12 @@ If you like the idea behind this node pack, want to explore cryptography, stegan
 - [ComfyUI-Custom-Scripts](https://github.com/pythongosssss/ComfyUI-Custom-Scripts) - Provides a lot of useful features and nodes in general for ComfyUI.
 - [ComfyUI-Crystools](https://github.com/crystian/ComfyUI-Crystools) - System monitor extension for ComfyUI.
 - [ComfyUI_Invisible_Watermark](https://github.com/web3nomad/ComfyUI_Invisible_Watermark) - The main reason I even started this project in the first place, for making an "invisible watermark" node that left such an impression on me I decided to make my own.
+- [ComfyLiterals](https://github.com/M1kep/ComfyLiterals) - Optional custom nodes for use with these nodes to provide or bypass certain limitations of ComfyUI.
 
 # License
 
     This project is licensed under the GNU General Public License 3.0 (GPLv3)
     See the LICENSE file for full license details.
     See the ATTRIBUTIONS file for notices regarding third-party software used.
-
-.... . .-.. .-.. --- / .-- --- .-. .-.. -.. -.-.--
+    
+Moreover, this project uses additional libraries and projects as both reference and implementations. Additional attributions and citations are listed in the ATTRIBUTIONS file.
