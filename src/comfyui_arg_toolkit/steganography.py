@@ -13,6 +13,8 @@ import folder_paths  # This is dealt with by ComfyUI. If this import is throwing
 # Every node is inspired heavily by their reference implementations in their GitHub repository, with changes made to best use PyTorch as possible as it's the main way ComfyUI stores data
 # For more information, check https://docs.comfy.org/custom-nodes/backend/images_and_masks#images
 
+# TODO: Deduplicate this entire file and convert it to a more reasonable standard, like the rest of the nodes.
+
 
 class Stegano_LSB_Encode:
     def __init__(self):
@@ -64,9 +66,7 @@ class Stegano_LSB_Encode:
                     ["None"]
                     + [
                         name
-                        for name, _ in inspect.getmembers(
-                            stegano.lsb.generators, inspect.isfunction
-                        )
+                        for name, _ in inspect.getmembers(stegano.lsb.generators, inspect.isfunction)
                         if name
                         not in [
                             "carmichael",
@@ -77,13 +77,20 @@ class Stegano_LSB_Encode:
                         ]
                     ],
                 ),  # Extracts the available generators to use with Stegano
+                "encoding": (
+                    ["UTF-8", "UTF-32LE"],
+                    {
+                        "default": "UTF-8",
+                        "tooltip": "Chooses the encoding format for the message. Only allows standard UTF-8 or a version with UTF-32LE",
+                    },
+                ),
             }
         }
 
     RETURN_TYPES = ("IMAGE",)
     FUNCTION = "encode_stego"
 
-    def encode_stego(self, images, message, m, n, generator_type):
+    def encode_stego(self, images, message, m, n, generator_type, encoding):
         B, H, W, C = images.shape
         output_images = []
         for i in range(B):
@@ -107,7 +114,7 @@ class Stegano_LSB_Encode:
                 generator_type = generator_func(temp_path)
             else:
                 generator_type = generator_func()
-            img_pil = stegano.lsb.hide(img_pil, message, generator_type)
+            img_pil = stegano.lsb.hide(img_pil, message, generator_type, encoding=encoding)
             img_np_out = np.array(img_pil)
             img_tensor_out = torch.from_numpy(img_np_out).float() / 255.0
             output_images.append(img_tensor_out)
@@ -156,9 +163,7 @@ class Stegano_LSB_Decode:
                     ["None"]
                     + [
                         name
-                        for name, _ in inspect.getmembers(
-                            stegano.lsb.generators, inspect.isfunction
-                        )
+                        for name, _ in inspect.getmembers(stegano.lsb.generators, inspect.isfunction)
                         if name
                         not in [
                             "carmichael",
@@ -169,13 +174,20 @@ class Stegano_LSB_Decode:
                         ]
                     ],
                 ),
+                "encoding": (
+                    ["UTF-8", "UTF-32LE"],
+                    {
+                        "default": "UTF-8",
+                        "tooltip": "Chooses the encoding format for the message. Only allows standard UTF-8 or a version with UTF-32LE",
+                    },
+                ),
             }
         }
 
     RETURN_TYPES = ("STRING",)
     FUNCTION = "decode_stego"
 
-    def decode_stego(self, images, m, n, generator_type):
+    def decode_stego(self, images, m, n, generator_type, encoding):
         B, H, W, C = images.shape
         final_output = []
         for i in range(B):
@@ -199,7 +211,7 @@ class Stegano_LSB_Decode:
                 generator_type = generator_func(temp_path)
             else:
                 generator_type = generator_func()
-            final_output.append(stegano.lsb.reveal(img_pil, generator_type))
+            final_output.append(stegano.lsb.reveal(img_pil, generator_type, encoding=encoding))
         return ("".join(final_output),)
 
 
@@ -251,27 +263,54 @@ class IMWatermarkEncode:
                     """),
                     },
                 ),
-            }
+                "encoding_format": (
+                    [
+                        "utf-8",
+                        "utf-16",
+                        "utf-32",
+                        "ascii",
+                        "latin-1",
+                        "cp1252",
+                        "utf-8-sig",
+                        "Other",
+                    ],
+                    {
+                        "tooltip": "The encoding format available for text, may yield different results when converting.",
+                    },
+                ),
+            },
+            "optional": {
+                "other_encoding_format": (
+                    "STRING",
+                    {
+                        "default": "",
+                        "multiline": False,
+                        "tooltip": 'If, for some reason, your chosen encoding format is not available in the dropdown, select "Other" in encoding_format and type in your encoding format here. Supports all format written in Python\'s `encoding` module.',
+                    },
+                )
+            },
         }
 
     RETURN_TYPES = ("IMAGE",)
     FUNCTION = "encode_imwatermark"
 
-    def encode_imwatermark(self, images, message, algorithm, types):
+    def encoding_selector(self, encoding_format, other_encoding_format):
+        if encoding_format == "Other":
+            encoding_format = other_encoding_format
+        return encoding_format
+
+    def encode_imwatermark(self, images, message, algorithm, types, encoding_format, other_encoding_format):
         B, H, W, C = images.shape
         output_images = []
+        encoding_format = self.encoding_selector(encoding_format, other_encoding_format)
         if algorithm == "rivaGan":
             imwatermark.WatermarkEncoder().loadModel()
         if types == "bytes":  # Wants watermark bytes
-            encoded_message = message.encode("utf-8")
-        elif (
-            types == "b16"
-        ):  # Also wants watermark bytes, but needs to convert to hex first
-            encoded_message = message.encode("utf-8").hex().upper().encode("utf-8")
+            encoded_message = message.encode(encoding_format)
+        elif types == "b16":  # Also wants watermark bytes, but needs to convert to hex first
+            encoded_message = message.encode(encoding_format).hex().upper().encode(encoding_format)
         elif types == "bits":  # Wants bit list
-            encoded_message = [
-                int(bit) for byte in message.encode("utf-8") for bit in f"{byte:08b}"
-            ]
+            encoded_message = [int(bit) for byte in message.encode(encoding_format) for bit in f"{byte:08b}"]
         else:  # Wants string
             encoded_message = message
         encoder = imwatermark.WatermarkEncoder()
@@ -335,15 +374,46 @@ class IMWatermarkDecode:
                     - IPv4 (32 bits, fixed): Takes an IPv4 address and embeds that.""")
                     },
                 ),
-            }
+                "encoding_format": (
+                    [
+                        "utf-8",
+                        "utf-16",
+                        "utf-32",
+                        "ascii",
+                        "latin-1",
+                        "cp1252",
+                        "utf-8-sig",
+                        "Other",
+                    ],
+                    {
+                        "tooltip": "The encoding format available for text, may yield different results when converting.",
+                    },
+                ),
+            },
+            "optional": {
+                "other_encoding_format": (
+                    "STRING",
+                    {
+                        "default": "",
+                        "multiline": False,
+                        "tooltip": 'If, for some reason, your chosen encoding format is not available in the dropdown, select "Other" in encoding_format and type in your encoding format here. Supports all format written in Python\'s `encoding` module.',
+                    },
+                )
+            },
         }
 
     RETURN_TYPES = ("STRING",)
     FUNCTION = "decode_imwatermark"
 
-    def decode_imwatermark(self, images, length, algorithm, types):
+    def encoding_selector(self, encoding_format, other_encoding_format):
+        if encoding_format == "Other":
+            encoding_format = other_encoding_format
+        return encoding_format
+
+    def decode_imwatermark(self, images, length, algorithm, types, encoding_format, other_encoding_format):
         B, H, W, C = images.shape
         final_output = []
+        encoding_format = self.encoding_selector(encoding_format, other_encoding_format)
         if types in ["bytes", "bits", "b16"]:  # Bit-related types
             if length <= 0:
                 raise ValueError(
@@ -360,22 +430,49 @@ class IMWatermarkDecode:
             img_pil = np.array(Image.fromarray(img_np))[:, :, ::-1]
             decoded_bit = decoder.decode(img_pil, algorithm)
             if types == "bytes":  # Returns watermark bytes
-                decoded_str = decoded_bit.decode("utf-8")
+                decoded_str = decoded_bit.decode(encoding_format)
             elif types == "b16":
-                decoded_str = bytes.fromhex(decoded_bit.decode("utf-8")).decode("utf-8")
-            elif (
-                types == "bits"
-            ):  # Returns bits in a list of 0/1 (i.e: [0, 1, 1, 0, 1,...])
+                decoded_str = bytes.fromhex(decoded_bit.decode(encoding_format)).decode(encoding_format)
+            elif types == "bits":  # Returns bits in a list of 0/1 (i.e: [0, 1, 1, 0, 1,...])
                 bits_int = [int(bit) for bit in decoded_bit]
                 byte_chunks = [bits_int[i : i + 8] for i in range(0, len(bits_int), 8)]
-                decoded_bytes = bytes(
-                    int("".join(str(b) for b in chunk), 2) for chunk in byte_chunks
-                )
-                decoded_str = decoded_bytes.decode("utf-8")
+                decoded_bytes = bytes(int("".join(str(b) for b in chunk), 2) for chunk in byte_chunks)
+                decoded_str = decoded_bytes.decode(encoding_format)
             else:  # Returns string
                 decoded_str = decoded_bit
             final_output.append(decoded_str)
         return ("".join(final_output),)
+
+
+class SteganoAnalysis:
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {"required": {"image": ("IMAGE", {}), "mode": (["Parity", "Statistics"])}}
+
+    RETURN_TYPES = ("IMAGE",)
+    FUNCTION = "analyze"
+
+    def analyze(self, image, mode):
+        B, H, W, C = image.shape
+        output_images = []
+        for i in range(B):
+            img_tensor = image[i]  # [H,W,C]
+            if img_tensor.dtype == torch.float32:
+                img_np = (img_tensor.numpy() * 255).astype(np.uint8)
+            else:
+                img_np = img_tensor.numpy()
+            img_pil = Image.fromarray(img_np)
+            # This part is a stub. Insert actual analysis function here
+            if mode == "Parity":
+                img_pil = stegano.steganalysis.parity(img_pil)
+            elif mode == "Statistics":
+                img_pil = stegano.steganalysis.statistics(img_pil)
+            else:
+                raise ValueError(f"Your chosen mode ({mode}) is invalid.")
+            img_np_out = np.array(img_pil)
+            img_tensor_out = torch.from_numpy(img_np_out).float() / 255.0
+            output_images.append(img_tensor_out)
+        return (torch.stack(output_images, dim=0),)
 
 
 # A dictionary that contains all nodes you want to export with their names
@@ -383,13 +480,15 @@ class IMWatermarkDecode:
 NODE_CLASS_MAPPINGS = {
     "SteganoLSBEncode": Stegano_LSB_Encode,
     "SteganoLSBDecode": Stegano_LSB_Decode,
+    "SteganoAnalysis": SteganoAnalysis,
     "IMWatermarkEncode": IMWatermarkEncode,
     "IMWatermarkDecode": IMWatermarkDecode,
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "SteganoLSBEncode": "Steganography - LSB Encoder",
-    "SteganoLSBDecode": "Steganography - LSB Decoder",
+    "SteganoLSBEncode": "Stegano LSB Encode",
+    "SteganoLSBDecode": "Stegano LSB Decode",
+    "SteganoAnalysis": "Stegano Analysis",
     "IMWatermarkEncode": "Invisible Watermark Encode",
     "IMWatermarkDecode": "Invisible Watermark Decode",
 }

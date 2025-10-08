@@ -1,3 +1,4 @@
+
 # Symmetrical Encrypt/Decrypt
 
 Encrypts or decrypts a message using a symmetrical cipher. This node is a wrapper around the `cryptography` library.
