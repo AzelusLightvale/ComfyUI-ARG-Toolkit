@@ -1,4 +1,5 @@
 import os
+import sys
 import inspect
 import textwrap
 
@@ -8,7 +9,20 @@ import torch
 from PIL import Image
 import numpy as np
 
-import folder_paths  # This is dealt with by ComfyUI. If this import is throwing an error, ignore it.
+# folder_path.py solver, just so the complaints will stop.
+current = os.path.dirname(os.path.realpath(__file__))
+while True:
+    candidate = os.path.join(current, "folder_paths.py")
+    if os.path.exists(candidate):
+        target_dir = current
+        break
+    parent = os.path.dirname(current)
+    if parent == current:
+        raise FileNotFoundError("folder_paths.py not found in any parent directories")
+    current = parent
+sys.path.insert(0, target_dir)
+
+import folder_paths  # This import is handled by the solver above looking for it inside the parent directories. This will most likely hit the one from base ComfyUI, assuming no other nodes or .py file carry this namespace.
 
 # Every node is inspired heavily by their reference implementations in their GitHub repository, with changes made to best use PyTorch as possible as it's the main way ComfyUI stores data
 # For more information, check https://docs.comfy.org/custom-nodes/backend/images_and_masks#images

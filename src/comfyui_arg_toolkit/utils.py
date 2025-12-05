@@ -100,61 +100,34 @@ class ConverterNodes:
 
 class String2Binary(ConverterNodes):
     def string2binary(self, text, encoding_format, other_encoding_format):
-        return (
-            " ".join(
-                format(c, "b")
-                for c in bytearray(
-                    text, self.encoding_selector(encoding_format, other_encoding_format)
-                )
-            ),
-        )
+        return (" ".join(format(c, "b") for c in bytearray(text, self.encoding_selector(encoding_format, other_encoding_format))),)
 
 
 class Binary2String(ConverterNodes):
     def binary2string(self, text, encoding_format, other_encoding_format):
-        return (
-            bytes(int(b, 2) for b in text.split(" ")).decode(
-                self.encoding_selector(encoding_format, other_encoding_format)
-            ),
-        )
+        return (bytes(int(b, 2) for b in text.split(" ")).decode(self.encoding_selector(encoding_format, other_encoding_format)),)
 
 
 class String2Hex(ConverterNodes):
     def string2hex(self, text, encoding_format, other_encoding_format):
-        return (
-            text.encode(
-                self.encoding_selector(encoding_format, other_encoding_format)
-            ).hex(),
-        )
+        return (text.encode(self.encoding_selector(encoding_format, other_encoding_format)).hex(),)
 
 
 class Hex2String(ConverterNodes):
     def hex2string(self, text, encoding_format, other_encoding_format):
         return (
-            bytes.fromhex(text.replace("0x", "").replace(" ", "")).decode(
-                self.encoding_selector(encoding_format, other_encoding_format)
-            ),
+            bytes.fromhex(text.replace("0x", "").replace(" ", "")).decode(self.encoding_selector(encoding_format, other_encoding_format)),
         )
 
 
 class String2Base64(ConverterNodes):
     def string2base64(self, text, encoding_format, other_encoding_format):
-        return (
-            base64.b64encode(
-                text.encode(
-                    self.encoding_selector(encoding_format, other_encoding_format)
-                )
-            ).decode("ascii"),
-        )
+        return (base64.b64encode(text.encode(self.encoding_selector(encoding_format, other_encoding_format))).decode("ascii"),)
 
 
 class Base642String(ConverterNodes):
     def base642string(self, text, encoding_format, other_encoding_format):
-        return (
-            base64.b64decode(text.encode("ascii")).decode(
-                self.encoding_selector(encoding_format, other_encoding_format)
-            ),
-        )
+        return (base64.b64decode(text.encode("ascii")).decode(self.encoding_selector(encoding_format, other_encoding_format)),)
 
 
 # The Bitwise category of Utilities. Also has auto-detection for the sake of my sanity.
@@ -241,17 +214,13 @@ class BitwiseNodes:
             if len(cleaned) % 8 != 0:
                 # pad to nearest byte
                 cleaned = cleaned.zfill(((len(cleaned) + 7) // 8) * 8)
-            return bytes(
-                int(cleaned[i : i + 8], 2) for i in range(0, len(cleaned), 8)
-            ), "Binary"
+            return bytes(int(cleaned[i : i + 8], 2) for i in range(0, len(cleaned), 8)), "Binary"
 
         # Leading 0 + digits 0/1 → implicit binary
         elif text.startswith("0") and all(c in "01" for c in text):
             # pad to nearest byte
             cleaned = text.zfill(((len(text) + 7) // 8) * 8)
-            return bytes(
-                int(cleaned[i : i + 8], 2) for i in range(0, len(cleaned), 8)
-            ), "Binary"
+            return bytes(int(cleaned[i : i + 8], 2) for i in range(0, len(cleaned), 8)), "Binary"
 
         # Integer detection
         elif text.isdigit():  # simple positive integer
@@ -277,25 +246,17 @@ class BitwiseNodes:
 
         # Default to chosen formatted string
         else:
-            return text.encode(
-                self.encoding_selector(encoding_format, other_encoding_format)
-            ), "String"
+            return text.encode(self.encoding_selector(encoding_format, other_encoding_format)), "String"
 
-    def operate(
-        self, text_1, text_2, encoding_format, other_encoding_format=None, func=None
-    ):
+    def operate(self, text_1, text_2, encoding_format, other_encoding_format=None, func=None):
         """
         func: a callable that takes one or two byte objects and returns bytes
         Returns: (result_bytes, detected_format_of_input1)
         """
-        b1, return_fmt = self.detect_and_parse(
-            text_1, encoding_format, other_encoding_format
-        )
+        b1, return_fmt = self.detect_and_parse(text_1, encoding_format, other_encoding_format)
 
         if text_2 is not None:
-            b2, _ = self.detect_and_parse(
-                text_2, encoding_format, other_encoding_format
-            )
+            b2, _ = self.detect_and_parse(text_2, encoding_format, other_encoding_format)
             # Ensure same length for operations that need it
             if len(b1) != len(b2):
                 raise ValueError("Inputs must be same length for bitwise operations")
@@ -305,9 +266,7 @@ class BitwiseNodes:
 
         return result, return_fmt
 
-    def format_output(
-        self, data, output_format, encoding_format, other_encoding_format=None
-    ):
+    def format_output(self, data, output_format, encoding_format, other_encoding_format=None):
         if output_format == "Binary":
             return " ".join(format(b, "08b") for b in data)
         elif output_format == "Hex":
@@ -317,9 +276,7 @@ class BitwiseNodes:
         elif output_format == "Int":
             return str(int.from_bytes(data, "big"))
         elif output_format == "String":
-            return data.decode(
-                self.encoding_selector(encoding_format, other_encoding_format)
-            )
+            return data.decode(self.encoding_selector(encoding_format, other_encoding_format))
         else:
             raise ValueError(f"Unknown output format {output_format}")
 
@@ -333,11 +290,7 @@ class BitwiseAND(BitwiseNodes):
             other_encoding_format,
             func=lambda b1, b2: bytes(x & y for x, y in zip(b1, b2)),
         )
-        return (
-            self.format_output(
-                result_bytes, input_format, encoding_format, other_encoding_format
-            ),
-        )
+        return (self.format_output(result_bytes, input_format, encoding_format, other_encoding_format),)
 
 
 class BitwiseOR(BitwiseNodes):
@@ -349,11 +302,7 @@ class BitwiseOR(BitwiseNodes):
             other_encoding_format,
             func=lambda b1, b2: bytes(x | y for x, y in zip(b1, b2)),
         )
-        return (
-            self.format_output(
-                result_bytes, input_format, encoding_format, other_encoding_format
-            ),
-        )
+        return (self.format_output(result_bytes, input_format, encoding_format, other_encoding_format),)
 
 
 class BitwiseNOT(BitwiseNodes):
@@ -372,11 +321,7 @@ class BitwiseNOT(BitwiseNodes):
             other_encoding_format,
             func=lambda b1: bytes((~x & 0xFF) for x in b1),
         )
-        return (
-            self.format_output(
-                result_bytes, input_format, encoding_format, other_encoding_format
-            ),
-        )
+        return (self.format_output(result_bytes, input_format, encoding_format, other_encoding_format),)
 
 
 class BitwiseXOR(BitwiseNodes):
@@ -388,11 +333,7 @@ class BitwiseXOR(BitwiseNodes):
             other_encoding_format,
             func=lambda b1, b2: bytes(x ^ y for x, y in zip(b1, b2)),
         )
-        return (
-            self.format_output(
-                result_bytes, input_format, encoding_format, other_encoding_format
-            ),
-        )
+        return (self.format_output(result_bytes, input_format, encoding_format, other_encoding_format),)
 
 
 class BitwiseLS(BitwiseNodes):
@@ -404,11 +345,7 @@ class BitwiseLS(BitwiseNodes):
             other_encoding_format,
             func=lambda b1, b2: bytes(x << y for x, y in zip(b1, b2)),
         )
-        return (
-            self.format_output(
-                result_bytes, input_format, encoding_format, other_encoding_format
-            ),
-        )
+        return (self.format_output(result_bytes, input_format, encoding_format, other_encoding_format),)
 
 
 class BitwiseRS(BitwiseNodes):
@@ -420,11 +357,42 @@ class BitwiseRS(BitwiseNodes):
             other_encoding_format,
             func=lambda b1, b2: bytes(x >> y for x, y in zip(b1, b2)),
         )
-        return (
-            self.format_output(
-                result_bytes, input_format, encoding_format, other_encoding_format
-            ),
-        )
+        return (self.format_output(result_bytes, input_format, encoding_format, other_encoding_format),)
+
+
+class StringLooper:
+    CATEGORY = "Utilities/Padding"
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "text": (
+                    "STRING",
+                    {
+                        "default": "Hello World!",
+                        "multiline": True,
+                        "placeholder": "Type your message here...",
+                    },
+                ),
+                "loops": (
+                    "INT",
+                    {
+                        "min": 1,
+                        "step": 1,
+                        "default": 3,
+                        "tooltip": "The number of times to repeat the string given",
+                    },
+                ),
+            }
+        }
+
+    RETURN_TYPES = ("STRING",)
+    RETURN_NAMES = ("looped_text",)
+    FUNCTION = "Looper"
+
+    def Looper(self, text=str, loops=int):
+        return (text * (loops + 1),)
 
 
 # A dictionary that contains all nodes you want to export with their names
@@ -443,6 +411,7 @@ NODE_CLASS_MAPPINGS = {
     "BitwiseXOR": BitwiseXOR,
     "BitwiseLS": BitwiseLS,
     "BitwiseRS": BitwiseRS,
+    "StringLooper": StringLooper,
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
@@ -459,4 +428,5 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "BitwiseXOR": "Bitwise XOR Operator",
     "BitwiseLS": "Bitwise Left Shift Operator",
     "BitwiseRS": "Bitwise Right Shift Operator",
+    "StringLooper": "String Append Looper",
 }
