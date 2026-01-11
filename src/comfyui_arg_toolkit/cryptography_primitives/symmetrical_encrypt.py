@@ -1,6 +1,12 @@
 from cryptography.hazmat.primitives import ciphers
 from cryptography.hazmat.decrepit.ciphers import algorithms as decrepit_algorithms
+from cryptography.hazmat.decrepit.ciphers import modes as decrepit_modes
 from cryptography.hazmat.primitives.ciphers import algorithms
+
+# This version is perparation for 47.0 of cryptography.
+# Changes that matter for this release:
+# - CFB, OFB, and CFB8 being moved to decrepit under modes
+# - Camellia being moved to decrepit
 
 
 class CipherNodes:
@@ -125,7 +131,7 @@ class EncryptDecrypt(CipherNodes):
         iv = bytes.fromhex(iv)
         if algorithm == "ChaCha20":
             algorithm = algorithms.ChaCha20(key, nonce)
-        elif algorithm in ["ARC4", "Blowfish", "CAST5", "SEED", "IDEA"]:
+        elif algorithm in ["ARC4", "Blowfish", "CAST5", "SEED", "IDEA", "Camellia"]:
             algorithm = getattr(decrepit_algorithms, algorithm)(key)
         else:
             algorithm = getattr(algorithms, algorithm)(key)
@@ -136,6 +142,8 @@ class EncryptDecrypt(CipherNodes):
                 tag = tag.encode("utf-8")
             min_tag_length = int(min_tag_length)
             modes = ciphers.modes.GCM(iv, tag, min_tag_length)
+        elif modes in ["CFB", "OFB", "CFB8"]:
+            modes = getattr(decrepit_modes)(iv)
         elif modes == "XTS":
             modes = ciphers.modes.XTS(tweak=iv)
         elif modes == "ECB":
