@@ -96,8 +96,9 @@ class Argon2id_Derive(KeyDerivationNodes):
             {
                 "default": 65536,
                 "min": 1,
+                "max": 2147483647,
                 "step": 1,
-                "tooltip": "The amount of memory to use in kibibytes. 1 kibibyte (KiB) is 1024 bytes. This must be at minimum `8 * parallel_lanes`. However, due to ComfyUI limitations, the memory cost will be purposefully limited to 8*2048 KiB, or 16 MiB (Mebibytes)",
+                "tooltip": "The amount of memory to use in kibibytes. 1 kibibyte (KiB) is 1024 bytes. This must be at minimum `8 * parallel_lanes`.",
             },
         )
         class_input["optional"]["ad"] = (
@@ -263,6 +264,7 @@ class PBKDF2HMAC_Derive(KeyDerivationNodes):
                 "default": 1200000,
                 "tooltip": "The number of iterations to perform of the hash function. This can be used to control the length of time the operation takes. Higher numbers help mitigate brute force attacks against derived keys.",
                 "min": 1,
+                "max": 2147483647,
             },
         )
         return class_input
@@ -339,7 +341,7 @@ class Scrypt_Derive(KeyDerivationNodes):
             "INT",
             {
                 "default": 14,
-                "tooltip": "The CPU/Memory cost parameter. Normally, this must be larger than one and a power of 2. This specific implementation uses the direct power to exponentiate 2, minimum 1.",
+                "tooltip": "The CPU/Memory cost parameter. Normally, this must be larger than 1 and a power of 2. This specific implementation uses the direct power to exponentiate 2 (as in 2^n, or, in Python, `2**n`), minimum 1.",
                 "min": 1,
             },
         )
@@ -347,7 +349,7 @@ class Scrypt_Derive(KeyDerivationNodes):
             "INT",
             {
                 "default": 8,
-                "tooltip": "The block size parameter. Affects computation costs.",
+                "tooltip": "The block size parameter. Affects memory costs and sequential memory-hard properties by controlling memory access patterns and memory block size.",
                 "min": 1,
             },
         )
@@ -355,7 +357,7 @@ class Scrypt_Derive(KeyDerivationNodes):
             "INT",
             {
                 "default": 1,
-                "tooltip": "The parallel factor parameter. Affects computation costs.",
+                "tooltip": "The parallel factor parameter. Affects the number of mixing functions to run in parallel. Can help in multi-core systems, but also makes it easier for attackers with parallel hardware.",
                 "min": 1,
             },
         )
