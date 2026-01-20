@@ -127,13 +127,13 @@ class Argon2id_Derive(KeyDerivationNodes):
         secret,
         mode,
     ):
-        if 8 * memory_cost < 8 * parallel_lanes:
+        if memory_cost < 8 * parallel_lanes:
             print(
-                f"[WARNING]: Because defined memory cost ({8 * memory_cost} KiB) is lower than the minimum required ({8 * parallel_lanes} KiB), the value will be silently clamped to the minimum."
+                f"[WARNING]: Because defined memory cost ({memory_cost} KiB) is lower than the minimum required ({8 * parallel_lanes} KiB), the value will be silently clamped to the minimum."
             )
             memory_cost = 8 * parallel_lanes
         else:
-            memory_cost = 8 * memory_cost  # To actually convert this to a proper amount of defined kibibytes.
+            memory_cost = memory_cost
         ad = ad.encode("utf-8")
         secret = secret.encode("utf-8")
         salt = bytes.fromhex(salt)
@@ -185,13 +185,13 @@ class Argon2id_Verify(Argon2id_Derive):
         mode,
         expected_key,
     ):
-        if 8 * memory_cost < 8 * parallel_lanes:
+        if memory_cost < 8 * parallel_lanes:
             print(
-                f"[WARNING]: Because defined memory cost ({8 * memory_cost} KiB) is lower than the minimum required ({8 * parallel_lanes} KiB), the value will be silently clamped to the minimum."
+                f"[WARNING]: Because defined memory cost ({memory_cost} KiB) is lower than the minimum required ({8 * parallel_lanes} KiB), the value will be silently clamped to the minimum."
             )
             memory_cost = 8 * parallel_lanes
         else:
-            memory_cost = 8 * memory_cost  # To actually convert this to a proper amount of defined kibibytes.
+            memory_cost = memory_cost
         salt = bytes.fromhex(salt)
         ad = ad.encode("utf-8")
         secret = secret.encode("utf-8")
