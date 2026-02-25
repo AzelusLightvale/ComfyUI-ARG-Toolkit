@@ -1,4 +1,5 @@
 from cryptography.hazmat.primitives import hashes  # For the algorithm functions
+import base64
 
 # Import hell
 import cryptography
@@ -35,18 +36,17 @@ class KeyDerivationNodes:
                     },
                 ),
                 "message": (
-                    "STRING",
+                    "BYTESLIKE",
                     {
-                        "default": "Hello World!",
-                        "multiline": True,
-                        "placeholder": "Type your message here...",
+                        "forceInput": True,
+                        "tooltip": "The message to derive key from. Must be bytes.",
                     },
                 ),
             },
             "optional": {},
         }
 
-    RETURN_TYPES = ("STRING",)
+    RETURN_TYPES = ("BYTESLIKE",)
     RETURN_NAMES = ("derived_key",)
 
     def __init_subclass__(cls, **kwargs):
@@ -64,10 +64,8 @@ class Argon2id_Derive(KeyDerivationNodes):
     def INPUT_TYPES(cls):
         class_input = super().INPUT_TYPES()
         class_input["required"]["salt"] = (
-            "STRING",
+            "BYTESLIKE",
             {
-                "default": "",
-                "multiline": False,
                 "forceInput": True,
                 "tooltip": "The nonce used to generate the key. Use SystemRandom (Random Nonce Generator) to generate this.",
             },
@@ -102,14 +100,13 @@ class Argon2id_Derive(KeyDerivationNodes):
             },
         )
         class_input["optional"]["ad"] = (
-            "STRING",
-            {"default": "", "multiline": False, "tooltip": "Optional associated data."},
+            "BYTESLIKE",
+            {"forceInput": True, "tooltip": "Optional associated data."},
         )
         class_input["optional"]["secret"] = (
-            "STRING",
+            "BYTESLIKE",
             {
-                "default": "",
-                "multiline": False,
+                "forceInput": True,
                 "tooltip": "Optional secret data, to be used for keyed hashing.",
             },
         )
@@ -129,15 +126,11 @@ class Argon2id_Derive(KeyDerivationNodes):
     ):
         if memory_cost < 8 * parallel_lanes:
             print(
-                f"[WARNING]: Because defined memory cost ({memory_cost} KiB) is lower than the minimum required ({8 * parallel_lanes} KiB), the value will be silently clamped to the minimum."
+                f"[ComfyUI ARG Toolkit][WARNING]: Because defined memory cost ({memory_cost} KiB) is lower than the minimum required ({8 * parallel_lanes} KiB), the value will be silently clamped to the minimum."
             )
             memory_cost = 8 * parallel_lanes
         else:
             memory_cost = memory_cost
-        ad = ad.encode("utf-8")
-        secret = secret.encode("utf-8")
-        salt = bytes.fromhex(salt)
-        message = message.encode("utf-8")
         argon2_key = Argon2id(
             salt=salt,
             length=length,
@@ -149,9 +142,9 @@ class Argon2id_Derive(KeyDerivationNodes):
         )
         if mode:
             output = argon2_key.derive(message)
-            output = output.hex()
         else:
             output = argon2_key.derive_phc_encoded(message)
+            output = output.encode("utf-8")
         return (output,)
 
 
@@ -163,10 +156,9 @@ class Argon2id_Verify(Argon2id_Derive):
     def INPUT_TYPES(cls):
         class_input = super().INPUT_TYPES()
         class_input["required"]["expected_key"] = (
-            "STRING",
+            "BYTESLIKE",
             {
-                "default": "",
-                "multiline": False,
+                "forceInput": True,
                 "tooltip": "The expected result of key derivation.",
             },
         )
@@ -192,14 +184,9 @@ class Argon2id_Verify(Argon2id_Derive):
             memory_cost = 8 * parallel_lanes
         else:
             memory_cost = memory_cost
-        salt = bytes.fromhex(salt)
-        ad = ad.encode("utf-8")
-        secret = secret.encode("utf-8")
         argon2_key = Argon2id(salt, length, iterations, parallel_lanes, memory_cost, ad, secret)
 
         if mode:
-            expected_key = bytes.fromhex(expected_key)
-            message = message.encode("utf-8")
             try:
                 argon2_key.verify(message, expected_key)
                 output = True
@@ -210,11 +197,9 @@ class Argon2id_Verify(Argon2id_Derive):
                     "The verification function is being called more than once on a finalized KDF target. This should not be happening."
                 )
         else:
-            expected_key = str(expected_key)
-            message = str(message)
             # For some stupid reason, PHC-formatted strings have to be done in string form, not hex or base64...
             try:
-                argon2_key.verify_phc_encoded(message, expected_key, secret)
+                argon2_key.verify_phc_encoded(message, expected_key.decode("utf-8"), secret)
                 output = True
             except InvalidKey:
                 output = False
@@ -230,10 +215,8 @@ class PBKDF2HMAC_Derive(KeyDerivationNodes):
     def INPUT_TYPES(cls):
         class_input = super().INPUT_TYPES()
         class_input["required"]["salt"] = (
-            "STRING",
+            "BYTESLIKE",
             {
-                "default": "",
-                "multiline": False,
                 "forceInput": True,
                 "tooltip": "The nonce used to generate the key. Use SystemRandom (Random Nonce Generator) to generate this.",
             },
@@ -276,11 +259,8 @@ class PBKDF2HMAC_Derive(KeyDerivationNodes):
             digest = getattr(hashes, algorithm)(32)
         else:
             digest = getattr(hashes, algorithm)()
-        salt = bytes.fromhex(salt)
-        message = message.encode("utf-8")
         pbkdf2hmac_key = PBKDF2HMAC(salt=salt, length=length, iterations=iterations, algorithm=digest)
         output = pbkdf2hmac_key.derive(message)
-        output = output.hex()
         return (output,)
 
 
@@ -292,10 +272,9 @@ class PBKDF2HMAC_Verify(PBKDF2HMAC_Derive):
     def INPUT_TYPES(cls):
         class_input = super().INPUT_TYPES()
         class_input["required"]["expected_key"] = (
-            "STRING",
+            "BYTESLIKE",
             {
-                "default": "",
-                "multiline": False,
+                "forceInput": True,
                 "tooltip": "The expected result of key derivation.",
             },
         )
@@ -308,10 +287,7 @@ class PBKDF2HMAC_Verify(PBKDF2HMAC_Derive):
             digest = getattr(hashes, algorithm)(32)
         else:
             digest = getattr(hashes, algorithm)()
-        salt = bytes.fromhex(salt)
-        message = message.encode("utf-8")
         pbkdf2hmac_key = PBKDF2HMAC(salt=salt, length=length, iterations=iterations, algorithm=digest)
-        expected_key = bytes.fromhex(expected_key)
         try:
             pbkdf2hmac_key.verify(message, expected_key)
             output = True
@@ -329,10 +305,8 @@ class Scrypt_Derive(KeyDerivationNodes):
     def INPUT_TYPES(cls):
         class_input = super().INPUT_TYPES()
         class_input["required"]["salt"] = (
-            "STRING",
+            "BYTESLIKE",
             {
-                "default": "",
-                "multiline": False,
                 "forceInput": True,
                 "tooltip": "The nonce used to generate the key. Use SystemRandom (Random Nonce Generator) to generate this.",
             },
@@ -364,12 +338,9 @@ class Scrypt_Derive(KeyDerivationNodes):
         return class_input
 
     def scrypt_derive(self, message, length, salt, n, r, p):
-        salt = bytes.fromhex(salt)
-        message = message.encode("utf-8")
         n = 2**n
         scrypt_key = Scrypt(salt, length, n, r, p)
         output = scrypt_key.derive(message)
-        output = output.hex()
         return (output,)
 
 
@@ -381,21 +352,17 @@ class Scrypt_Verify(Scrypt_Derive):
     def INPUT_TYPES(cls):
         class_input = super().INPUT_TYPES()
         class_input["required"]["expected_key"] = (
-            "STRING",
+            "BYTESLIKE",
             {
-                "default": "",
-                "multiline": False,
+                "forceInput": True,
                 "tooltip": "The expected result of key derivation.",
             },
         )
         return class_input
 
     def scrypt_verify(self, message, length, salt, n, r, p, expected_key):
-        salt = bytes.fromhex(salt)
-        message = message.encode("utf-8")
         n = 2**n
         scrypt_key = Scrypt(salt, length, n, r, p)
-        expected_key = bytes.fromhex(expected_key)
         try:
             scrypt_key.verify(message, expected_key)
             output = True
@@ -434,10 +401,9 @@ class ConcatKDFHash_Derive(KeyDerivationNodes):
             {"tooltip": "The algorithm to use for hash generation."},
         )
         class_input["optional"]["other_info"] = (
-            "STRING",
+            "BYTESLIKE",
             {
-                "default": "",
-                "multiline": False,
+                "forceInput": True,
                 "tooltip": "Application-specific context information. If left empty, will pass an empty byte string.",
             },
         )
@@ -450,11 +416,10 @@ class ConcatKDFHash_Derive(KeyDerivationNodes):
             digest = getattr(hashes, algorithm)(32)
         else:
             digest = getattr(hashes, algorithm)()
-        message = message.encode("utf-8")
-        other_info = other_info.encode("utf-8")
+        if other_info is None:
+            other_info = b""
         ckdfhash_key = ConcatKDFHash(length=length, algorithm=digest, otherinfo=other_info)
         output = ckdfhash_key.derive(message)
-        output = output.hex()
         return (output,)
 
 
@@ -466,10 +431,9 @@ class ConcatKDFHash_Verify(ConcatKDFHash_Derive):
     def INPUT_TYPES(cls):
         class_input = super().INPUT_TYPES()
         class_input["required"]["expected_key"] = (
-            "STRING",
+            "BYTESLIKE",
             {
-                "default": "",
-                "multiline": False,
+                "forceInput": True,
                 "tooltip": "The expected result of key derivation.",
             },
         )
@@ -482,10 +446,9 @@ class ConcatKDFHash_Verify(ConcatKDFHash_Derive):
             digest = getattr(hashes, algorithm)(32)
         else:
             digest = getattr(hashes, algorithm)()
-        message = message.encode("utf-8")
-        other_info = other_info.encode("utf-8")
+        if other_info is None:
+            other_info = b""
         ckdfhash_key = ConcatKDFHash(length=length, algorithm=digest, otherinfo=other_info)
-        expected_key = bytes.fromhex(expected_key)
         try:
             ckdfhash_key.verify(message, expected_key)
             output = True
@@ -503,10 +466,9 @@ class ConcatKDFHMAC_Derive(ConcatKDFHash_Derive):
     def INPUT_TYPES(cls):
         class_input = super().INPUT_TYPES()
         class_input["optional"]["salt"] = (
-            "STRING",
+            "BYTESLIKE",
             {
-                "default": "",
-                "multiline": False,
+                "forceInput": True,
                 "tooltip": "A salt. Optional, but highly recommended, ideally with as many bits of entropy as the security level of the hash function.",
             },
         )
@@ -519,12 +481,10 @@ class ConcatKDFHMAC_Derive(ConcatKDFHash_Derive):
             digest = getattr(hashes, algorithm)(32)
         else:
             digest = getattr(hashes, algorithm)()
-        message = message.encode("utf-8")
-        other_info = other_info.encode("utf-8")
-        salt = bytes.fromhex(salt)
+        if other_info is None:
+            other_info = b""
         ckdfhmac_key = ConcatKDFHMAC(length=length, algorithm=digest, otherinfo=other_info, salt=salt)
         output = ckdfhmac_key.derive(message)
-        output = output.hex()
         return (output,)
 
 
@@ -536,10 +496,9 @@ class ConcatKDFHMAC_Verify(ConcatKDFHMAC_Derive):
     def INPUT_TYPES(cls):
         class_input = super().INPUT_TYPES()
         class_input["required"]["expected_key"] = (
-            "STRING",
+            "BYTESLIKE",
             {
-                "default": "",
-                "multiline": False,
+                "forceInput": True,
                 "tooltip": "The expected result of key derivation.",
             },
         )
@@ -552,11 +511,9 @@ class ConcatKDFHMAC_Verify(ConcatKDFHMAC_Derive):
             digest = getattr(hashes, algorithm)(32)
         else:
             digest = getattr(hashes, algorithm)()
-        message = message.encode("utf-8")
-        other_info = other_info.encode("utf-8")
-        salt = bytes.fromhex(salt)
+        if other_info is None:
+            other_info = b""
         ckdfhash_key = ConcatKDFHMAC(length=length, algorithm=digest, otherinfo=other_info, salt=salt)
-        expected_key = bytes.fromhex(expected_key)
         try:
             ckdfhash_key.verify(message, expected_key)
             output = True
@@ -594,19 +551,16 @@ class HKDF_Derive(KeyDerivationNodes):
             {"tooltip": "The algorithm to use for hash generation."},
         )
         class_input["optional"]["salt"] = (
-            "STRING",
+            "BYTESLIKE",
             {
-                "default": "",
-                "multiline": False,
                 "forceInput": True,
                 "tooltip": "A salt to randomize the KDF's output. Optional, but highly recommended.",
             },
         )
         class_input["optional"]["info"] = (
-            "STRING",
+            "BYTESLIKE",
             {
-                "default": "",
-                "multiline": False,
+                "forceInput": True,
                 "tooltip": "Application-specific context information. If left empty, will pass an empty byte string.",
             },
         )
@@ -620,12 +574,10 @@ class HKDF_Derive(KeyDerivationNodes):
             digest = getattr(hashes, algorithm)(32)
         else:
             digest = getattr(hashes, algorithm)()
-        message = message.encode("utf-8")
-        salt = bytes.fromhex(salt)
-        info = info.encode("utf-8")
+        if info is None:
+            info = b""
         hkdf_key = HKDF(algorithm=digest, length=length, salt=salt, info=info)
         output = hkdf_key.derive(message)
-        output = output.hex()
         return (output,)
 
 
@@ -637,10 +589,9 @@ class HKDF_Verify(HKDF_Derive):
     def INPUT_TYPES(cls):
         class_input = super().INPUT_TYPES()
         class_input["required"]["expected_key"] = (
-            "STRING",
+            "BYTESLIKE",
             {
-                "default": "",
-                "multiline": False,
+                "forceInput": True,
                 "tooltip": "The expected result of key derivation.",
             },
         )
@@ -653,11 +604,9 @@ class HKDF_Verify(HKDF_Derive):
             digest = getattr(hashes, algorithm)(32)
         else:
             digest = getattr(hashes, algorithm)()
-        message = message.encode("utf-8")
-        info = info.encode("utf-8")
-        salt = bytes.fromhex(salt)
+        if info is None:
+            info = b""
         hkdf_key = HKDF(length=length, algorithm=digest, info=info, salt=salt)
-        expected_key = bytes.fromhex(expected_key)
         try:
             hkdf_key.verify(message, expected_key)
             output = True
@@ -695,10 +644,9 @@ class HKDFExpand_Derive(KeyDerivationNodes):
             {"tooltip": "The algorithm to use for hash generation."},
         )
         class_input["optional"]["info"] = (
-            "STRING",
+            "BYTESLIKE",
             {
-                "default": "",
-                "multiline": False,
+                "forceInput": True,
                 "tooltip": "Application-specific context information. If left empty, will pass an empty byte string.",
             },
         )
@@ -712,11 +660,10 @@ class HKDFExpand_Derive(KeyDerivationNodes):
             digest = getattr(hashes, algorithm)(32)
         else:
             digest = getattr(hashes, algorithm)()
-        message = message.encode("utf-8")
-        info = info.encode("utf-8")
+        if info is None:
+            info = b""
         hkdf_key = HKDFExpand(algorithm=digest, length=length, info=info)
         output = hkdf_key.derive(message)
-        output = output.hex()
         return (output,)
 
 
@@ -728,10 +675,9 @@ class HKDFExpand_Verify(HKDFExpand_Derive):
     def INPUT_TYPES(cls):
         class_input = super().INPUT_TYPES()
         class_input["required"]["expected_key"] = (
-            "STRING",
+            "BYTESLIKE",
             {
-                "default": "",
-                "multiline": False,
+                "forceInput": True,
                 "tooltip": "The expected result of key derivation.",
             },
         )
@@ -744,10 +690,9 @@ class HKDFExpand_Verify(HKDFExpand_Derive):
             digest = getattr(hashes, algorithm)(32)
         else:
             digest = getattr(hashes, algorithm)()
-        message = message.encode("utf-8")
-        info = info.encode("utf-8")
-        hkdf_key = HKDF(length=length, algorithm=digest, info=info)
-        expected_key = bytes.fromhex(expected_key)
+        if info is None:
+            info = b""
+        hkdf_key = HKDFExpand(length=length, algorithm=digest, info=info)
         try:
             hkdf_key.verify(message, expected_key)
             output = True
@@ -785,10 +730,9 @@ class X963KDF_Derive(KeyDerivationNodes):
             {"tooltip": "The algorithm to use for hash generation."},
         )
         class_input["optional"]["info"] = (
-            "STRING",
+            "BYTESLIKE",
             {
-                "default": "",
-                "multiline": False,
+                "forceInput": True,
                 "tooltip": "Application-specific context information. If left empty, will pass an empty byte string.",
             },
         )
@@ -802,11 +746,10 @@ class X963KDF_Derive(KeyDerivationNodes):
             digest = getattr(hashes, algorithm)(32)
         else:
             digest = getattr(hashes, algorithm)()
-        message = message.encode("utf-8")
-        info = info.encode("utf-8")
+        if info is None:
+            info = b""
         x963kdf_key = X963KDF(algorithm=digest, length=length, info=info)
         output = x963kdf_key.derive(message)
-        output = output.hex()
         return (output,)
 
 
@@ -818,10 +761,9 @@ class X963KDF_Verify(X963KDF_Derive):
     def INPUT_TYPES(cls):
         class_input = super().INPUT_TYPES()
         class_input["required"]["expected_key"] = (
-            "STRING",
+            "BYTESLIKE",
             {
-                "default": "",
-                "multiline": False,
+                "forceInput": True,
                 "tooltip": "The expected result of key derivation.",
             },
         )
@@ -834,10 +776,9 @@ class X963KDF_Verify(X963KDF_Derive):
             digest = getattr(hashes, algorithm)(32)
         else:
             digest = getattr(hashes, algorithm)()
-        message = message.encode("utf-8")
-        info = info.encode("utf-8")
+        if info is None:
+            info = b""
         x963kdf_key = X963KDF(length=length, algorithm=digest, info=info)
-        expected_key = bytes.fromhex(expected_key)
         try:
             x963kdf_key.verify(message, expected_key)
             output = True
@@ -892,26 +833,23 @@ class KBKDF_Derive(KeyDerivationNodes):
             {"default": "KBKDFHMAC", "tooltip": "The operation mode to use."},
         )
         class_input["optional"]["label"] = (
-            "STRING",
+            "BYTESLIKE",
             {
-                "default": "",
-                "multiline": False,
+                "forceInput": True,
                 "tooltip": "Application-specific label information",
             },
         )
         class_input["optional"]["context"] = (
-            "STRING",
+            "BYTESLIKE",
             {
-                "default": "",
-                "multiline": False,
+                "forceInput": True,
                 "tooltip": "Application-specific context information",
             },
         )
         class_input["optional"]["fixed"] = (
-            "STRING",
+            "BYTESLIKE",
             {
-                "default": "",
-                "multiline": False,
+                "forceInput": True,
                 "tooltip": "Instead of supplying `label` and `context`, you can supply fixed data in this field instead. Note that if this is specified, `label` and `context` will be ignored.",
             },
         )
@@ -945,10 +883,12 @@ class KBKDF_Derive(KeyDerivationNodes):
             digest = getattr(hashes, algorithm)(32)
         else:
             digest = getattr(hashes, algorithm)()
-        message = message.encode("utf-8")
-        label = label.encode("utf-8")
-        context = context.encode("utf-8")
-        fixed = fixed.encode("utf-8")
+        if label is None:
+            label = b""
+        if context is None:
+            context = b""
+        if fixed is None:
+            fixed = b""
         location = getattr(CounterLocation, location)
         kbkdf_key = getattr(cryptography.hazmat.primitives.kdf.kbkdf, operation_mode)(
             length=length,
@@ -963,7 +903,6 @@ class KBKDF_Derive(KeyDerivationNodes):
             break_location=break_location,
         )
         output = kbkdf_key.derive(message)
-        output = output.hex()
         return (output,)
 
 
@@ -975,10 +914,9 @@ class KBKDF_Verify(KBKDF_Derive):
     def INPUT_TYPES(cls):
         class_input = super().INPUT_TYPES()
         class_input["required"]["expected_key"] = (
-            "STRING",
+            "BYTESLIKE",
             {
-                "default": "",
-                "multiline": False,
+                "forceInput": True,
                 "tooltip": "The expected result of key derivation.",
             },
         )
@@ -1005,10 +943,12 @@ class KBKDF_Verify(KBKDF_Derive):
             digest = getattr(hashes, algorithm)(32)
         else:
             digest = getattr(hashes, algorithm)()
-        message = message.encode("utf-8")
-        label = label.encode("utf-8")
-        context = context.encode("utf-8")
-        fixed = fixed.encode("utf-8")
+        if label is None:
+            label = b""
+        if context is None:
+            context = b""
+        if fixed is None:
+            fixed = b""
         location = getattr(CounterLocation, location)
         kbkdf_key = getattr(cryptography.hazmat.primitives.kdf.kbkdf, operation_mode)(
             length=length,
@@ -1022,7 +962,6 @@ class KBKDF_Verify(KBKDF_Derive):
             fixed=fixed,
             break_location=break_location,
         )
-        expected_key = bytes.fromhex(expected_key)
         try:
             kbkdf_key.verify(message, expected_key)
             output = True

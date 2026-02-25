@@ -65,8 +65,8 @@ class TestKeyDerivation:
 class TestKeyWrapper:
     def test_aeskeywrap(self):
         wrapper = key_wrapper.AESKeyWrap()
-        wrapping_key = "00" * 32
-        key_to_wrap = "11" * 16
+        wrapping_key = bytes.fromhex("00" * 32)
+        key_to_wrap = bytes.fromhex("11" * 16)
 
         wrapped_key = wrapper.aeskeywrap(wrapping_key, key_to_wrap, True)
         unwrapped_key = wrapper.aeskeywrap(wrapping_key, wrapped_key[0], False)
@@ -75,8 +75,8 @@ class TestKeyWrapper:
 
     def test_aeskeywrapwithpadding(self):
         wrapper = key_wrapper.AESKeyWrapWithPadding()
-        wrapping_key = "00" * 32
-        key_to_wrap = "11" * 20  # Not a multiple of 8
+        wrapping_key = bytes.fromhex("00" * 32)
+        key_to_wrap = bytes.fromhex("11" * 20)  # Not a multiple of 8
 
         wrapped_key = wrapper.aeskeywrapwithpadding(wrapping_key, key_to_wrap, True)
         unwrapped_key = wrapper.aeskeywrapwithpadding(wrapping_key, wrapped_key[0], False)
@@ -87,7 +87,7 @@ class TestKeyWrapper:
 class TestSymmetricalPadding:
     def test_pkcs7_padding(self):
         padding_node = symm_padding.PaddingNode()
-        data = "Hello World"
+        data = b"Hello World"
 
         padded_data = padding_node.padding(data, 128, "PKCS7", True)
         unpadded_data = padding_node.padding(padded_data[0], 128, "PKCS7", False)
@@ -96,7 +96,7 @@ class TestSymmetricalPadding:
 
     def test_ansix923_padding(self):
         padding_node = symm_padding.PaddingNode()
-        data = "Hello World"
+        data = b"Hello World"
 
         padded_data = padding_node.padding(data, 128, "ANSIX923", True)
         unpadded_data = padding_node.padding(padded_data[0], 128, "ANSIX923", False)
@@ -108,21 +108,19 @@ class TestSymmetricalEncryption:
     def test_aes_cbc_encryption_decryption(self):
         enc_dec = symmetrical_encrypt.EncryptDecrypt()
 
-        text = "Hello World"
-        key = "00" * 32
-        iv = "11" * 16
+        text = b"Hello World"
+        key = bytes.fromhex("00" * 32)
+        iv = bytes.fromhex("11" * 16)
 
         # Pad the text first
         padding_node = symm_padding.PaddingNode()
         padded_text = padding_node.padding(text, 128, "PKCS7", True)
 
-        encrypted_text = enc_dec.encryptdecrypt(padded_text[0], key, iv, "", "AES", "CBC", True, 16, "")
+        encrypted_text, _ = enc_dec.encryptdecrypt(padded_text[0], key, iv, None, "AES", "CBC", True, 16, None)
 
-        decrypted_text_hex = enc_dec.encryptdecrypt(encrypted_text[0], key, iv, "", "AES", "CBC", False, 16, "")
-        print(f"Type: {type(decrypted_text_hex[0])}")
-        print(f"Value: {repr(decrypted_text_hex[0])}")
+        decrypted_text_bytes, _ = enc_dec.encryptdecrypt(encrypted_text, key, iv, None, "AES", "CBC", False, 16, None)
 
         # Unpad the decrypted text
-        unpadded_data = padding_node.padding(decrypted_text_hex[0], 128, "PKCS7", False)
+        unpadded_data = padding_node.padding(decrypted_text_bytes, 128, "PKCS7", False)
 
         assert unpadded_data[0] == text

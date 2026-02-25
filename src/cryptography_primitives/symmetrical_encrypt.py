@@ -11,25 +11,22 @@ class CipherNodes:
         return {
             "required": {
                 "text": (
-                    "STRING",
+                    "BYTESLIKE",
                     {
-                        "default": "Hello World!",
-                        "multiline": True,
-                        "placeholder": "Type your message here...",
+                        "forceInput": True,
+                        "tooltip": "The message to encrypt or decrypt. Must be bytes.",
                     },
                 ),
                 "key": (
-                    "STRING",
+                    "BYTESLIKE",
                     {
-                        "default": "",
-                        "multiline": False,
+                        "forceInput": True,
+                        "tooltip": "The encryption key. Must be bytes.",
                     },
                 ),
                 "iv": (
-                    "STRING",
+                    "BYTESLIKE",
                     {
-                        "default": "",
-                        "multiline": False,
                         "forceInput": True,
                         "tooltip": "A random string to initialize from for modes. Use SystemRandom (Random Nonce Generator) to generate this. Note that is also acts like `tweak` for XTS.",
                     },
@@ -83,10 +80,9 @@ class CipherNodes:
             },
             "optional": {
                 "tag": (
-                    "STRING",
+                    "BYTESLIKE",
                     {
-                        "default": "",
-                        "multiline": False,
+                        "forceInput": True,
                         "tooltip": "The tag bytes to verify during decryption. Exclusively for GCM mode. When encrypting this must be None. When decrypting, it may be None if the tag is supplied on finalization using finalize_with_tag(). Otherwise, the tag is mandatory.",
                     },
                 ),
@@ -98,10 +94,8 @@ class CipherNodes:
                     },
                 ),
                 "nonce": (
-                    "STRING",
+                    "BYTESLIKE",
                     {
-                        "default": "",
-                        "multiline": False,
                         "forceInput": True,
                         "tooltip": "A random nonce to instantiate from. Currently only for ChaCha20",
                     },
@@ -115,14 +109,18 @@ class CipherNodes:
         # Auto-set FUNCTION to lowercase class name
         cls.FUNCTION = cls.__name__.lower()
 
-    RETURN_TYPES = ("STRING",)
-    RETURN_NAMES = ("encrypted_txt",)
+    RETURN_TYPES = ("BYTESLIKE", "BYTESLIKE")
+    RETURN_NAMES = ("output", "tag")
 
 
 class EncryptDecrypt(CipherNodes):
-    def encryptdecrypt(self, text, key, iv, nonce, algorithm, modes, mode, min_tag_length, tag):
-        key = bytes.fromhex(key)
-        iv = bytes.fromhex(iv)
+    def encryptdecrypt(self, text, key, iv, nonce, algorithm, modes, mode, min_tag_length, tag=None):
+        if iv is None:
+            iv = b""
+        if nonce is None:
+            nonce = b""
+        if tag is None:
+            tag = b""
         if algorithm == "ChaCha20":
             algorithm = algorithms.ChaCha20(key, nonce)
         elif algorithm in ["ARC4", "Blowfish", "CAST5", "SEED", "IDEA"]:
@@ -130,10 +128,6 @@ class EncryptDecrypt(CipherNodes):
         else:
             algorithm = getattr(algorithms, algorithm)(key)
         if modes == "GCM":
-            if tag == "":
-                tag = None
-            else:
-                tag = tag.encode("utf-8")
             min_tag_length = int(min_tag_length)
             modes = ciphers.modes.GCM(iv, tag, min_tag_length)
         elif modes == "XTS":
@@ -147,39 +141,20 @@ class EncryptDecrypt(CipherNodes):
         cipher_engine = ciphers.Cipher(algorithm, modes)
         if mode:
             encryptor = cipher_engine.encryptor()
-            if isinstance(text, str):
-                # Check if it's hex string (pre-padded data)
-                try:
-                    # Try to decode as hex first
-                    data = bytes.fromhex(text)
-                    # If successful, use the binary data directly
-                    ct = encryptor.update(data) + encryptor.finalize()
-                except ValueError:
-                    # If not hex, treat as regular Unicode text
-                    data = text.encode("utf-8")
-                    ct = encryptor.update(data) + encryptor.finalize()
-            else:
-                # If text is already bytes, use directly
-                data = text
-                ct = encryptor.update(data) + encryptor.finalize()
+            data = text
+            ct = encryptor.update(data) + encryptor.finalize()
+            tag_out = b""
             if isinstance(modes, ciphers.modes.GCM):
-                tag = encryptor.tag
-                return (ct.hex(), tag.hex())
-            return (ct.hex(),)
+                tag_out = encryptor.tag
+            return (ct, tag_out)
         else:
             decryptor = cipher_engine.decryptor()
-            if isinstance(text, str):
-                text = bytes.fromhex(text)
-            else:
-                text = text
+            data = text
             if isinstance(modes, ciphers.modes.GCM):
-                pt = decryptor.update(text) + decryptor.finalize_with_tag(bytes.fromhex(tag))
+                pt = decryptor.update(data) + decryptor.finalize_with_tag(tag)
             else:
-                pt = decryptor.update(text) + decryptor.finalize()
-            try:
-                return (pt.decode("utf-8"),)
-            except UnicodeDecodeError:
-                return (pt.hex(),)
+                pt = decryptor.update(data) + decryptor.finalize()
+            return (pt, b"")
 
 
 NODE_CLASS_MAPPINGS = {

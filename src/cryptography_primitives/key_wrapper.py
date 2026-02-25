@@ -1,6 +1,6 @@
 from cryptography.hazmat.primitives import keywrap
 
-# To save my sanity (and because ComfyUI does not support it as a type), all byte array objects are converted to hexadecimal. Do not expect to directly manipulate byte arrays here. This comment will be on top of every Python file that directly interfaces with byte arrays.
+# As of 2.0.0, all byte-like objects now have their own types. To actually input new data, new Byte-to-Format and Format-to-Byte nodes have been created to deal with that demand.
 
 
 class WrapKeyNodes:
@@ -14,19 +14,17 @@ class WrapKeyNodes:
         return {
             "required": {
                 "wrapping_key": (
-                    "STRING",
+                    "BYTESLIKE",
                     {
-                        "default": "",
-                        "multiline": False,
-                        "tooltip": "The wrapping key, in hexadecimal.",
+                        "forceInput": True,
+                        "tooltip": "The wrapping key.",
                     },
                 ),
                 "secondary_key": (
-                    "STRING",
+                    "BYTESLIKE",
                     {
-                        "default": "",
-                        "multiline": False,
-                        "tooltip": "The secondary key, in hexadecimal. For wrapping, this is the key to wrap. For decoding, this is the wrapped key.",
+                        "forceInput": True,
+                        "tooltip": "For wrapping, this is the key to wrap. For unwrapping, this is the wrapped key.",
                     },
                 ),
                 "mode": (
@@ -40,7 +38,7 @@ class WrapKeyNodes:
             }
         }
 
-    RETURN_TYPES = ("STRING",)
+    RETURN_TYPES = ("BYTESLIKE",)
     RETURN_NAMES = ("wrapped_key",)
 
     def __init_subclass__(cls, **kwargs):
@@ -50,29 +48,23 @@ class WrapKeyNodes:
 
 
 class AESKeyWrap(WrapKeyNodes):
-    def aeskeywrap(self, wrapping_key, secondary_key, mode):
-        wrapping_key_bytes = bytes.fromhex(wrapping_key)
-        secondary_key_bytes = bytes.fromhex(secondary_key)
-
+    def aeskeywrap(self, wrapping_key: bytes, secondary_key: bytes, mode):
         if mode:  # Wrap
-            wrapped_key = keywrap.aes_key_wrap(wrapping_key_bytes, secondary_key_bytes)
-            return (wrapped_key.hex(),)
+            wrapped_key = keywrap.aes_key_wrap(wrapping_key, secondary_key)
+            return (wrapped_key,)
         else:  # Unwrap
-            unwrapped_key = keywrap.aes_key_unwrap(wrapping_key_bytes, secondary_key_bytes)
-            return (unwrapped_key.hex(),)
+            unwrapped_key = keywrap.aes_key_unwrap(wrapping_key, secondary_key)
+            return (unwrapped_key,)
 
 
 class AESKeyWrapWithPadding(WrapKeyNodes):
-    def aeskeywrapwithpadding(self, wrapping_key, secondary_key, mode):
-        wrapping_key_bytes = bytes.fromhex(wrapping_key)
-        secondary_key_bytes = bytes.fromhex(secondary_key)
-
+    def aeskeywrapwithpadding(self, wrapping_key: bytes, secondary_key: bytes, mode):
         if mode:  # Wrap
-            wrapped_key = keywrap.aes_key_wrap_with_padding(wrapping_key_bytes, secondary_key_bytes)
-            return (wrapped_key.hex(),)
+            wrapped_key = keywrap.aes_key_wrap_with_padding(wrapping_key, secondary_key)
+            return (wrapped_key,)
         else:  # Unwrap
-            unwrapped_key = keywrap.aes_key_unwrap_with_padding(wrapping_key_bytes, secondary_key_bytes)
-            return (unwrapped_key.hex(),)
+            unwrapped_key = keywrap.aes_key_unwrap_with_padding(wrapping_key, secondary_key)
+            return (unwrapped_key,)
 
 
 NODE_CLASS_MAPPINGS = {

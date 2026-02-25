@@ -6,7 +6,7 @@ class DynamicInputContainer(dict):
         return item.startswith("key") and item != "key1"
 
     def __getitem__(self, key):
-        return ("STRING", {})
+        return ("BYTESLIKE", {})
 
     def keys(self):
         return []
@@ -22,7 +22,7 @@ class Hash:
     def INPUT_TYPES(cls):
         mandatory_inputs = {
             "key1": (
-                "STRING",
+                "BYTESLIKE",
                 {"forceInput": True, "default": "", "tooltip": "First key (mandatory)"},
             )
         }
@@ -46,11 +46,11 @@ class Hash:
             if key.startswith("key") and value is not None:
                 if isinstance(value, (list, tuple)):
                     for v in value:
-                        digest.update(str(v).encode("utf-8"))
+                        digest.update(v)
                 else:
-                    digest.update(str(value).encode("utf-8"))
+                    digest.update(value)
 
-        return (digest.finalize().hex(),)
+        return (digest.finalize(),)
 
     @classmethod
     def __init_subclass__(cls, **kwargs):
@@ -58,8 +58,8 @@ class Hash:
         # Auto-set FUNCTION to lowercase class name
         cls.FUNCTION = cls.__name__.lower()
 
-    RETURN_TYPES = ("STRING",)
-    RETURN_NAMES = ("hash",)
+    RETURN_TYPES = ("BYTESLIKE",)
+    RETURN_NAMES = ("hash_bytes",)
 
 
 class SHA2(Hash):
@@ -173,9 +173,9 @@ class XOFHash(Hash):
             if key.startswith("key") and key != "key1" and value is not None:
                 if isinstance(value, (list, tuple)):
                     for v in value:
-                        digest.update(str(v).encode("utf-8"))
+                        digest.update(v)
                 else:
-                    digest.update(str(value).encode("utf-8"))
+                    digest.update(value)
 
         # Squeeze loop to define how many keys to output
         while x != squeeze_times:
@@ -184,7 +184,7 @@ class XOFHash(Hash):
 
         # Finalize
         outputs = hashes.Hash(getattr(hashes, algorithm)(digest_size)).finalize()
-        return (outputs.hex(),)
+        return (outputs,)
 
 
 class SHAKE(XOFHash):

@@ -8,7 +8,7 @@ class PaddingNode:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "padding_data": ("STRING", {"default": "Hello World", "multiline": False, "tooltip": "The data to pad."}),
+                "padding_data": ("BYTESLIKE", {"forceInput": True, "tooltip": "The data to pad or unpad."}),
                 "block_size": (
                     "INT",
                     {
@@ -30,61 +30,25 @@ class PaddingNode:
                     },
                 ),
             },
-            "optional": {},
         }
 
-    RETURN_TYPES = ("STRING",)
+    RETURN_TYPES = ("BYTESLIKE",)
     RETURN_NAMES = ("padded_data",)
     FUNCTION = "padding"
 
-    def padding(self, padding_data, block_size, algorithm, mode):
-        padder = getattr(padding, algorithm)(block_size)
-
-        def to_bytes(data):
-            if isinstance(data, bytes):
-                return data
-            elif isinstance(data, str):
-                # Try hex first
-                try:
-                    if all(c in "0123456789abcdefABCDEF" for c in data) and len(data) % 2 == 0:
-                        return bytes.fromhex(data)
-                except:
-                    pass
-                # Try base64
-                try:
-                    import base64
-
-                    if all(c in "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=" for c in data):
-                        return base64.b64decode(data)
-                except:
-                    pass
-                # Otherwise treat as string
-                return data.encode("utf-8")
-            else:
-                raise ValueError(f"Unsupported data type: {type(data)}")
-
-        # Always return hex for crypto operations
-        def to_hex(data_bytes):
-            return (data_bytes.hex(),)
+    def padding(self, padding_data: bytes, block_size, algorithm, mode):
+        padding_algorithm = getattr(padding, algorithm)(block_size)
 
         if mode:
-            data_bytes = to_bytes(padding_data)
-            padder = padder.padder()
-            padded_data = padder.update(data_bytes)
+            padder = padding_algorithm.padder()
+            padded_data = padder.update(padding_data)
             padded_data += padder.finalize()
-            return to_hex(padded_data)
+            return (padded_data,)
         else:
-            data_bytes = to_bytes(padding_data)
-            padder = padder.unpadder()
-            unpadded_data = padder.update(data_bytes)
+            unpadder = padding_algorithm.unpadder()
+            unpadded_data = unpadder.update(padding_data)
             unpadded_data += padder.finalize()
-
-            # For unpadding, try to return string if it's valid text, otherwise hex
-            try:
-                decoded = unpadded_data.decode("utf-8")
-                return (decoded,)
-            except UnicodeDecodeError:
-                return to_hex(unpadded_data)
+            return (unpadded_data,)
 
 
 NODE_CLASS_MAPPINGS = {
