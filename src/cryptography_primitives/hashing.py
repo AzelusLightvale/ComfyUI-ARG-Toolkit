@@ -94,15 +94,13 @@ class BLAKE2(Hash):
             ],
             {},
         )
-        class_input["required"]["digest_size"] = (
-            ["32", "64"],
-            {
-                "tooltip": "Due to `cryptography`'s implementation, BLAKE2b can only accept a digest size of 32 and BLAKE2s can only accept a digest size of 64. If the input is wrong, an error will occur."
-            },
-        )
         return class_input
 
-    def blake2(self, algorithm, digest_size, **kwargs):
+    def blake2(self, algorithm, **kwargs):
+        if algorithm == "BLAKE2b":
+            digest_size = 32
+        elif algorithm == "BLAKE2s":
+            digest_size = 64
         return self.main_method(algorithm, digest_size, **kwargs)
 
 
@@ -165,9 +163,7 @@ class XOFHash(Hash):
         )
         return class_input
 
-    def main_method_xof(
-        self, algorithm, squeeze_bytes, squeeze_times, digest_size, **kwargs
-    ):
+    def main_method_xof(self, algorithm, squeeze_bytes, squeeze_times, digest_size, **kwargs):
         # Initialize hash object
         digest = hashes.XOFHash(getattr(hashes, algorithm)(digest_size))
         x = 0
@@ -205,11 +201,7 @@ class SHAKE(XOFHash):
         return class_input
 
     def shake(self, algorithm, squeeze_bytes, squeeze_times, digest_size, **kwargs):
-        return (
-            self.main_method_xof(
-                algorithm, squeeze_bytes, squeeze_times, digest_size, **kwargs
-            ),
-        )
+        return (self.main_method_xof(algorithm, squeeze_bytes, squeeze_times, digest_size, **kwargs),)
 
 
 NODE_CLASS_MAPPINGS = {

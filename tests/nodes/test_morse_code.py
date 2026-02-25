@@ -1,5 +1,5 @@
 import unicodedata
-from src.comfyui_arg_toolkit import morse_code
+from src import morse_code
 
 # Test suite for morse_code.py
 class TestMorseCode:

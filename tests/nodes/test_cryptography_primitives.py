@@ -1,8 +1,8 @@
-from src.comfyui_arg_toolkit.cryptography_primitives import const_time
-from src.comfyui_arg_toolkit.cryptography_primitives import kdf
-from src.comfyui_arg_toolkit.cryptography_primitives import key_wrapper
-from src.comfyui_arg_toolkit.cryptography_primitives import symm_padding
-from src.comfyui_arg_toolkit.cryptography_primitives import symmetrical_encrypt
+from src.cryptography_primitives import const_time
+from src.cryptography_primitives import kdf
+from src.cryptography_primitives import key_wrapper
+from src.cryptography_primitives import symm_padding
+from src.cryptography_primitives import symmetrical_encrypt
 
 
 class TestConstantTimeCompare:

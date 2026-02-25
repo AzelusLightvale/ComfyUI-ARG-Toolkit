@@ -476,7 +476,6 @@ class SteganoAnalysis:
             else:
                 img_np = img_tensor.numpy()
             img_pil = Image.fromarray(img_np)
-            # This part is a stub. Insert actual analysis function here
             if mode == "Parity":
                 img_pil = stegano.steganalysis.parity(img_pil)
             elif mode == "Statistics":

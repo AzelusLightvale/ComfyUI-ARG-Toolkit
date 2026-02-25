@@ -1,6 +1,7 @@
 from cryptography.hazmat.primitives.ciphers import aead
+import base64
 
-# To save my sanity, all byte array objects are converted to hexadecimal. Do not expect to directly manipulate byte arrays here. This comment will be on top of every Python file that directly interfaces with byte arrays.
+# As of 2.0.0, all byte-like objects now have their own types. To actually input new data, new Byte-to-Format and Format-to-Byte nodes have been created to deal with that demand.
 
 
 class ChaCha20Poly1305:
@@ -18,30 +19,27 @@ class ChaCha20Poly1305:
                     {
                         "default": "Hello World!",
                         "multiline": True,
-                        "placeholder": "Type your message here...",
+                        "placeholder": "Type your message here... (if message is a bytes-like object, convert to base64 first)",
                     },
                 ),
                 "key": (
-                    "STRING",
+                    "BYTESLIKE",
                     {
-                        "default": "",
-                        "multiline": False,
-                        "tooltip": "Input encryption key here. Has to be 32 bytes in size (and in hexadecimal format for this node).",
+                        "forceInput": True,
+                        "tooltip": "Input encryption key here. Has to be in bytes format for this node.",
                     },
                 ),
                 "nonce": (
-                    "STRING",
+                    "BYTESLIKE",
                     {
-                        "default": "",
-                        "multiline": False,
+                        "forceInput": True,
                         "tooltip": "A random value to use. Should be 12 bytes in size.",
                     },
                 ),
                 "associated_data": (
-                    "STRING",
+                    "BYTESLIKE",
                     {
-                        "default": "",
-                        "multiline": False,
+                        "forceInput": True,
                         "tooltip": "Additional data that should be authenticated with the key, but does not need to be encrypted. Can be None",
                     },
                 ),
@@ -61,16 +59,14 @@ class ChaCha20Poly1305:
     RETURN_NAMES = ("encrypted_txt",)
     FUNCTION = "cc20"
 
-    def cc20(self, text, key, nonce, associated_data, mode):
-        cipher = aead.ChaCha20Poly1305(bytes.fromhex(key))
-        nonce = bytes.fromhex(nonce)
-        associated_data = associated_data.encode("utf-8")
+    def cc20(self, text, key: bytes, nonce: bytes, associated_data: bytes, mode):
+        cipher = aead.ChaCha20Poly1305(key)
         if mode:
             bytetext = text.encode("utf-8")
             token = cipher.encrypt(nonce, bytetext, associated_data)
             encrypted_message = token.hex()
         else:
-            bytetext = bytes.fromhex(text)
+            bytetext = base64.b64decode(text, "utf-8")
             token = cipher.decrypt(nonce, bytetext, associated_data)
             encrypted_message = token.decode("utf-8")
         return (encrypted_message,)
@@ -86,13 +82,13 @@ class ChaCha20Poly1305Keygen:
     def INPUT_TYPES(cls):
         return {"required": {}}
 
-    RETURN_TYPES = ("STRING",)
+    RETURN_TYPES = ("BYTESLIKE",)
     RETURN_NAMES = ("key",)
     FUNCTION = "cc20_key"
 
     def cc20_key(self):
         key = aead.ChaCha20Poly1305.generate_key()
-        return (key.hex(),)
+        return (key.base64.b64encode(),)
 
 
 class AESAuth:  # Since all AES-based authenticated encryption techniques are the same, this one node concatenates all of them together into the same node to save on processing.
@@ -114,26 +110,23 @@ class AESAuth:  # Since all AES-based authenticated encryption techniques are th
                     },
                 ),
                 "key": (
-                    "STRING",
+                    "BYTESLIKE",
                     {
-                        "default": "",
-                        "multiline": False,
-                        "tooltip": "Input encryption key here. Has to be 32 bytes in size (and in hexadecimal format for this node)",
+                        "forceInput": True,
+                        "tooltip": "Input encryption key here. Has to be in a bytes-like format.",
                     },
                 ),
                 "nonce": (
-                    "STRING",
+                    "BYTESLIKE",
                     {
-                        "default": "",
-                        "multiline": False,
+                        "forceInput": True,
                         "tooltip": "A random value to use. Should be 12 bytes in size.",
                     },
                 ),
                 "associated_data": (
-                    "STRING",
+                    "BYTESLIKE",
                     {
-                        "default": "",
-                        "multiline": False,
+                        "forceInput": True,
                         "tooltip": "Additional data that should be authenticated with the key, but does not need to be encrypted. Can be None",
                     },
                 ),
@@ -171,37 +164,30 @@ class AESAuth:  # Since all AES-based authenticated encryption techniques are th
     RETURN_NAMES = ("encrypted_txt",)
     FUNCTION = "aesauth"
 
-    def aesauth(
-        self, text, key, nonce, associated_data, mode, aes_type, ccm_tag_length
-    ):
-        bytekey = bytes.fromhex(key)
-        nonce = bytes.fromhex(nonce)
-        associated_data = associated_data.encode("utf-8")
+    def aesauth(self, text, key: bytes, nonce, associated_data, mode, aes_type, ccm_tag_length):
         cipher_engines = {
             "AES-GCM": aead.AESGCM,
             "AES-GCM-SIV": aead.AESGCMSIV,
             "AES-OCB3": aead.AESOCB3,
         }
         if aes_type == "AES-SIV":
-            cipher = aead.AESSIV(bytekey)
+            cipher = aead.AESSIV(key)
             associated_data = [associated_data, nonce]
         elif aes_type == "AES-CCM":
-            cipher = aead.AESCCM(bytekey, ccm_tag_length)
+            cipher = aead.AESCCM(key, ccm_tag_length)
         elif aes_type in cipher_engines:
-            cipher = cipher_engines[aes_type](bytekey)
+            cipher = cipher_engines[aes_type](key)
         else:
-            raise ValueError(
-                "Invalid AES type chosen. Perhaps the node is broken? Try making a new one, as this is normally impossible."
-            )
+            raise ValueError("Invalid AES type chosen. Perhaps the node is broken? Try making a new one, as this is normally impossible.")
         if mode:
             bytetext = text.encode("utf-8")
             if aes_type == "AES-SIV":
                 token = cipher.encrypt(bytetext, associated_data)
             else:
                 token = cipher.encrypt(nonce, bytetext, associated_data)
-            encrypted_message = token.hex()
+            encrypted_message = base64.b64encode(token).decode("utf-8")
         else:
-            bytetext = bytes.fromhex(text)
+            bytetext = base64.b64decode(text, "utf-8")
             if aes_type == "AES-SIV":
                 token = cipher.decrypt(bytetext, associated_data)
             else:
@@ -235,7 +221,7 @@ class AESAuthKeygen:
             }
         }
 
-    RETURN_TYPES = ("STRING",)
+    RETURN_TYPES = ("BYTESLIKE",)
     RETURN_NAMES = ("key",)
     FUNCTION = "aes_keygen"
 
@@ -255,7 +241,7 @@ class AESAuthKeygen:
             raise ValueError(
                 f"Invalid AES type chosen. Perhaps the node is broken? Try making a new one, as this is normally impossible. Currently, it's {aes_type}, which is wrong."
             )
-        return (key.hex(),)  # For string output purposes
+        return (base64.b64encode(key),)
 
 
 NODE_CLASS_MAPPINGS = {

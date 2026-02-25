@@ -1,4 +1,4 @@
-from src.comfyui_arg_toolkit import utils
+from src import utils
 
 # Test suite for utils.py
 class TestUtils:

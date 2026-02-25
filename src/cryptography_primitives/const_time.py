@@ -9,18 +9,16 @@ class ConstantTimeCompare:
         return {
             "required": {
                 "a": (
-                    "STRING",
+                    "BYTESLIKE",
                     {
-                        "default": "",
-                        "multiline": False,
+                        "forceInput": True,
                         "tooltip": "The first string to compare (in hexadecimal).",
                     },
                 ),
                 "b": (
-                    "STRING",
+                    "BYTESLIKE",
                     {
-                        "default": "",
-                        "multiline": False,
+                        "forceInput": True,
                         "tooltip": "The second string to compare (in hexadecimal).",
                     },
                 ),
@@ -32,9 +30,7 @@ class ConstantTimeCompare:
     FUNCTION = "compare"
 
     def compare(self, a, b):
-        a_bytes = bytes.fromhex(a)
-        b_bytes = bytes.fromhex(b)
-        result = constant_time.bytes_eq(a_bytes, b_bytes)
+        result = constant_time.bytes_eq(a, b)
         return (result,)
 
 
