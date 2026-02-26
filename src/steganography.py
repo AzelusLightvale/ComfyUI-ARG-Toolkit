@@ -37,7 +37,7 @@ class Stegano_LSB_Encode:
     CATEGORY = "Steganography"
     DESCRIPTION = textwrap.dedent("""Encodes a message in the least significant bit (LSB) of the image. Includes some generators for different steganography methods for harder detection.
     - Library used: [Stegano](https://github.com/cedricbonhomme/Stegano)
-    Note that currently, some of the generators (specifically: carmichael, fermat, fibonacci, log_gen, and mersenne) are currently broken and are excluded.
+    Note that some of the generators (specifically: carmichael, fermat, fibonacci, log_gen, and mersenne) are excluded.
     """)
 
     @classmethod
@@ -461,7 +461,7 @@ class IMWatermarkDecode:
 class SteganoAnalysis:
     @classmethod
     def INPUT_TYPES(cls):
-        return {"required": {"image": ("IMAGE", {}), "mode": (["Parity", "Statistics"])}}
+        return {"required": {"image": ("IMAGE", {}), "mode": (["Parity", "Statistics"], {})}}
 
     RETURN_TYPES = ("IMAGE",)
     FUNCTION = "analyze"

@@ -13,11 +13,13 @@ Might also double as a poor-man's cryptanalysis and steganography lab
 
 # Features
 
-- Classic ciphers and cryptography techniques (Caesar, Playfair, Vigénere, Foursquare,...) - powered by [`secretpy`](https://github.com/tigertv/secretpy).
-- Image steganography and invisible watermarking tools - powered by [`stegano`](https://github.com/cedricbonhomme/Stegano) and [`invisible-watermark`](https://github.com/ShieldMnt/invisible-watermark/).
+- Classic ciphers and cryptography techniques (Caesar, Playfair, Vigénere, Foursquare,...) - currently powered by [`secretpy`](https://github.com/tigertv/secretpy).
+- Image steganography and invisible watermarking tools - currently powered by [`stegano`](https://github.com/cedricbonhomme/Stegano) and [`invisible-watermark`](https://github.com/ShieldMnt/invisible-watermark/).
 - Bitwise operators and string converters for use with other ciphers.
+- Bytes-like datatype and encoders/decoders for many nodes in the node pack.
+- Error correction codes for more robust operations - currently powered by [`reedsolo`](https://github.com/tomerfiliba-org/reedsolomon)
 - Multi-language Morse code encoder and decoder.
-- (WIP) Modern cryptographic encryption tools and functions - powered by [`cryptography`](https://github.com/pyca/cryptography).
+- (WIP) Modern cryptographic encryption tools and functions - currently powered by [`cryptography`](https://github.com/pyca/cryptography).
 - (Planned) Historical encoding and encrypting formats (Kansas City System, SNOW, SSTV,...) made user-friendly and available through a node interface.
 - (Planned) Recreations of historical cipher machines (Enigma, Lorenz, M-209,...) within ComfyUI.
 - (Planned) Audio spectrogram analysis tools.
@@ -50,8 +52,5 @@ If you like the idea behind this node pack, want to explore cryptography, stegan
 
 # License
 
-    This project is licensed under the GNU General Public License 3.0 (GPLv3)
-    See the LICENSE file for full license details.
-    See the ATTRIBUTIONS file for notices regarding third-party software used.
-    
-Moreover, this project uses additional libraries and projects as both reference and implementations. Additional attributions and citations are listed in the ATTRIBUTIONS file.
+This project is licensed under the GNU General Public License 3.0 (GPLv3)
+See the LICENSE file for full license details.

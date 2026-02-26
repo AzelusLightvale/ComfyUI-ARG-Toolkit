@@ -1,5 +1,4 @@
 from cryptography.hazmat.primitives import hashes  # For the algorithm functions
-import base64
 
 # Import hell
 import cryptography

@@ -1,6 +1,7 @@
 import os
 import base64
 import binascii
+import ast
 
 # To save my sanity, all byte array objects are converted to hexadecimal. Do not expect to directly manipulate byte arrays here. This comment will be on top of every Python file that directly interfaces with byte arrays.
 
@@ -100,12 +101,18 @@ class ConverterNodes:
 
 class String2Binary(ConverterNodes):
     def string2binary(self, text, encoding_format, other_encoding_format):
-        return (" ".join(format(c, "b") for c in bytearray(text, self.encoding_selector(encoding_format, other_encoding_format))),)
+        return (" ".join(format(c, "08b") for c in bytearray(text, self.encoding_selector(encoding_format, other_encoding_format))),)
 
 
 class Binary2String(ConverterNodes):
     def binary2string(self, text, encoding_format, other_encoding_format):
-        return (bytes(int(b, 2) for b in text.split(" ")).decode(self.encoding_selector(encoding_format, other_encoding_format)),)
+        cleaned = text.replace(" ", "").replace("\n", "")
+        if len(cleaned) % 8 != 0:
+            raise ValueError("Binary string length must be a multiple of 8")
+        if any(c not in "01" for c in cleaned):
+            raise ValueError("Binary input must contain only 0 and 1")
+        byte_data = bytes(int(cleaned[i : i + 8], 2) for i in range(0, len(cleaned), 8))
+        return (byte_data.decode(self.encoding_selector(encoding_format, other_encoding_format)),)
 
 
 class String2Hex(ConverterNodes):
@@ -161,7 +168,7 @@ class BitwiseNodes:
                         "tooltip": "The secondary string to compare against. Accepts format defined in `datatype`",
                     },
                 ),
-                "datatype": (["String", "Hexadecimal", "Base64", "Integer", "Binary"]),
+                "datatype": (["String", "Hexadecimal", "Base64", "Integer", "Binary"], {}),
                 "encoding_format": (
                     [
                         "utf-8",
@@ -380,13 +387,13 @@ class StringLooper:
         return (text * (loops + 1),)
 
 
-class ByteslikeEncoder:
+class ByteslikeEncode:
     @classmethod
     def INPUT_TYPES(cls):
         return {
             "required": {
                 "text": ("STRING", {"multiline": True, "default": "Hello World!", "placeholder": "Type your message here..."}),
-                "encoding": (["Hexadecimal", "Base64", "UTF-8", "Binary"],),
+                "encoding": (["Hexadecimal", "Base64", "UTF-8", "Binary", "Raw Bytes"],),
             }
         }
 
@@ -401,62 +408,60 @@ class ByteslikeEncoder:
         if encoding == "Hexadecimal":
             cleaned = text.strip().replace(" ", "").replace("\n", "")
             if len(cleaned) % 2 != 0:
-                raise ValueError("Hex input must have even length")
+                raise ValueError("Hex input must have even length.")
             try:
                 data = bytes.fromhex(cleaned)
             except ValueError:
-                raise ValueError("Invalid hex input")
-            return (data,)
-
-        if encoding == "Base64":
+                raise ValueError("Invalid hex input.")
+        elif encoding == "Base64":
             cleaned = text.strip()
             try:
                 data = base64.b64decode(cleaned, validate=True)
             except binascii.Error:
-                raise ValueError("Invalid base64 input")
-            return (data,)
-
-        if encoding == "Binary":
+                raise ValueError("Invalid base64 input.")
+        elif encoding == "Binary":
             cleaned = text.replace(" ", "").replace("\n", "")
             if len(cleaned) % 8 != 0:
-                raise ValueError("Binary length must be multiple of 8")
+                raise ValueError("Binary length must be multiple of 8.")
             if any(c not in "01" for c in cleaned):
-                raise ValueError("Binary input must contain only 0 and 1")
+                raise ValueError("Binary input must contain only 0 and 1.")
             data = bytes(int(cleaned[i : i + 8], 2) for i in range(0, len(cleaned), 8))
-            return (data,)
-
-        if encoding == "UTF-8":
+        elif encoding == "UTF-8":
             try:
                 data = text.encode("utf-8")
             except UnicodeEncodeError:
-                raise ValueError("UTF-8 encoding failed")
-            return (data,)
+                raise ValueError("UTF-8 encoding failed.")
+        elif encoding == "Raw Bytes":
+            data = ast.literal_eval(f"b{data!r}" if not data.startswith(("'", '"')) else f"b{data}")
+        else:
+            raise ValueError("Unsupported mode")
+        return (data,)
 
-        raise ValueError("Unsupported mode")
 
-
-class ByteslikeDecoder:
+class ByteslikeDecode:
     @classmethod
     def INPUT_TYPES(cls):
-        return {"required": {"blob": ("BYTESLIKE",), "encoding": (["Hexadecimal", "Base64", "UTF-8", "Binary"],)}}
+        return {"required": {"data": ("BYTESLIKE",), "encoding": (["Hexadecimal", "Base64", "UTF-8", "Binary", "Raw Bytes"],)}}
 
     RETURN_TYPES = ("STRING",)
     FUNCTION = "execute"
     CATEGORY = "Utilities/Converters"
 
-    def execute(self, blob, encoding):
-        data = blob.data  # must be bytes
-
-        if encoding == "hex":
+    def execute(self, data, encoding):
+        if not isinstance(data, (bytes, bytearray)):
+            raise TypeError("Expected bytes-like objects. Got a different datatype from `BYTESLIKE`")
+        if encoding == "Hexadecimal":
             return (data.hex(),)
-
-        if encoding == "base64":
+        elif encoding == "Base64":
             return (base64.b64encode(data).decode("utf-8"),)
-
-        if encoding == "utf8":
+        elif encoding == "UTF-8":
             return (data.decode("utf-8"),)
-
-        raise ValueError("Unsupported encoding")
+        elif encoding == "Binary":
+            return ("".join(f"{byte:08b}" for byte in data),)
+        elif encoding == "Raw Bytes":
+            return (repr(data),)
+        else:
+            raise ValueError("Unsupported encoding")
 
 
 # A dictionary that contains all nodes you want to export with their names
@@ -476,8 +481,8 @@ NODE_CLASS_MAPPINGS = {
     "BitwiseLS": BitwiseLS,
     "BitwiseRS": BitwiseRS,
     "StringLooper": StringLooper,
-    "ByteslikeEncoder": ByteslikeEncoder,
-    "ByteslikeDecoder": ByteslikeDecoder,
+    "ByteslikeEncode": ByteslikeEncode,
+    "ByteslikeDecode": ByteslikeDecode,
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
@@ -495,6 +500,6 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "BitwiseLS": "Bitwise Left Shift Operator",
     "BitwiseRS": "Bitwise Right Shift Operator",
     "StringLooper": "String Append Looper",
-    "ByteslikeEncoder": "Bytes-like Object Encoder",
-    "ByteslikeDecoder": "Bytes-like Object Decoder",
+    "ByteslikeEncode": "Bytes-like Object Encode",
+    "ByteslikeDecode": "Bytes-like Object Decode",
 }

@@ -1,8 +1,11 @@
+## Cryptography requirements
 secretpy
 cryptography==46.0.*
+
+## Steganography requirements
 stegano
 invisible-watermark
-
-## hstego requirements
+reedsolo
+### hstego requirements
 pycryptodome
 git+https://github.com/daniellerch/hstego.git@master
