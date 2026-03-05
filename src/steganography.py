@@ -114,10 +114,11 @@ class Stegano_LSB_Encode:
             else:
                 img_np = img_tensor.numpy()
             img_pil = Image.fromarray(img_np)
-            generator_func = getattr(stegano.lsb.generators, generator_type)
             if generator_type == "None":
                 generator_type = None
-            elif generator_type in ["LFSR", "ackermann", "ackermann_naive"]:
+            else:
+                generator_func = getattr(stegano.lsb.generators, generator_type)
+            if generator_type in ["LFSR", "ackermann", "ackermann_naive"]:
                 generator_type = generator_func(m=m)
             elif generator_type in ["ackermann_fast", "ackermann_slow"]:
                 generator_type = generator_func(m=m, n=n)
@@ -126,8 +127,6 @@ class Stegano_LSB_Encode:
                 temp_path = os.path.join(temp_dir, f"image_{i}.png")
                 img_pil.save(temp_path)
                 generator_type = generator_func(temp_path)
-            else:
-                generator_type = generator_func()
             img_pil = stegano.lsb.hide(img_pil, message, generator_type, encoding=encoding)
             img_np_out = np.array(img_pil)
             img_tensor_out = torch.from_numpy(img_np_out).float() / 255.0
@@ -211,10 +210,11 @@ class Stegano_LSB_Decode:
             else:
                 img_np = img_tensor.numpy()
             img_pil = Image.fromarray(img_np)
-            generator_func = getattr(stegano.lsb.generators, generator_type)
             if generator_type == "None":
                 generator_type = None
-            elif generator_type in ["LFSR", "ackermann", "ackermann_naive"]:
+            else:
+                generator_func = getattr(stegano.lsb.generators, generator_type)
+            if generator_type in ["LFSR", "ackermann", "ackermann_naive"]:
                 generator_type = generator_func(m=m)
             elif generator_type in ["ackermann_fast", "ackermann_slow"]:
                 generator_type = generator_func(m=m, n=n)
@@ -223,8 +223,6 @@ class Stegano_LSB_Decode:
                 temp_path = os.path.join(temp_dir, f"image_{i}.png")
                 img_pil.save(temp_path)
                 generator_type = generator_func(temp_path)
-            else:
-                generator_type = generator_func()
             final_output.append(stegano.lsb.reveal(img_pil, generator_type, encoding=encoding))
         return ("".join(final_output),)
 
@@ -347,6 +345,7 @@ class IMWatermarkDecode:
     DESCRIPTION = textwrap.dedent("""Hides a message of choice into the image. Utilizes discrete wavelet transform (DWT) and discrete cosine transform (DCT) by default, but also includes options for RivaGAN.
     - Library used: [invisible-watermark](https://github.com/ShieldMnt/invisible-watermark/)
     From my own testing, recommended algorithm choice is dwtDctSvd, which includes singular value decomposition to fortify it better at a slight cost of time.
+    When converting to string, if the conversion fails, it will output the raw bytes representation instead.
     """)
 
     @classmethod
@@ -363,8 +362,9 @@ class IMWatermarkDecode:
                         "default": 96,
                         "min": 1,
                         "step": 1,
+                        "max": 2147483647,
                         "display": "number",
-                        "toolip": "Length of the message to decode. Check the tooltip in Types for more information.",
+                        "toolip": "Length of the message to decode. Check the tooltip in Types for more information.. Length requirement changes based on chosen type. Bytes assume 1 = 1 byte, b16 assumes 1 = 1 hex character (ex: a2)",
                     },
                 ),
                 "algorithm": (
@@ -381,7 +381,7 @@ class IMWatermarkDecode:
                     ["bytes", "b16", "bits", "uuid", "ipv4"],
                     {
                         "tooltip": textwrap.dedent("""In order of appearance (and encoding length needed):
-                    - bytes (8 * total byte length): Transforms message to bytes.
+                    - bytes (8 * total byte length): Transforms message from string to bytes.
                     - b16 (4 * total b16 length): Text -> Byte representation -> Hexadecimal -> Byte representation.
                     - bits (equivalent to array length): 8 bits = 1 byte. Good for transmitting small binary messages.
                     - UUID (128 bits, fixed): Takes a UUID string and embeds that. Do not use to send messages.
@@ -431,8 +431,14 @@ class IMWatermarkDecode:
         if types in ["bytes", "bits", "b16"]:  # Bit-related types
             if length <= 0:
                 raise ValueError(
-                    "Length is required for bytes-based watermark decoding. Please put in a non-zero length, preferably in a multiplication of 8."
+                    "Length is required for bytes-based watermark decoding. Please put in a non-zero length fitting to the format chosen."
                 )
+            if types == "bytes":
+                length = int(length * 8)
+            elif types == "b16":
+                length = int(length * 4)
+            else:
+                length = length
             decoder = imwatermark.WatermarkDecoder(types, length)
         else:
             decoder = imwatermark.WatermarkDecoder(types)
@@ -444,48 +450,27 @@ class IMWatermarkDecode:
             img_pil = np.array(Image.fromarray(img_np))[:, :, ::-1]
             decoded_bit = decoder.decode(img_pil, algorithm)
             if types == "bytes":  # Returns watermark bytes
-                decoded_str = decoded_bit.decode(encoding_format)
+                try:
+                    decoded_str = decoded_bit.decode(encoding_format)
+                except UnicodeDecodeError:
+                    decoded_str = str(decoded_bit)
             elif types == "b16":
-                decoded_str = bytes.fromhex(decoded_bit.decode(encoding_format)).decode(encoding_format)
+                try:
+                    decoded_str = bytes.fromhex(decoded_bit.decode(encoding_format)).decode(encoding_format)
+                except (UnicodeDecodeError, ValueError):
+                    decoded_str = str(decoded_bit)
             elif types == "bits":  # Returns bits in a list of 0/1 (i.e: [0, 1, 1, 0, 1,...])
                 bits_int = [int(bit) for bit in decoded_bit]
                 byte_chunks = [bits_int[i : i + 8] for i in range(0, len(bits_int), 8)]
                 decoded_bytes = bytes(int("".join(str(b) for b in chunk), 2) for chunk in byte_chunks)
-                decoded_str = decoded_bytes.decode(encoding_format)
+                try:
+                    decoded_str = decoded_bytes.decode(encoding_format)
+                except UnicodeDecodeError:
+                    decoded_str = str(decoded_bytes)
             else:  # Returns string
                 decoded_str = decoded_bit
             final_output.append(decoded_str)
         return ("".join(final_output),)
-
-
-class SteganoAnalysis:
-    @classmethod
-    def INPUT_TYPES(cls):
-        return {"required": {"image": ("IMAGE", {}), "mode": (["Parity", "Statistics"], {})}}
-
-    RETURN_TYPES = ("IMAGE",)
-    FUNCTION = "analyze"
-
-    def analyze(self, image, mode):
-        B, H, W, C = image.shape
-        output_images = []
-        for i in range(B):
-            img_tensor = image[i]  # [H,W,C]
-            if img_tensor.dtype == torch.float32:
-                img_np = (img_tensor.numpy() * 255).astype(np.uint8)
-            else:
-                img_np = img_tensor.numpy()
-            img_pil = Image.fromarray(img_np)
-            if mode == "Parity":
-                img_pil = stegano.steganalysis.parity(img_pil)
-            elif mode == "Statistics":
-                img_pil = stegano.steganalysis.statistics(img_pil)
-            else:
-                raise ValueError(f"Your chosen mode ({mode}) is invalid.")
-            img_np_out = np.array(img_pil)
-            img_tensor_out = torch.from_numpy(img_np_out).float() / 255.0
-            output_images.append(img_tensor_out)
-        return (torch.stack(output_images, dim=0),)
 
 
 # A dictionary that contains all nodes you want to export with their names
@@ -493,7 +478,6 @@ class SteganoAnalysis:
 NODE_CLASS_MAPPINGS = {
     "SteganoLSBEncode": Stegano_LSB_Encode,
     "SteganoLSBDecode": Stegano_LSB_Decode,
-    "SteganoAnalysis": SteganoAnalysis,
     "IMWatermarkEncode": IMWatermarkEncode,
     "IMWatermarkDecode": IMWatermarkDecode,
 }
@@ -501,7 +485,6 @@ NODE_CLASS_MAPPINGS = {
 NODE_DISPLAY_NAME_MAPPINGS = {
     "SteganoLSBEncode": "Stegano LSB Encode",
     "SteganoLSBDecode": "Stegano LSB Decode",
-    "SteganoAnalysis": "Stegano Analysis",
     "IMWatermarkEncode": "Invisible Watermark Encode",
     "IMWatermarkDecode": "Invisible Watermark Decode",
 }

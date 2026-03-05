@@ -11,6 +11,7 @@ class SystemRandom:
         pass
 
     CATEGORY = "Utilities/Random"
+    DESCRIPTION = "Generates a random number of bytes using"
 
     @classmethod
     def INPUT_TYPES(cls):
@@ -432,7 +433,14 @@ class ByteslikeEncode:
             except UnicodeEncodeError:
                 raise ValueError("UTF-8 encoding failed.")
         elif encoding == "Raw Bytes":
-            data = ast.literal_eval(f"b{data!r}" if not data.startswith(("'", '"')) else f"b{data}")
+            try:
+                data = ast.literal_eval(text)
+                if not isinstance(data, bytes):
+                    raise ValueError("Input for 'Raw Bytes' must evaluate to a bytes object (e.g., b'text').")
+            except (ValueError, SyntaxError, TypeError) as e:
+                raise ValueError(
+                    f"Invalid 'Raw Bytes' input. It must be a valid Python bytes literal string (e.g., b'hello' or b'\\xde\\xad'). Original error: {e}"
+                )
         else:
             raise ValueError("Unsupported mode")
         return (data,)

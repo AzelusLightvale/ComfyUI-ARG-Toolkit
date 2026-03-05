@@ -6,6 +6,6 @@ cryptography==46.0.*
 stegano
 invisible-watermark
 reedsolo
-### hstego requirements
-pycryptodome
-git+https://github.com/daniellerch/hstego.git@master
+### hstego requirements (part of future plans)
+#pycryptodome
+#git+https://github.com/daniellerch/hstego.git@master

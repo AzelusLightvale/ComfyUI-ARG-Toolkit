@@ -5,6 +5,9 @@ from cryptography.exceptions import InvalidSignature
 
 
 class InitNode:
+    def __init__(self):
+        pass
+
     CATEGORY = "Cryptography/Modern/Asymmetric"
 
     def __init_subclass__(cls, **kwargs):

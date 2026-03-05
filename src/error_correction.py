@@ -34,14 +34,14 @@ class ReedSolomonEncode(InitNode):
     def reedsolomonencode(self, data, ecc_symbols):
         rsc = RSCodec(ecc_symbols)
         output = rsc.encode(data)
-        return (output,)
+        return (bytes(output),)
 
 
 class ReedSolomonDecode(InitNode):
     RETURN_TYPES = (
-        "STRING",
-        "STRING",
-        "STRING",
+        "BYTESLIKE",
+        "BYTESLIKE",
+        "BYTESLIKE",
     )
     RETURN_NAMES = (
         "decoded_msg",
@@ -60,17 +60,21 @@ class ReedSolomonDecode(InitNode):
                 "tooltip": "If you know the exact positions of the errors, type them here in a comma-separated list.",
             },
         )
+        return class_method
 
-    def reedsolomondecode(self, data, ecc_symbols, erase_pos=None):
+    def reedsolomondecode(self, data, ecc_symbols, erase_pos=""):
         rsc = RSCodec(ecc_symbols)
-        if erase_pos != "":
-            msg, coded_msg, pos_list = rsc.decode(data, erase_pos=erase_pos)
-        else:
-            msg, coded_msg, pos_list = rsc.decode(data)
+        parsed_erase_pos = None
+        if erase_pos:
+            try:
+                parsed_erase_pos = [int(p.strip()) for p in erase_pos.split(",")]
+            except ValueError:
+                raise ValueError("Invalid format for erase_pos. It should be a comma-separated list of integers.")
+        msg, coded_msg, pos_list = rsc.decode(data, erase_pos=parsed_erase_pos)
         return (
-            msg,
-            coded_msg,
-            pos_list,
+            bytes(msg),
+            bytes(coded_msg),
+            bytes(pos_list),
         )
 
 
