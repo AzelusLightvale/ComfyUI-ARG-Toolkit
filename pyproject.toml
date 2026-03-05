@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "arg-toolkit"
-version = "1.0.0"
+version = "2.0.0"
 description = "A collection of ComfyUI nodes for cryptography, steganography, encryption, decryption, and tools needed to both make and solve ARGs (Alternative Reality Games) and secret messages."
 authors = [
   {name = "AzelusLightvale", email = "NexusLightvale@protonmail.com"}
