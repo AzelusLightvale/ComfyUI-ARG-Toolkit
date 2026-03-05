@@ -17,6 +17,16 @@ from cryptography.exceptions import AlreadyFinalized
 # TODO: Write NIST a strongly worded letter complaining about this categorization system, regret writing the thing in the first place, then burn it.
 
 
+def _get_hash_algorithm(name):
+    """Gets a hash algorithm instance from its name."""
+    if name == "BLAKE2b":
+        return getattr(hashes, name)(64)
+    elif name == "BLAKE2s":
+        return getattr(hashes, name)(32)
+    else:
+        return getattr(hashes, name)()
+
+
 class KeyDerivationNodes:
     CATEGORY = "Cryptography/Modern/Key Derivation"
 
@@ -111,26 +121,15 @@ class Argon2id_Derive(KeyDerivationNodes):
         )
         return class_input
 
-    def argon2id_derive(
-        self,
-        message,
-        length,
-        salt,
-        iterations,
-        parallel_lanes,
-        memory_cost,
-        ad,
-        secret,
-        mode,
-    ):
-        if memory_cost < 8 * parallel_lanes:
+    def _get_kdf(self, salt, length, iterations, parallel_lanes, memory_cost, ad, secret):
+        min_memory_cost = 8 * parallel_lanes
+        if memory_cost < min_memory_cost:
             print(
-                f"[ComfyUI ARG Toolkit][WARNING]: Because defined memory cost ({memory_cost} KiB) is lower than the minimum required ({8 * parallel_lanes} KiB), the value will be silently clamped to the minimum."
+                f"[ComfyUI ARG Toolkit][WARNING]: Because defined memory cost ({memory_cost} KiB) is lower than the minimum required ({min_memory_cost} KiB), the value will be silently clamped to the minimum."
             )
-            memory_cost = 8 * parallel_lanes
-        else:
-            memory_cost = memory_cost
-        argon2_key = Argon2id(
+            memory_cost = min_memory_cost
+
+        return Argon2id(
             salt=salt,
             length=length,
             iterations=iterations,
@@ -139,6 +138,9 @@ class Argon2id_Derive(KeyDerivationNodes):
             ad=ad,
             secret=secret,
         )
+
+    def argon2id_derive(self, message, length, salt, iterations, parallel_lanes, memory_cost, ad, secret, mode):
+        argon2_key = self._get_kdf(salt, length, iterations, parallel_lanes, memory_cost, ad, secret)
         if mode:
             output = argon2_key.derive(message)
         else:
@@ -163,27 +165,8 @@ class Argon2id_Verify(Argon2id_Derive):
         )
         return class_input
 
-    def argon2id_verify(
-        self,
-        message,
-        length,
-        salt,
-        iterations,
-        parallel_lanes,
-        memory_cost,
-        ad,
-        secret,
-        mode,
-        expected_key,
-    ):
-        if memory_cost < 8 * parallel_lanes:
-            print(
-                f"[WARNING]: Because defined memory cost ({memory_cost} KiB) is lower than the minimum required ({8 * parallel_lanes} KiB), the value will be silently clamped to the minimum."
-            )
-            memory_cost = 8 * parallel_lanes
-        else:
-            memory_cost = memory_cost
-        argon2_key = Argon2id(salt, length, iterations, parallel_lanes, memory_cost, ad, secret)
+    def argon2id_verify(self, message, length, salt, iterations, parallel_lanes, memory_cost, ad, secret, mode, expected_key):
+        argon2_key = self._get_kdf(salt, length, iterations, parallel_lanes, memory_cost, ad, secret)
 
         if mode:
             try:
@@ -251,15 +234,12 @@ class PBKDF2HMAC_Derive(KeyDerivationNodes):
         )
         return class_input
 
+    def _get_kdf(self, salt, length, iterations, algorithm):
+        digest = _get_hash_algorithm(algorithm)
+        return PBKDF2HMAC(salt=salt, length=length, iterations=iterations, algorithm=digest)
+
     def pbkdf2hmac_derive(self, message, length, salt, iterations, algorithm):
-        if algorithm == "BLAKE2b":
-            digest = getattr(hashes, algorithm)(64)
-        elif algorithm == "BLAKE2s":
-            digest = getattr(hashes, algorithm)(32)
-        else:
-            digest = getattr(hashes, algorithm)()
-        pbkdf2hmac_key = PBKDF2HMAC(salt=salt, length=length, iterations=iterations, algorithm=digest)
-        output = pbkdf2hmac_key.derive(message)
+        output = self._get_kdf(salt, length, iterations, algorithm).derive(message)
         return (output,)
 
 
@@ -280,13 +260,7 @@ class PBKDF2HMAC_Verify(PBKDF2HMAC_Derive):
         return class_input
 
     def pbkdf2hmac_verify(self, message, length, salt, iterations, algorithm, expected_key):
-        if algorithm == "BLAKE2b":
-            digest = getattr(hashes, algorithm)(64)
-        elif algorithm == "BLAKE2s":
-            digest = getattr(hashes, algorithm)(32)
-        else:
-            digest = getattr(hashes, algorithm)()
-        pbkdf2hmac_key = PBKDF2HMAC(salt=salt, length=length, iterations=iterations, algorithm=digest)
+        pbkdf2hmac_key = self._get_kdf(salt, length, iterations, algorithm)
         try:
             pbkdf2hmac_key.verify(message, expected_key)
             output = True
@@ -336,10 +310,12 @@ class Scrypt_Derive(KeyDerivationNodes):
         )
         return class_input
 
+    def _get_kdf(self, salt, length, n, r, p):
+        n_cost = 2**n
+        return Scrypt(salt, length, n_cost, r, p)
+
     def scrypt_derive(self, message, length, salt, n, r, p):
-        n = 2**n
-        scrypt_key = Scrypt(salt, length, n, r, p)
-        output = scrypt_key.derive(message)
+        output = self._get_kdf(salt, length, n, r, p).derive(message)
         return (output,)
 
 
@@ -360,8 +336,7 @@ class Scrypt_Verify(Scrypt_Derive):
         return class_input
 
     def scrypt_verify(self, message, length, salt, n, r, p, expected_key):
-        n = 2**n
-        scrypt_key = Scrypt(salt, length, n, r, p)
+        scrypt_key = self._get_kdf(salt, length, n, r, p)
         try:
             scrypt_key.verify(message, expected_key)
             output = True
@@ -408,18 +383,15 @@ class ConcatKDFHash_Derive(KeyDerivationNodes):
         )
         return class_input
 
-    def concatkdfhash_derive(self, message, length, algorithm, other_info):
-        if algorithm == "BLAKE2b":
-            digest = getattr(hashes, algorithm)(64)
-        elif algorithm == "BLAKE2s":
-            digest = getattr(hashes, algorithm)(32)
-        else:
-            digest = getattr(hashes, algorithm)()
+    def _get_kdf(self, length, algorithm, other_info):
+        digest = _get_hash_algorithm(algorithm)
         if other_info is None:
             other_info = b""
-        ckdfhash_key = ConcatKDFHash(length=length, algorithm=digest, otherinfo=other_info)
-        output = ckdfhash_key.derive(message)
-        return (output,)
+        return ConcatKDFHash(length=length, algorithm=digest, otherinfo=other_info)
+
+    def concatkdfhash_derive(self, message, length, algorithm, other_info):
+        kdf = self._get_kdf(length, algorithm, other_info)
+        return (kdf.derive(message),)
 
 
 class ConcatKDFHash_Verify(ConcatKDFHash_Derive):
@@ -439,15 +411,7 @@ class ConcatKDFHash_Verify(ConcatKDFHash_Derive):
         return class_input
 
     def concatkdfhash_verify(self, message, length, algorithm, other_info, expected_key):
-        if algorithm == "BLAKE2b":
-            digest = getattr(hashes, algorithm)(64)
-        elif algorithm == "BLAKE2s":
-            digest = getattr(hashes, algorithm)(32)
-        else:
-            digest = getattr(hashes, algorithm)()
-        if other_info is None:
-            other_info = b""
-        ckdfhash_key = ConcatKDFHash(length=length, algorithm=digest, otherinfo=other_info)
+        ckdfhash_key = self._get_kdf(length, algorithm, other_info)
         try:
             ckdfhash_key.verify(message, expected_key)
             output = True
@@ -473,18 +437,15 @@ class ConcatKDFHMAC_Derive(ConcatKDFHash_Derive):
         )
         return class_input
 
-    def concatkdfhmac_derive(self, message, length, algorithm, other_info, salt):
-        if algorithm == "BLAKE2b":
-            digest = getattr(hashes, algorithm)(64)
-        elif algorithm == "BLAKE2s":
-            digest = getattr(hashes, algorithm)(32)
-        else:
-            digest = getattr(hashes, algorithm)()
+    def _get_kdf(self, length, algorithm, other_info, salt):
+        digest = _get_hash_algorithm(algorithm)
         if other_info is None:
             other_info = b""
-        ckdfhmac_key = ConcatKDFHMAC(length=length, algorithm=digest, otherinfo=other_info, salt=salt)
-        output = ckdfhmac_key.derive(message)
-        return (output,)
+        return ConcatKDFHMAC(length=length, algorithm=digest, otherinfo=other_info, salt=salt)
+
+    def concatkdfhmac_derive(self, message, length, algorithm, other_info, salt):
+        kdf = self._get_kdf(length, algorithm, other_info, salt)
+        return (kdf.derive(message),)
 
 
 class ConcatKDFHMAC_Verify(ConcatKDFHMAC_Derive):
@@ -504,15 +465,7 @@ class ConcatKDFHMAC_Verify(ConcatKDFHMAC_Derive):
         return class_input
 
     def concatkdfhmac_verify(self, message, length, algorithm, other_info, salt, expected_key):
-        if algorithm == "BLAKE2b":
-            digest = getattr(hashes, algorithm)(64)
-        elif algorithm == "BLAKE2s":
-            digest = getattr(hashes, algorithm)(32)
-        else:
-            digest = getattr(hashes, algorithm)()
-        if other_info is None:
-            other_info = b""
-        ckdfhash_key = ConcatKDFHMAC(length=length, algorithm=digest, otherinfo=other_info, salt=salt)
+        ckdfhash_key = self._get_kdf(length, algorithm, other_info, salt)
         try:
             ckdfhash_key.verify(message, expected_key)
             output = True
@@ -566,18 +519,15 @@ class HKDF_Derive(KeyDerivationNodes):
 
         return class_input
 
-    def hkdf_derive(self, message, length, algorithm, salt, info):
-        if algorithm == "BLAKE2b":
-            digest = getattr(hashes, algorithm)(64)
-        elif algorithm == "BLAKE2s":
-            digest = getattr(hashes, algorithm)(32)
-        else:
-            digest = getattr(hashes, algorithm)()
+    def _get_kdf(self, length, algorithm, salt, info):
+        digest = _get_hash_algorithm(algorithm)
         if info is None:
             info = b""
-        hkdf_key = HKDF(algorithm=digest, length=length, salt=salt, info=info)
-        output = hkdf_key.derive(message)
-        return (output,)
+        return HKDF(algorithm=digest, length=length, salt=salt, info=info)
+
+    def hkdf_derive(self, message, length, algorithm, salt, info):
+        kdf = self._get_kdf(length, algorithm, salt, info)
+        return (kdf.derive(message),)
 
 
 class HKDF_Verify(HKDF_Derive):
@@ -597,15 +547,7 @@ class HKDF_Verify(HKDF_Derive):
         return class_input
 
     def hkdf_verify(self, message, length, algorithm, info, salt, expected_key):
-        if algorithm == "BLAKE2b":
-            digest = getattr(hashes, algorithm)(64)
-        elif algorithm == "BLAKE2s":
-            digest = getattr(hashes, algorithm)(32)
-        else:
-            digest = getattr(hashes, algorithm)()
-        if info is None:
-            info = b""
-        hkdf_key = HKDF(length=length, algorithm=digest, info=info, salt=salt)
+        hkdf_key = self._get_kdf(length, algorithm, salt, info)
         try:
             hkdf_key.verify(message, expected_key)
             output = True
@@ -652,18 +594,15 @@ class HKDFExpand_Derive(KeyDerivationNodes):
 
         return class_input
 
-    def hkdfexpand_derive(self, message, length, algorithm, info):
-        if algorithm == "BLAKE2b":
-            digest = getattr(hashes, algorithm)(64)
-        elif algorithm == "BLAKE2s":
-            digest = getattr(hashes, algorithm)(32)
-        else:
-            digest = getattr(hashes, algorithm)()
+    def _get_kdf(self, length, algorithm, info):
+        digest = _get_hash_algorithm(algorithm)
         if info is None:
             info = b""
-        hkdf_key = HKDFExpand(algorithm=digest, length=length, info=info)
-        output = hkdf_key.derive(message)
-        return (output,)
+        return HKDFExpand(algorithm=digest, length=length, info=info)
+
+    def hkdfexpand_derive(self, message, length, algorithm, info):
+        kdf = self._get_kdf(length, algorithm, info)
+        return (kdf.derive(message),)
 
 
 class HKDFExpand_Verify(HKDFExpand_Derive):
@@ -683,15 +622,7 @@ class HKDFExpand_Verify(HKDFExpand_Derive):
         return class_input
 
     def hkdfexpand_verify(self, message, length, algorithm, info, expected_key):
-        if algorithm == "BLAKE2b":
-            digest = getattr(hashes, algorithm)(64)
-        elif algorithm == "BLAKE2s":
-            digest = getattr(hashes, algorithm)(32)
-        else:
-            digest = getattr(hashes, algorithm)()
-        if info is None:
-            info = b""
-        hkdf_key = HKDFExpand(length=length, algorithm=digest, info=info)
+        hkdf_key = self._get_kdf(length, algorithm, info)
         try:
             hkdf_key.verify(message, expected_key)
             output = True
@@ -738,18 +669,15 @@ class X963KDF_Derive(KeyDerivationNodes):
 
         return class_input
 
-    def x963kdf_derive(self, message, length, algorithm, info):
-        if algorithm == "BLAKE2b":
-            digest = getattr(hashes, algorithm)(64)
-        elif algorithm == "BLAKE2s":
-            digest = getattr(hashes, algorithm)(32)
-        else:
-            digest = getattr(hashes, algorithm)()
+    def _get_kdf(self, length, algorithm, info):
+        digest = _get_hash_algorithm(algorithm)
         if info is None:
             info = b""
-        x963kdf_key = X963KDF(algorithm=digest, length=length, info=info)
-        output = x963kdf_key.derive(message)
-        return (output,)
+        return X963KDF(algorithm=digest, length=length, sharedinfo=info)
+
+    def x963kdf_derive(self, message, length, algorithm, info):
+        kdf = self._get_kdf(length, algorithm, info)
+        return (kdf.derive(message),)
 
 
 class X963KDF_Verify(X963KDF_Derive):
@@ -769,15 +697,7 @@ class X963KDF_Verify(X963KDF_Derive):
         return class_input
 
     def x963kdf_verify(self, message, length, algorithm, info, expected_key):
-        if algorithm == "BLAKE2b":
-            digest = getattr(hashes, algorithm)(64)
-        elif algorithm == "BLAKE2s":
-            digest = getattr(hashes, algorithm)(32)
-        else:
-            digest = getattr(hashes, algorithm)()
-        if info is None:
-            info = b""
-        x963kdf_key = X963KDF(length=length, algorithm=digest, info=info)
+        x963kdf_key = self._get_kdf(length, algorithm, info)
         try:
             x963kdf_key.verify(message, expected_key)
             output = True
@@ -862,6 +782,35 @@ class KBKDF_Derive(KeyDerivationNodes):
         )
         return class_input
 
+    def _get_kdf(
+        self,
+        length,
+        algorithm,
+        rlen,
+        llen,
+        location,
+        label,
+        context,
+        operation_mode,
+        break_location=None,
+        fixed=None,
+    ):
+        digest = _get_hash_algorithm(algorithm)
+        location_enum = getattr(CounterLocation, location)
+        kdf_class = getattr(cryptography.hazmat.primitives.kdf.kbkdf, operation_mode)
+        return kdf_class(
+            length=length,
+            algorithm=digest,
+            mode=Mode.CounterMode,
+            rlen=rlen,
+            llen=llen,
+            location=location_enum,
+            label=label or b"",
+            context=context or b"",
+            fixed=fixed,
+            break_location=break_location,
+        )
+
     def kbkdf_derive(
         self,
         message,
@@ -876,33 +825,8 @@ class KBKDF_Derive(KeyDerivationNodes):
         break_location=None,
         fixed=None,
     ):
-        if algorithm == "BLAKE2b":
-            digest = getattr(hashes, algorithm)(64)
-        elif algorithm == "BLAKE2s":
-            digest = getattr(hashes, algorithm)(32)
-        else:
-            digest = getattr(hashes, algorithm)()
-        if label is None:
-            label = b""
-        if context is None:
-            context = b""
-        if fixed is None:
-            fixed = b""
-        location = getattr(CounterLocation, location)
-        kbkdf_key = getattr(cryptography.hazmat.primitives.kdf.kbkdf, operation_mode)(
-            length=length,
-            algorithm=digest,
-            mode=Mode.CounterMode,
-            rlen=rlen,
-            llen=llen,
-            location=location,
-            label=label,
-            context=context,
-            fixed=fixed,
-            break_location=break_location,
-        )
-        output = kbkdf_key.derive(message)
-        return (output,)
+        kdf = self._get_kdf(length, algorithm, rlen, llen, location, label, context, operation_mode, break_location, fixed)
+        return (kdf.derive(message),)
 
 
 class KBKDF_Verify(KBKDF_Derive):
@@ -936,31 +860,7 @@ class KBKDF_Verify(KBKDF_Derive):
         break_location=None,
         fixed=None,
     ):
-        if algorithm == "BLAKE2b":
-            digest = getattr(hashes, algorithm)(64)
-        elif algorithm == "BLAKE2s":
-            digest = getattr(hashes, algorithm)(32)
-        else:
-            digest = getattr(hashes, algorithm)()
-        if label is None:
-            label = b""
-        if context is None:
-            context = b""
-        if fixed is None:
-            fixed = b""
-        location = getattr(CounterLocation, location)
-        kbkdf_key = getattr(cryptography.hazmat.primitives.kdf.kbkdf, operation_mode)(
-            length=length,
-            algorithm=digest,
-            mode=Mode.CounterMode,
-            rlen=rlen,
-            llen=llen,
-            location=location,
-            label=label,
-            context=context,
-            fixed=fixed,
-            break_location=break_location,
-        )
+        kbkdf_key = self._get_kdf(length, algorithm, rlen, llen, location, label, context, operation_mode, break_location, fixed)
         try:
             kbkdf_key.verify(message, expected_key)
             output = True

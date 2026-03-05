@@ -64,9 +64,9 @@ class ChaCha20Poly1305:
         if mode:
             bytetext = text.encode("utf-8")
             token = cipher.encrypt(nonce, bytetext, associated_data)
-            encrypted_message = token.hex()
+            encrypted_message = base64.b64encode(token).decode("utf-8")
         else:
-            bytetext = base64.b64decode(text, "utf-8")
+            bytetext = base64.b64decode(text.encode("utf-8"))
             token = cipher.decrypt(nonce, bytetext, associated_data)
             encrypted_message = token.decode("utf-8")
         return (encrypted_message,)
@@ -88,7 +88,7 @@ class ChaCha20Poly1305Keygen:
 
     def cc20_key(self):
         key = aead.ChaCha20Poly1305.generate_key()
-        return (key.base64.b64encode(),)
+        return (key,)
 
 
 class AESAuth:  # Since all AES-based authenticated encryption techniques are the same, this one node concatenates all of them together into the same node to save on processing.
@@ -187,7 +187,7 @@ class AESAuth:  # Since all AES-based authenticated encryption techniques are th
                 token = cipher.encrypt(nonce, bytetext, associated_data)
             encrypted_message = base64.b64encode(token).decode("utf-8")
         else:
-            bytetext = base64.b64decode(text, "utf-8")
+            bytetext = base64.b64decode(text.encode("utf-8"))
             if aes_type == "AES-SIV":
                 token = cipher.decrypt(bytetext, associated_data)
             else:
@@ -241,7 +241,7 @@ class AESAuthKeygen:
             raise ValueError(
                 f"Invalid AES type chosen. Perhaps the node is broken? Try making a new one, as this is normally impossible. Currently, it's {aes_type}, which is wrong."
             )
-        return (base64.b64encode(key),)
+        return (key,)
 
 
 NODE_CLASS_MAPPINGS = {
