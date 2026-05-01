@@ -3,12 +3,6 @@ from cryptography.hazmat.decrepit.ciphers import algorithms as decrepit_algorith
 from cryptography.hazmat.decrepit.ciphers import modes as decrepit_modes
 from cryptography.hazmat.primitives.ciphers import algorithms
 
-# This version is perparation for 47.0 of cryptography.
-# Changes that matter for this release:
-# - CFB, OFB, and CFB8 being moved to decrepit under modes
-# - Camellia being moved to decrepit
-
-
 class CipherNodes:
     CATEGORY = "Cryptography/Modern/Cipher"
 
