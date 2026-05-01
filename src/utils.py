@@ -10,7 +10,7 @@ class SystemRandom:
     def __init__(self):
         pass
 
-    CATEGORY = "Utilities/Random"
+    CATEGORY = "ARG Toolkit/Utilities/Random"
     DESCRIPTION = "Generates a random number of bytes using"
 
     @classmethod
@@ -43,7 +43,7 @@ class ConverterNodes:
     def __init__(self):
         pass
 
-    CATEGORY = "Utilities/Converter"
+    CATEGORY = "ARG Toolkit/Utilities/Converter"
 
     @classmethod
     def INPUT_TYPES(cls):
@@ -145,7 +145,7 @@ class BitwiseNodes:
     def __init__(self):
         pass
 
-    CATEGORY = "Utilities/Bitwise"
+    CATEGORY = "ARG Toolkit/Utilities/Bitwise"
 
     @classmethod
     def INPUT_TYPES(cls):
@@ -354,7 +354,7 @@ class BitwiseRS(BitwiseNodes):
 
 
 class StringLooper:
-    CATEGORY = "Utilities/Padding"
+    CATEGORY = "ARG Toolkit/Utilities/Padding"
 
     @classmethod
     def INPUT_TYPES(cls):
@@ -400,7 +400,7 @@ class ByteslikeEncode:
 
     RETURN_TYPES = ("BYTESLIKE",)
     FUNCTION = "execute"
-    CATEGORY = "Utilities/Converters"
+    CATEGORY = "ARG Toolkit/Utilities/Converters"
 
     def execute(self, text, encoding):
         if not isinstance(text, str):
@@ -453,7 +453,7 @@ class ByteslikeDecode:
 
     RETURN_TYPES = ("STRING",)
     FUNCTION = "execute"
-    CATEGORY = "Utilities/Converters"
+    CATEGORY = "ARG Toolkit/Utilities/Converters"
 
     def execute(self, data, encoding):
         if not isinstance(data, (bytes, bytearray)):

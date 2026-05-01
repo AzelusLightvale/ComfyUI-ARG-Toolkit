@@ -5,7 +5,7 @@ class InitNode:
     def __init__(self):
         pass
 
-    CATEGORY = "Utilities/Error Correction"
+    CATEGORY = "ARG Toolkit/Utilities/Error Correction"
 
     @classmethod
     def INPUT_TYPES(cls):

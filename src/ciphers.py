@@ -10,7 +10,7 @@ import math
 
 
 class BaseCipherNode:
-    CATEGORY = "Cryptography/Classical"
+    CATEGORY = "ARG Toolkit/Cryptography/Classical"
 
     @classmethod
     def __init__(self):
@@ -111,9 +111,7 @@ class BaseCipherNode:
 
         if mode:  # encryption may expand, so append leftovers
             if cipher_index < len(cipher_result):
-                last_case = (
-                    result[position_map[-1]].isupper() if position_map else False
-                )
+                last_case = result[position_map[-1]].isupper() if position_map else False
                 tail = cipher_result[cipher_index:]
                 if last_case:
                     result.extend(c.upper() for c in tail)
@@ -123,9 +121,7 @@ class BaseCipherNode:
 
         return "".join(result)
 
-    def execute_cipher(
-        self, text, alphabet, key, mode, keep_formatting, allowed_chars=None, **kwargs
-    ):
+    def execute_cipher(self, text, alphabet, key, mode, keep_formatting, allowed_chars=None, **kwargs):
         cipher_name = self.__class__.__name__
         cipher_class = getattr(secretpy, cipher_name)
         cipher_instance = cipher_class()
@@ -205,13 +201,9 @@ class Affine(BaseCipherNode):
         if len(alphabet) is None or len(alphabet) <= 1:
             raise ValueError("Alphabet size must be >= 2 for Affine.")
         if math.gcd(key_1, key_2) != 1:
-            allowed = [
-                x for x in range(1, len(alphabet)) if math.gcd(x, len(alphabet) == 1)
-            ]
+            allowed = [x for x in range(1, len(alphabet)) if math.gcd(x, len(alphabet) == 1)]
         if key_1 not in allowed:
-            raise ValueError(
-                f" Invalid key #1 ({key_1}) for the current alphabet size {len(alphabet)}."
-            )
+            raise ValueError(f" Invalid key #1 ({key_1}) for the current alphabet size {len(alphabet)}.")
         processed_alphabet = self.alphabet_checker(alphabet, as_tuple=False)
         key = (key_1, key_2)
         return self.execute_cipher(text, processed_alphabet, key, mode, keep_formatting)
@@ -425,9 +417,7 @@ class Gronsfeld(BaseCipherNode):
         key_tuple = tuple(int(ch) for ch in key if ch.isdigit())
         if not key_tuple:
             raise ValueError("Invalid Gronsfeld key: must contain at least one digit.")
-        return self.execute_cipher(
-            text, processed_alphabet, key_tuple, mode, keep_formatting
-        )
+        return self.execute_cipher(text, processed_alphabet, key_tuple, mode, keep_formatting)
 
 
 class Keyword(BaseCipherNode):
@@ -670,9 +660,7 @@ class Trifid(BaseCipherNode):
     def trifid(self, text, alphabet, key, mode, keep_formatting):
         processed_alphabet = self.alphabet_checker(alphabet, as_tuple=False)
         allowed_chars = processed_alphabet
-        return self.execute_cipher(
-            text, processed_alphabet, key, mode, keep_formatting, allowed_chars
-        )
+        return self.execute_cipher(text, processed_alphabet, key, mode, keep_formatting, allowed_chars)
 
 
 class TwoSquare(BaseCipherNode):

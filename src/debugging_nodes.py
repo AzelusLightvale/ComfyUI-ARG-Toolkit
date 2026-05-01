@@ -12,7 +12,7 @@ class BooleanOutputter:
             }
         }
 
-    CATEGORY = "Debugging"
+    CATEGORY = "ARG Toolkit/Debugging"
     RETURN_TYPES = ("STRING",)
     RETURN_NAMES = ("text",)
     FUNCTION = "bool_check"

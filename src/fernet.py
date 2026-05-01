@@ -5,7 +5,7 @@ class FernetSimple:
     def __init__(self):
         pass
 
-    CATEGORY = "Cryptography/Modern"
+    CATEGORY = "ARG Toolkit/Cryptography/Modern"
 
     @classmethod
     def INPUT_TYPES(cls):
@@ -57,7 +57,7 @@ class FernetKeygenSimple:
     def __init__(self):
         pass
 
-    CATEGORY = "Cryptography/Modern"
+    CATEGORY = "ARG Toolkit/Cryptography/Modern"
 
     @classmethod
     def INPUT_TYPES(cls):

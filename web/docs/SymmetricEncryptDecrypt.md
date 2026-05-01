@@ -15,6 +15,8 @@ This is a flexible, general-purpose node for performing symmetric encryption. It
 - **iv**: The initialization vector or nonce as a `BYTESLIKE` object. For XTS mode, this is the `tweak`. Not used by all algorithms/modes (e.g., ECB, stream ciphers).
 - **algorithm**: The symmetric algorithm to use (e.g., `AES`, `ChaCha20`, `TripleDES`).
 - **modes**: The cipher mode of operation (e.g., `CBC`, `GCM`, `CTR`).
+- **algorithm**: The symmetric algorithm to use (e.g., `AES`, `ChaCha20`). Several legacy algorithms like `TripleDES` and `Blowfish` are supported but considered deprecated.
+- **modes**: The cipher mode of operation (e.g., `CBC`, `GCM`, `CTR`). Legacy modes like `OFB` and `CFB` are supported but considered deprecated.
 - **mode**: Toggles between `Encrypt` and `Decrypt`.
 - **tag**: (Optional) For GCM decryption, this is the `BYTESLIKE` authentication tag that must be provided to verify the ciphertext's integrity and authenticity.
 - **min_tag_length**: (Optional) For GCM, the minimum acceptable tag length during decryption.
@@ -28,21 +30,36 @@ This is a flexible, general-purpose node for performing symmetric encryption. It
 ## Algorithm and Mode Compatibility
 
 The `cryptography` library will raise an error if an incompatible algorithm and mode are selected. The following table provides a general guide.
+The `cryptography` library will raise an error if an incompatible algorithm and mode are selected. The following table provides a general guide. Items marked with **(D)** are deprecated according to the `cryptography` library and should be avoided for new projects.
 
-| Algorithm | CBC | CTR | OFB | CFB | CFB8 | GCM | XTS | ECB | None |
-| :-------- | :-: | :-: | :-: | :-: | :--: | :-: | :-: | :-: | :--: |
-| AES       |  ✔  |  ✔  |  ✔  |  ✔  |  ✔   |  ✔  |  ✔  |  ✔  |  ❌  |
-| AES128    |  ✔  |  ✔  |  ✔  |  ✔  |  ✔   |  ✔  |  ✔  |  ✔  |  ❌  |
-| AES256    |  ✔  |  ✔  |  ✔  |  ✔  |  ✔   |  ✔  |  ✔  |  ✔  |  ❌  |
-| Camellia  |  ✔  |  ✔  |  ✔  |  ✔  |  ✔   | ❌  | ❌  |  ✔  |  ❌  |
-| ChaCha20  | ❌  | ❌  | ❌  | ❌  |  ❌  | ❌  | ❌  | ❌  |  ✔   |
-| TripleDES |  ✔  |  ✔  |  ✔  |  ✔  |  ✔   | ❌  | ❌  |  ✔  |  ❌  |
-| SM4       |  ✔  |  ✔  |  ✔  |  ✔  |  ❌  | ❌  | ❌  |  ✔  |  ❌  |
-| ARC4      | ❌  | ❌  | ❌  | ❌  |  ❌  | ❌  | ❌  | ❌  |  ✔   |
-| Blowfish  |  ✔  |  ✔  |  ✔  |  ✔  |  ❌  | ❌  | ❌  |  ✔  |  ❌  |
-| CAST5     |  ✔  |  ✔  |  ✔  |  ✔  |  ❌  | ❌  | ❌  |  ✔  |  ❌  |
-| SEED      |  ✔  |  ✔  |  ✔  |  ✔  |  ❌  | ❌  | ❌  |  ✔  |  ❌  |
-| IDEA      |  ✔  |  ✔  |  ✔  |  ✔  |  ❌  | ❌  | ❌  |  ✔  |  ❌  |
+| Algorithm      | CBC | CTR |   OFB   |   CFB   |   CFB8   | GCM | XTS | ECB | None |
+| :------------- | :-: | :-: | :-----: | :-----: | :------: | :-: | :-: | :-: | :--: |
+| AES            |  ✔  |  ✔  |    ✔    |    ✔    |    ✔     |  ✔  |  ✔  |  ✔  |  ❌  |
+| AES128         |  ✔  |  ✔  |    ✔    |    ✔    |    ✔     |  ✔  |  ✔  |  ✔  |  ❌  |
+| AES256         |  ✔  |  ✔  |    ✔    |    ✔    |    ✔     |  ✔  |  ✔  |  ✔  |  ❌  |
+| Camellia       |  ✔  |  ✔  |    ✔    |    ✔    |    ✔     | ❌  | ❌  |  ✔  |  ❌  |
+| ChaCha20       | ❌  | ❌  |   ❌    |   ❌    |    ❌    | ❌  | ❌  | ❌  |  ✔   |
+| TripleDES      |  ✔  |  ✔  |    ✔    |    ✔    |    ✔     | ❌  | ❌  |  ✔  |  ❌  |
+| SM4            |  ✔  |  ✔  |    ✔    |    ✔    |    ❌    | ❌  | ❌  |  ✔  |  ❌  |
+| ARC4           | ❌  | ❌  |   ❌    |   ❌    |    ❌    | ❌  | ❌  | ❌  |  ✔   |
+| Blowfish       |  ✔  |  ✔  |    ✔    |    ✔    |    ❌    | ❌  | ❌  |  ✔  |  ❌  |
+| CAST5          |  ✔  |  ✔  |    ✔    |    ✔    |    ❌    | ❌  | ❌  |  ✔  |  ❌  |
+| SEED           |  ✔  |  ✔  |    ✔    |    ✔    |    ❌    | ❌  | ❌  |  ✔  |  ❌  |
+| IDEA           |  ✔  |  ✔  |    ✔    |    ✔    |    ❌    | ❌  | ❌  |  ✔  |  ❌  |
+| Algorithm      | CBC | CTR | OFB (D) | CFB (D) | CFB8 (D) | GCM | XTS | ECB | None |
+| :------------- | :-: | :-: | :-----: | :-----: | :------: | :-: | :-: | :-: | :--: |
+| AES            |  ✔  |  ✔  |    ✔    |    ✔    |    ✔     |  ✔  |  ✔  |  ✔  |  ❌  |
+| AES128         |  ✔  |  ✔  |    ✔    |    ✔    |    ✔     |  ✔  |  ✔  |  ✔  |  ❌  |
+| AES256         |  ✔  |  ✔  |    ✔    |    ✔    |    ✔     |  ✔  |  ✔  |  ✔  |  ❌  |
+| Camellia       |  ✔  |  ✔  |    ✔    |    ✔    |    ✔     | ❌  | ❌  |  ✔  |  ❌  |
+| ChaCha20       | ❌  | ❌  |   ❌    |   ❌    |    ❌    | ❌  | ❌  | ❌  |  ✔   |
+| TripleDES (D)  |  ✔  |  ✔  |    ✔    |    ✔    |    ✔     | ❌  | ❌  |  ✔  |  ❌  |
+| SM4            |  ✔  |  ✔  |    ✔    |    ✔    |    ❌    | ❌  | ❌  |  ✔  |  ❌  |
+| ARC4 (D)       | ❌  | ❌  |   ❌    |   ❌    |    ❌    | ❌  | ❌  | ❌  |  ✔   |
+| Blowfish (D)   |  ✔  |  ✔  |    ✔    |    ✔    |    ❌    | ❌  | ❌  |  ✔  |  ❌  |
+| CAST5 (D)      |  ✔  |  ✔  |    ✔    |    ✔    |    ❌    | ❌  | ❌  |  ✔  |  ❌  |
+| SEED (D)       |  ✔  |  ✔  |    ✔    |    ✔    |    ❌    | ❌  | ❌  |  ✔  |  ❌  |
+| IDEA (D)       |  ✔  |  ✔  |    ✔    |    ✔    |    ❌    | ❌  | ❌  |  ✔  |  ❌  |
 
 **Notes:**
 
@@ -51,3 +68,6 @@ The `cryptography` library will raise an error if an incompatible algorithm and 
 - **GCM**: GCM is an authenticated mode and only works with AES in this implementation. It provides both confidentiality and integrity.
 - **ECB**: Electronic Codebook mode is insecure for most uses and should be avoided. It does not use an IV.
 - **Padding**: Block ciphers in modes like CBC and ECB require padding to handle messages that are not a multiple of the block size. The `cryptography` library handles this automatically.
+
+**Deprecation Warning:**
+As of `cryptography` 47.0.0, several legacy primitives were moved to a `decrepit` module. This includes algorithms like `ARC4`, `Blowfish`, `CAST5`, `IDEA`, `SEED`, and `TripleDES`, as well as modes like `OFB`, `CFB`, and `CFB8`. These are considered insecure or sub-optimal and are only provided for compatibility with legacy systems. Users are encouraged to use **AES** (with **GCM** or **CTR** mode) or **ChaCha20** for modern applications. For more information, check the latest documentations over at [https://cryptography.io/en/47.0.0/](https://cryptography.io/en/47.0.0/).

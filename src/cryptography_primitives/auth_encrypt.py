@@ -8,7 +8,7 @@ class ChaCha20Poly1305:
     def __init__(self):
         pass
 
-    CATEGORY = "Cryptography/Modern/Authenticated"
+    CATEGORY = "ARG Toolkit/Cryptography/Modern/Authenticated"
 
     @classmethod
     def INPUT_TYPES(cls):
@@ -76,7 +76,7 @@ class ChaCha20Poly1305Keygen:
     def __init__(self):
         pass
 
-    CATEGORY = "Cryptography/Modern/Authenticated"
+    CATEGORY = "ARG Toolkit/Cryptography/Modern/Authenticated"
 
     @classmethod
     def INPUT_TYPES(cls):
@@ -95,7 +95,7 @@ class AESAuth:  # Since all AES-based authenticated encryption techniques are th
     def __init__(self):
         pass
 
-    CATEGORY = "Cryptography/Modern/Authenticated"
+    CATEGORY = "ARG Toolkit/Cryptography/Modern/Authenticated"
 
     @classmethod
     def INPUT_TYPES(cls):
@@ -200,7 +200,7 @@ class AESAuthKeygen:
     def __init__(self):
         pass
 
-    CATEGORY = "Cryptography/Modern/Authenticated"
+    CATEGORY = "ARG Toolkit/Cryptography/Modern/Authenticated"
 
     @classmethod
     def INPUT_TYPES(cls):

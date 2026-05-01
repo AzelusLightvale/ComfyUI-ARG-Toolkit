@@ -288,7 +288,7 @@ class MorseCode:
         }
         pass
 
-    CATEGORY = "Utilities/Converter"
+    CATEGORY = "ARG Toolkit/Utilities/Converter"
 
     @classmethod
     def INPUT_TYPES(self):
@@ -384,21 +384,10 @@ class MorseCode:
         codes = language_table[language]
 
         def strip_accents(s):
-            return "".join(
-                c
-                for c in unicodedata.normalize("NFD", s)
-                if unicodedata.category(c) != "Mn"
-            )
+            return "".join(c for c in unicodedata.normalize("NFD", s) if unicodedata.category(c) != "Mn")
 
         def hiragana_to_katakana(s):
-            return "".join(
-                [
-                    chr(ord(char) + 96)
-                    if "\u3040" <= char <= "\u309f"
-                    else char
-                    for char in s
-                ]
-            )
+            return "".join([chr(ord(char) + 96) if "\u3040" <= char <= "\u309f" else char for char in s])
 
         def normalize_japanese(s):
             # Normalize width and convert hiragana → katakana
@@ -508,9 +497,7 @@ class MorseCode:
 
         # Normalize input Morse (map arbitrary symbols → '.' and '-')
         def normalize(morse_str):
-            return "".join(
-                "." if ch == dot else "-" if ch == dash else ch for ch in morse_str
-            )
+            return "".join("." if ch == dot else "-" if ch == dash else ch for ch in morse_str)
 
         # Encode
         if mode:  # encode

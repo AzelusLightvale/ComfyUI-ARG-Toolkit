@@ -34,7 +34,7 @@ class Stegano_LSB_Encode:
     def __init__(self):
         pass
 
-    CATEGORY = "Steganography"
+    CATEGORY = "ARG Toolkit/Steganography"
     DESCRIPTION = textwrap.dedent("""Encodes a message in the least significant bit (LSB) of the image. Includes some generators for different steganography methods for harder detection.
     - Library used: [Stegano](https://github.com/cedricbonhomme/Stegano)
     Note that some of the generators (specifically: carmichael, fermat, fibonacci, log_gen, and mersenne) are excluded.
@@ -138,7 +138,7 @@ class Stegano_LSB_Decode:
     def __init__(self):
         pass
 
-    CATEGORY = "Steganography"
+    CATEGORY = "ARG Toolkit/Steganography"
     DESCRIPTION = textwrap.dedent("""Decodes a message in the least significant bit (LSB) of the image. Includes some generators for different steganography methods for harder detection.
     - Library used: [Stegano](https://github.com/cedricbonhomme/Stegano)
     Note that currently, some of the generators (specifically: carmichael, fermat, fibonacci, log_gen, and mersenne) are currently broken and are excluded.
@@ -231,7 +231,7 @@ class IMWatermarkEncode:
     def __init__(self):
         pass
 
-    CATEGORY = "Steganography"
+    CATEGORY = "ARG Toolkit/Steganography"
     DESCRIPTION = textwrap.dedent("""Hides a message of choice into the image. Utilizes discrete wavelet transform (DWT) and discrete cosine transform (DCT) by default, but also includes options for RivaGAN.
     - Library used: [invisible-watermark](https://github.com/ShieldMnt/invisible-watermark/)
     From my own testing, recommended algorithm choice is dwtDctSvd, which includes singular value decomposition to fortify it better at a slight cost of time.
@@ -341,7 +341,7 @@ class IMWatermarkDecode:
     def __init__(self):
         pass
 
-    CATEGORY = "Steganography"
+    CATEGORY = "ARG Toolkit/Steganography"
     DESCRIPTION = textwrap.dedent("""Hides a message of choice into the image. Utilizes discrete wavelet transform (DWT) and discrete cosine transform (DCT) by default, but also includes options for RivaGAN.
     - Library used: [invisible-watermark](https://github.com/ShieldMnt/invisible-watermark/)
     From my own testing, recommended algorithm choice is dwtDctSvd, which includes singular value decomposition to fortify it better at a slight cost of time.

@@ -2,7 +2,7 @@ from cryptography.hazmat.primitives import padding
 
 
 class PaddingNode:
-    CATEGORY = "Cryptography/Modern/Padding"
+    CATEGORY = "ARG Toolkit/Cryptography/Modern/Padding"
 
     @classmethod
     def INPUT_TYPES(cls):

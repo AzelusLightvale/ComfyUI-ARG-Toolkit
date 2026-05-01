@@ -3,8 +3,9 @@ from cryptography.hazmat.decrepit.ciphers import algorithms as decrepit_algorith
 from cryptography.hazmat.decrepit.ciphers import modes as decrepit_modes
 from cryptography.hazmat.primitives.ciphers import algorithms
 
+
 class CipherNodes:
-    CATEGORY = "Cryptography/Modern/Cipher"
+    CATEGORY = "ARG Toolkit/Cryptography/Modern/Cipher"
 
     @classmethod
     def INPUT_TYPES(cls):

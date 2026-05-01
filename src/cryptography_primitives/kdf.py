@@ -14,7 +14,6 @@ from cryptography.exceptions import InvalidKey
 from cryptography.exceptions import AlreadyFinalized
 
 # Why does the entire Key Derivation Function section of cryptography work like this? Just...why?
-# TODO: Write NIST a strongly worded letter complaining about this categorization system, regret writing the thing in the first place, then burn it.
 
 
 def _get_hash_algorithm(name):
@@ -28,7 +27,7 @@ def _get_hash_algorithm(name):
 
 
 class KeyDerivationNodes:
-    CATEGORY = "Cryptography/Modern/Key Derivation"
+    CATEGORY = "ARG Toolkit/Cryptography/Modern/Key Derivation"
 
     @classmethod
     def INPUT_TYPES(cls):

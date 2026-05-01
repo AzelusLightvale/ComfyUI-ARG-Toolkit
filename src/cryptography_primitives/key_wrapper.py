@@ -1,13 +1,13 @@
 from cryptography.hazmat.primitives import keywrap
 
-# As of 2.0.0, all byte-like objects now have their own types. To actually input new data, new Byte-to-Format and Format-to-Byte nodes have been created to deal with that demand.
+# As of 2.0.0, all byte-like objects now have their own types. To actually input new data, new ByteslikeEncode and ByteslikeDecode nodes have been created to deal with that demand.
 
 
 class WrapKeyNodes:
     def __init__(self):
         pass
 
-    CATEGORY = "Cryptography/Modern/Key Wrap"
+    CATEGORY = "ARG Toolkit/Cryptography/Modern/Key Wrap"
 
     @classmethod
     def INPUT_TYPES(cls):

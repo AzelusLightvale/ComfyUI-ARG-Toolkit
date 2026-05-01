@@ -16,7 +16,7 @@ class DynamicInputContainer(dict):
 
 
 class Hash:
-    CATEGORY = "Cryptography/Modern/Hashing"
+    CATEGORY = "ARG Toolkit/Cryptography/Modern/Hashing"
 
     @classmethod
     def INPUT_TYPES(cls):

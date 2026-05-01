@@ -2,7 +2,7 @@ from cryptography.hazmat.primitives import constant_time
 
 
 class ConstantTimeCompare:
-    CATEGORY = "Cryptography/Modern/Constant Time"
+    CATEGORY = "ARG Toolkit/Cryptography/Modern/Constant Time"
 
     @classmethod
     def INPUT_TYPES(cls):
