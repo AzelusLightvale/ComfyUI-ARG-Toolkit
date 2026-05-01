@@ -8,7 +8,7 @@ class InitNode:
     def __init__(self):
         pass
 
-    CATEGORY = "Cryptography/Modern/Asymmetric"
+    CATEGORY = "ARG Toolkit/Cryptography/Modern/Asymmetric"
 
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
@@ -109,7 +109,7 @@ class EdDSAPrivateKeyFormat(InitNode):
 
 
 class EdDSASignature(InitNode):
-    CATEGORY = "Cryptography/Modern/Asymmetric"
+    CATEGORY = "ARG Toolkit/Cryptography/Modern/Asymmetric"
 
     @classmethod
     def INPUT_TYPES(cls):
@@ -157,7 +157,7 @@ class EdDSASignature(InitNode):
 
 
 class EdDSAPublicKeyFormat(InitNode):
-    CATEGORY = "Cryptography/Modern/Asymmetric"
+    CATEGORY = "ARG Toolkit/Cryptography/Modern/Asymmetric"
 
     @classmethod
     def INPUT_TYPES(cls):
@@ -227,7 +227,7 @@ class EdDSAPublicKeyFormat(InitNode):
 
 
 class EdDSAVerify(InitNode):
-    CATEGORY = "Cryptography/Modern/Asymmetric"
+    CATEGORY = "ARG Toolkit/Cryptography/Modern/Asymmetric"
 
     @classmethod
     def INPUT_TYPES(cls):
