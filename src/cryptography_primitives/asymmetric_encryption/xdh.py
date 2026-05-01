@@ -4,7 +4,7 @@ from cryptography.hazmat.primitives import serialization
 
 
 class InitNode:
-    CATEGORY = "Cryptography/Modern/Asymmetric"
+    CATEGORY = "ARG Toolkit/Cryptography/Modern/Asymmetric"
 
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
@@ -102,7 +102,7 @@ class XPrivateKeyFormat(InitNode):
 
 
 class XPublicKeyFormat(InitNode):
-    CATEGORY = "Cryptography/Modern/Asymmetric"
+    CATEGORY = "ARG Toolkit/Cryptography/Modern/Asymmetric"
 
     @classmethod
     def INPUT_TYPES(cls):
@@ -170,7 +170,7 @@ class XPublicKeyFormat(InitNode):
 
 
 class XExchange(InitNode):
-    CATEGORY = "Cryptography/Modern/Asymmetric"
+    CATEGORY = "ARG Toolkit/Cryptography/Modern/Asymmetric"
 
     @classmethod
     def INPUT_TYPES(cls):
