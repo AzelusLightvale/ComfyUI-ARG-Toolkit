@@ -32,20 +32,6 @@ This is a flexible, general-purpose node for performing symmetric encryption. It
 The `cryptography` library will raise an error if an incompatible algorithm and mode are selected. The following table provides a general guide.
 The `cryptography` library will raise an error if an incompatible algorithm and mode are selected. The following table provides a general guide. Items marked with **(D)** are deprecated according to the `cryptography` library and should be avoided for new projects.
 
-| Algorithm      | CBC | CTR |   OFB   |   CFB   |   CFB8   | GCM | XTS | ECB | None |
-| :------------- | :-: | :-: | :-----: | :-----: | :------: | :-: | :-: | :-: | :--: |
-| AES            |  ✔  |  ✔  |    ✔    |    ✔    |    ✔     |  ✔  |  ✔  |  ✔  |  ❌  |
-| AES128         |  ✔  |  ✔  |    ✔    |    ✔    |    ✔     |  ✔  |  ✔  |  ✔  |  ❌  |
-| AES256         |  ✔  |  ✔  |    ✔    |    ✔    |    ✔     |  ✔  |  ✔  |  ✔  |  ❌  |
-| Camellia       |  ✔  |  ✔  |    ✔    |    ✔    |    ✔     | ❌  | ❌  |  ✔  |  ❌  |
-| ChaCha20       | ❌  | ❌  |   ❌    |   ❌    |    ❌    | ❌  | ❌  | ❌  |  ✔   |
-| TripleDES      |  ✔  |  ✔  |    ✔    |    ✔    |    ✔     | ❌  | ❌  |  ✔  |  ❌  |
-| SM4            |  ✔  |  ✔  |    ✔    |    ✔    |    ❌    | ❌  | ❌  |  ✔  |  ❌  |
-| ARC4           | ❌  | ❌  |   ❌    |   ❌    |    ❌    | ❌  | ❌  | ❌  |  ✔   |
-| Blowfish       |  ✔  |  ✔  |    ✔    |    ✔    |    ❌    | ❌  | ❌  |  ✔  |  ❌  |
-| CAST5          |  ✔  |  ✔  |    ✔    |    ✔    |    ❌    | ❌  | ❌  |  ✔  |  ❌  |
-| SEED           |  ✔  |  ✔  |    ✔    |    ✔    |    ❌    | ❌  | ❌  |  ✔  |  ❌  |
-| IDEA           |  ✔  |  ✔  |    ✔    |    ✔    |    ❌    | ❌  | ❌  |  ✔  |  ❌  |
 | Algorithm      | CBC | CTR | OFB (D) | CFB (D) | CFB8 (D) | GCM | XTS | ECB | None |
 | :------------- | :-: | :-: | :-----: | :-----: | :------: | :-: | :-: | :-: | :--: |
 | AES            |  ✔  |  ✔  |    ✔    |    ✔    |    ✔     |  ✔  |  ✔  |  ✔  |  ❌  |
