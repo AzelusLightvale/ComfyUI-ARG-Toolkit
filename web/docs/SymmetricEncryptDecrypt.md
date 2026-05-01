@@ -37,7 +37,7 @@ The `cryptography` library will raise an error if an incompatible algorithm and 
 | AES            |  ✔  |  ✔  |    ✔    |    ✔    |    ✔     |  ✔  |  ✔  |  ✔  |  ❌  |
 | AES128         |  ✔  |  ✔  |    ✔    |    ✔    |    ✔     |  ✔  |  ✔  |  ✔  |  ❌  |
 | AES256         |  ✔  |  ✔  |    ✔    |    ✔    |    ✔     |  ✔  |  ✔  |  ✔  |  ❌  |
-| Camellia       |  ✔  |  ✔  |    ✔    |    ✔    |    ✔     | ❌  | ❌  |  ✔  |  ❌  |
+| Camellia (D)   |  ✔  |  ✔  |    ✔    |    ✔    |    ✔     | ❌  | ❌  |  ✔  |  ❌  |
 | ChaCha20       | ❌  | ❌  |   ❌    |   ❌    |    ❌    | ❌  | ❌  | ❌  |  ✔   |
 | TripleDES (D)  |  ✔  |  ✔  |    ✔    |    ✔    |    ✔     | ❌  | ❌  |  ✔  |  ❌  |
 | SM4            |  ✔  |  ✔  |    ✔    |    ✔    |    ❌    | ❌  | ❌  |  ✔  |  ❌  |
@@ -56,4 +56,4 @@ The `cryptography` library will raise an error if an incompatible algorithm and 
 - **Padding**: Block ciphers in modes like CBC and ECB require padding to handle messages that are not a multiple of the block size. The `cryptography` library handles this automatically.
 
 **Deprecation Warning:**
-As of `cryptography` 47.0.0, several legacy primitives were moved to a `decrepit` module. This includes algorithms like `ARC4`, `Blowfish`, `CAST5`, `IDEA`, `SEED`, and `TripleDES`, as well as modes like `OFB`, `CFB`, and `CFB8`. These are considered insecure or sub-optimal and are only provided for compatibility with legacy systems. Users are encouraged to use **AES** (with **GCM** or **CTR** mode) or **ChaCha20** for modern applications. For more information, check the latest documentations over at [https://cryptography.io/en/47.0.0/](https://cryptography.io/en/47.0.0/).
+As of `cryptography` 47.0.0, several legacy primitives were moved to a `decrepit` module. This includes algorithms like `ARC4`, `Blowfish`, `CAST5`, `IDEA`, `SEED`, `TripleDES`, and `Camellia`, as well as modes like `OFB`, `CFB`, and `CFB8`. These are considered insecure or sub-optimal and are only provided for compatibility with legacy systems. Users are encouraged to use **AES** (with **GCM** or **CTR** mode) or **ChaCha20** for modern applications. For more information, check the latest documentations over at [https://cryptography.io/en/47.0.0/](https://cryptography.io/en/47.0.0/).
