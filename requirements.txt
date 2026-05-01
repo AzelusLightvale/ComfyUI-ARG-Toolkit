@@ -1,6 +1,6 @@
 ## Cryptography requirements
 secretpy
-cryptography==46.0.*
+cryptography==47.0.0
 
 ## Steganography requirements
 stegano
