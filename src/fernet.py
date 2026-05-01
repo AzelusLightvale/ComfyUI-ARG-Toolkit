@@ -20,10 +20,9 @@ class FernetSimple:
                     },
                 ),
                 "key": (
-                    "STRING",
+                    "BYTESLIKE",
                     {
-                        "default": "",
-                        "multiline": False,
+                        "forceInput": True,
                         "tooltip": "Input encryption key here. Has to be 32 bytes in size.",
                     },
                 ),
@@ -44,7 +43,7 @@ class FernetSimple:
     FUNCTION = "FernetSimple"
 
     def FernetSimple(self, text, key, mode):
-        cipher = fernet.Fernet(key.encode("utf-8"))
+        cipher = fernet.Fernet(key)
         bytetext = text.encode("utf-8")
         if mode:
             token = cipher.encrypt(bytetext)
@@ -64,13 +63,13 @@ class FernetKeygenSimple:
     def INPUT_TYPES(cls):
         return {"required": {}}
 
-    RETURN_TYPES = ("STRING",)
+    RETURN_TYPES = ("BYTESLIKE",)
     RETURN_NAMES = ("key",)
     FUNCTION = "FernetKeygenSimple"
 
     def FernetKeygenSimple(self):
         key = fernet.Fernet.generate_key()
-        return (key.decode("utf-8"),)
+        return (key.decode,)
 
 
 # A dictionary that contains all nodes you want to export with their names

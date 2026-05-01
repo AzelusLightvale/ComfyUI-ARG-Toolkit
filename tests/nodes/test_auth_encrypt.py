@@ -1,4 +1,4 @@
-from src.comfyui_arg_toolkit.cryptography_primitives import auth_encrypt
+from src.cryptography_primitives import auth_encrypt
 
 # Test suite for auth_encrypt.py
 class TestAuthEncrypt:

@@ -1,4 +1,4 @@
-from src.comfyui_arg_toolkit.cryptography_primitives import hashing
+from src.cryptography_primitives import hashing
 
 # Test suite for hashing.py
 class TestHashing:

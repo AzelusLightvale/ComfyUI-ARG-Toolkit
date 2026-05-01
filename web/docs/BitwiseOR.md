@@ -1,13 +1,19 @@
-
 # Bitwise OR Operator
 
 Performs a bitwise OR operation on two inputs.
 
-Source library: Python standard library
+## Overview
+
+This node takes two inputs, interprets them as byte arrays based on the selected `datatype`, and performs a bitwise OR operation between them. The inputs must be of the same length. The result is then formatted back into the same datatype as the input.
 
 ## Parameters
 
-- **text_1**: The first input.
-- **text_2**: The second input.
-- **encoding_format**: The character encoding to use for the conversion. Defaults to `utf-8`.
-- **other_encoding_format**: A custom encoding format to use if `Other` is selected for `encoding_format`.
+- **text_1**: The first input string.
+- **text_2**: The second input string.
+- **datatype**: The format of the input strings. Can be `String`, `Hexadecimal`, `Base64`, `Integer`, or `Binary`. This determines how the strings are parsed into bytes before the operation.
+- **encoding_format**: If `datatype` is `String`, this specifies the character encoding to use.
+- **other_encoding_format**: If "Other" is selected for `encoding_format`, this field allows you to specify a custom encoding format.
+
+## Outputs
+
+- **bitwise_txt**: The result of the OR operation, formatted according to the input `datatype`.

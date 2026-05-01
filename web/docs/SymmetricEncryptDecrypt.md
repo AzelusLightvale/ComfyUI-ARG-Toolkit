@@ -1,25 +1,33 @@
+# Symmetric Encrypt/Decrypt
 
-# Symmetrical Encrypt/Decrypt
-
-Encrypts or decrypts a message using a symmetrical cipher. This node is a wrapper around the `cryptography` library.
+Encrypts or decrypts data using a variety of standard symmetric ciphers and modes. This node is a wrapper around the `cryptography` library.
 
 Source library: `cryptography`
 
+## Overview
+
+This is a flexible, general-purpose node for performing symmetric encryption. It allows you to choose from a wide range of algorithms (like AES, ChaCha20) and modes of operation (like CBC, GCM, CTR) to fit different cryptographic needs.
+
 ## Parameters
 
-- **text**: The message to encrypt or decrypt.
-- **key**: The encryption key. Must be a hexadecimal string of the correct length for the chosen algorithm.
-- **iv**: The initialization vector. Must be a hexadecimal string. For XTS mode, this is the `tweak`.
-- **algorithm**: The symmetrical algorithm to use.
-- **modes**: The mode of operation for the cipher.
-- **mode**: Whether to encrypt or decrypt the message.
-- **tag**: The tag bytes to verify during decryption. Exclusively for GCM mode.
-- **min_tag_length**: The minimum length of the tag. Exclusively for GCM mode.
-- **nonce**: A random nonce to instantiate from. Currently only for ChaCha20.
+- **text**: The `BYTESLIKE` data to be encrypted or decrypted.
+- **key**: The encryption key as a `BYTESLIKE` object. The required size depends on the chosen algorithm.
+- **iv**: The initialization vector or nonce as a `BYTESLIKE` object. For XTS mode, this is the `tweak`. Not used by all algorithms/modes (e.g., ECB, stream ciphers).
+- **algorithm**: The symmetric algorithm to use (e.g., `AES`, `ChaCha20`, `TripleDES`).
+- **modes**: The cipher mode of operation (e.g., `CBC`, `GCM`, `CTR`).
+- **mode**: Toggles between `Encrypt` and `Decrypt`.
+- **tag**: (Optional) For GCM decryption, this is the `BYTESLIKE` authentication tag that must be provided to verify the ciphertext's integrity and authenticity.
+- **min_tag_length**: (Optional) For GCM, the minimum acceptable tag length during decryption.
+- **nonce**: (Optional) A `BYTESLIKE` nonce, used specifically for `ChaCha20` in this implementation.
 
-## Algorithm and Mode Compatibility Matrix
+## Outputs
 
-The following table shows the compatibility between the available algorithms and modes.
+- **output**: The resulting ciphertext (on encryption) or plaintext (on decryption) as a `BYTESLIKE` object.
+- **tag**: When using GCM mode for encryption, this output provides the generated authentication tag as a `BYTESLIKE` object. This tag is required for decryption.
+
+## Algorithm and Mode Compatibility
+
+The `cryptography` library will raise an error if an incompatible algorithm and mode are selected. The following table provides a general guide.
 
 | Algorithm | CBC | CTR | OFB | CFB | CFB8 | GCM | XTS | ECB | None |
 | :-------- | :-: | :-: | :-: | :-: | :--: | :-: | :-: | :-: | :--: |
@@ -38,18 +46,8 @@ The following table shows the compatibility between the available algorithms and
 
 **Notes:**
 
-- The compatibility is based on the `cryptography` library. Please refer to the official documentation for the most accurate information.
-
-- AES-XTS requires a double-length key (e.g., 256-bit key for XTS-AES-128 and 512-bit key for XTS-AES-256).
-
-- Stream ciphers (ChaCha20, ARC4) do not use modes, so None is the only valid choice.
-
-- GCM only works with AES.
-
-- CBC/ECB block modes require padding.
-
-- ECB is insecure but technically valid.
-
-## Key and IV sizes
-
-The required key and IV sizes depend on the selected algorithm and mode. Please refer to the `cryptography` library documentation for the specific requirements.
+- **Key/IV Types**: All key and IV inputs must be `BYTESLIKE` objects of the correct length for the chosen algorithm/mode. Use the `Random Nonce Generator` node to create secure random values.
+- **Stream Ciphers**: Stream ciphers like `ChaCha20` and `ARC4` do not use a block mode; select `None`.
+- **GCM**: GCM is an authenticated mode and only works with AES in this implementation. It provides both confidentiality and integrity.
+- **ECB**: Electronic Codebook mode is insecure for most uses and should be avoided. It does not use an IV.
+- **Padding**: Block ciphers in modes like CBC and ECB require padding to handle messages that are not a multiple of the block size. The `cryptography` library handles this automatically.

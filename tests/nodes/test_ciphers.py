@@ -1,4 +1,4 @@
-from src.comfyui_arg_toolkit import ciphers
+from src import ciphers
 
 # Test suite for ciphers.py
 class TestCiphers:

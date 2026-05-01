@@ -17,6 +17,16 @@ from cryptography.exceptions import AlreadyFinalized
 # TODO: Write NIST a strongly worded letter complaining about this categorization system, regret writing the thing in the first place, then burn it.
 
 
+def _get_hash_algorithm(name):
+    """Gets a hash algorithm instance from its name."""
+    if name == "BLAKE2b":
+        return getattr(hashes, name)(64)
+    elif name == "BLAKE2s":
+        return getattr(hashes, name)(32)
+    else:
+        return getattr(hashes, name)()
+
+
 class KeyDerivationNodes:
     CATEGORY = "Cryptography/Modern/Key Derivation"
 
@@ -35,18 +45,17 @@ class KeyDerivationNodes:
                     },
                 ),
                 "message": (
-                    "STRING",
+                    "BYTESLIKE",
                     {
-                        "default": "Hello World!",
-                        "multiline": True,
-                        "placeholder": "Type your message here...",
+                        "forceInput": True,
+                        "tooltip": "The message to derive key from. Must be bytes.",
                     },
                 ),
             },
             "optional": {},
         }
 
-    RETURN_TYPES = ("STRING",)
+    RETURN_TYPES = ("BYTESLIKE",)
     RETURN_NAMES = ("derived_key",)
 
     def __init_subclass__(cls, **kwargs):
@@ -64,10 +73,8 @@ class Argon2id_Derive(KeyDerivationNodes):
     def INPUT_TYPES(cls):
         class_input = super().INPUT_TYPES()
         class_input["required"]["salt"] = (
-            "STRING",
+            "BYTESLIKE",
             {
-                "default": "",
-                "multiline": False,
                 "forceInput": True,
                 "tooltip": "The nonce used to generate the key. Use SystemRandom (Random Nonce Generator) to generate this.",
             },
@@ -96,48 +103,33 @@ class Argon2id_Derive(KeyDerivationNodes):
             {
                 "default": 65536,
                 "min": 1,
+                "max": 2147483647,
                 "step": 1,
-                "tooltip": "The amount of memory to use in kibibytes. 1 kibibyte (KiB) is 1024 bytes. This must be at minimum `8 * parallel_lanes`. However, due to ComfyUI limitations, the memory cost will be purposefully limited to 8*2048 KiB, or 16 MiB (Mebibytes)",
+                "tooltip": "The amount of memory to use in kibibytes. 1 kibibyte (KiB) is 1024 bytes. This must be at minimum `8 * parallel_lanes`.",
             },
         )
         class_input["optional"]["ad"] = (
-            "STRING",
-            {"default": "", "multiline": False, "tooltip": "Optional associated data."},
+            "BYTESLIKE",
+            {"forceInput": True, "tooltip": "Optional associated data."},
         )
         class_input["optional"]["secret"] = (
-            "STRING",
+            "BYTESLIKE",
             {
-                "default": "",
-                "multiline": False,
+                "forceInput": True,
                 "tooltip": "Optional secret data, to be used for keyed hashing.",
             },
         )
         return class_input
 
-    def argon2id_derive(
-        self,
-        message,
-        length,
-        salt,
-        iterations,
-        parallel_lanes,
-        memory_cost,
-        ad,
-        secret,
-        mode,
-    ):
-        if 8 * memory_cost < 8 * parallel_lanes:
+    def _get_kdf(self, salt, length, iterations, parallel_lanes, memory_cost, ad, secret):
+        min_memory_cost = 8 * parallel_lanes
+        if memory_cost < min_memory_cost:
             print(
-                f"[WARNING]: Because defined memory cost ({8 * memory_cost} KiB) is lower than the minimum required ({8 * parallel_lanes} KiB), the value will be silently clamped to the minimum."
+                f"[ComfyUI ARG Toolkit][WARNING]: Because defined memory cost ({memory_cost} KiB) is lower than the minimum required ({min_memory_cost} KiB), the value will be silently clamped to the minimum."
             )
-            memory_cost = 8 * parallel_lanes
-        else:
-            memory_cost = 8 * memory_cost  # To actually convert this to a proper amount of defined kibibytes.
-        ad = ad.encode("utf-8")
-        secret = secret.encode("utf-8")
-        salt = bytes.fromhex(salt)
-        message = message.encode("utf-8")
-        argon2_key = Argon2id(
+            memory_cost = min_memory_cost
+
+        return Argon2id(
             salt=salt,
             length=length,
             iterations=iterations,
@@ -146,11 +138,14 @@ class Argon2id_Derive(KeyDerivationNodes):
             ad=ad,
             secret=secret,
         )
+
+    def argon2id_derive(self, message, length, salt, iterations, parallel_lanes, memory_cost, ad, secret, mode):
+        argon2_key = self._get_kdf(salt, length, iterations, parallel_lanes, memory_cost, ad, secret)
         if mode:
             output = argon2_key.derive(message)
-            output = output.hex()
         else:
             output = argon2_key.derive_phc_encoded(message)
+            output = output.encode("utf-8")
         return (output,)
 
 
@@ -162,43 +157,18 @@ class Argon2id_Verify(Argon2id_Derive):
     def INPUT_TYPES(cls):
         class_input = super().INPUT_TYPES()
         class_input["required"]["expected_key"] = (
-            "STRING",
+            "BYTESLIKE",
             {
-                "default": "",
-                "multiline": False,
+                "forceInput": True,
                 "tooltip": "The expected result of key derivation.",
             },
         )
         return class_input
 
-    def argon2id_verify(
-        self,
-        message,
-        length,
-        salt,
-        iterations,
-        parallel_lanes,
-        memory_cost,
-        ad,
-        secret,
-        mode,
-        expected_key,
-    ):
-        if 8 * memory_cost < 8 * parallel_lanes:
-            print(
-                f"[WARNING]: Because defined memory cost ({8 * memory_cost} KiB) is lower than the minimum required ({8 * parallel_lanes} KiB), the value will be silently clamped to the minimum."
-            )
-            memory_cost = 8 * parallel_lanes
-        else:
-            memory_cost = 8 * memory_cost  # To actually convert this to a proper amount of defined kibibytes.
-        salt = bytes.fromhex(salt)
-        ad = ad.encode("utf-8")
-        secret = secret.encode("utf-8")
-        argon2_key = Argon2id(salt, length, iterations, parallel_lanes, memory_cost, ad, secret)
+    def argon2id_verify(self, message, length, salt, iterations, parallel_lanes, memory_cost, ad, secret, mode, expected_key):
+        argon2_key = self._get_kdf(salt, length, iterations, parallel_lanes, memory_cost, ad, secret)
 
         if mode:
-            expected_key = bytes.fromhex(expected_key)
-            message = message.encode("utf-8")
             try:
                 argon2_key.verify(message, expected_key)
                 output = True
@@ -209,11 +179,9 @@ class Argon2id_Verify(Argon2id_Derive):
                     "The verification function is being called more than once on a finalized KDF target. This should not be happening."
                 )
         else:
-            expected_key = str(expected_key)
-            message = str(message)
             # For some stupid reason, PHC-formatted strings have to be done in string form, not hex or base64...
             try:
-                argon2_key.verify_phc_encoded(message, expected_key, secret)
+                argon2_key.verify_phc_encoded(message, expected_key.decode("utf-8"), secret)
                 output = True
             except InvalidKey:
                 output = False
@@ -229,10 +197,8 @@ class PBKDF2HMAC_Derive(KeyDerivationNodes):
     def INPUT_TYPES(cls):
         class_input = super().INPUT_TYPES()
         class_input["required"]["salt"] = (
-            "STRING",
+            "BYTESLIKE",
             {
-                "default": "",
-                "multiline": False,
                 "forceInput": True,
                 "tooltip": "The nonce used to generate the key. Use SystemRandom (Random Nonce Generator) to generate this.",
             },
@@ -263,22 +229,17 @@ class PBKDF2HMAC_Derive(KeyDerivationNodes):
                 "default": 1200000,
                 "tooltip": "The number of iterations to perform of the hash function. This can be used to control the length of time the operation takes. Higher numbers help mitigate brute force attacks against derived keys.",
                 "min": 1,
+                "max": 2147483647,
             },
         )
         return class_input
 
+    def _get_kdf(self, salt, length, iterations, algorithm):
+        digest = _get_hash_algorithm(algorithm)
+        return PBKDF2HMAC(salt=salt, length=length, iterations=iterations, algorithm=digest)
+
     def pbkdf2hmac_derive(self, message, length, salt, iterations, algorithm):
-        if algorithm == "BLAKE2b":
-            digest = getattr(hashes, algorithm)(64)
-        elif algorithm == "BLAKE2s":
-            digest = getattr(hashes, algorithm)(32)
-        else:
-            digest = getattr(hashes, algorithm)()
-        salt = bytes.fromhex(salt)
-        message = message.encode("utf-8")
-        pbkdf2hmac_key = PBKDF2HMAC(salt=salt, length=length, iterations=iterations, algorithm=digest)
-        output = pbkdf2hmac_key.derive(message)
-        output = output.hex()
+        output = self._get_kdf(salt, length, iterations, algorithm).derive(message)
         return (output,)
 
 
@@ -290,26 +251,16 @@ class PBKDF2HMAC_Verify(PBKDF2HMAC_Derive):
     def INPUT_TYPES(cls):
         class_input = super().INPUT_TYPES()
         class_input["required"]["expected_key"] = (
-            "STRING",
+            "BYTESLIKE",
             {
-                "default": "",
-                "multiline": False,
+                "forceInput": True,
                 "tooltip": "The expected result of key derivation.",
             },
         )
         return class_input
 
     def pbkdf2hmac_verify(self, message, length, salt, iterations, algorithm, expected_key):
-        if algorithm == "BLAKE2b":
-            digest = getattr(hashes, algorithm)(64)
-        elif algorithm == "BLAKE2s":
-            digest = getattr(hashes, algorithm)(32)
-        else:
-            digest = getattr(hashes, algorithm)()
-        salt = bytes.fromhex(salt)
-        message = message.encode("utf-8")
-        pbkdf2hmac_key = PBKDF2HMAC(salt=salt, length=length, iterations=iterations, algorithm=digest)
-        expected_key = bytes.fromhex(expected_key)
+        pbkdf2hmac_key = self._get_kdf(salt, length, iterations, algorithm)
         try:
             pbkdf2hmac_key.verify(message, expected_key)
             output = True
@@ -327,10 +278,8 @@ class Scrypt_Derive(KeyDerivationNodes):
     def INPUT_TYPES(cls):
         class_input = super().INPUT_TYPES()
         class_input["required"]["salt"] = (
-            "STRING",
+            "BYTESLIKE",
             {
-                "default": "",
-                "multiline": False,
                 "forceInput": True,
                 "tooltip": "The nonce used to generate the key. Use SystemRandom (Random Nonce Generator) to generate this.",
             },
@@ -339,7 +288,7 @@ class Scrypt_Derive(KeyDerivationNodes):
             "INT",
             {
                 "default": 14,
-                "tooltip": "The CPU/Memory cost parameter. Normally, this must be larger than one and a power of 2. This specific implementation uses the direct power to exponentiate 2, minimum 1.",
+                "tooltip": "The CPU/Memory cost parameter. Normally, this must be larger than 1 and a power of 2. This specific implementation uses the direct power to exponentiate 2 (as in 2^n, or, in Python, `2**n`), minimum 1.",
                 "min": 1,
             },
         )
@@ -347,7 +296,7 @@ class Scrypt_Derive(KeyDerivationNodes):
             "INT",
             {
                 "default": 8,
-                "tooltip": "The block size parameter. Affects computation costs.",
+                "tooltip": "The block size parameter. Affects memory costs and sequential memory-hard properties by controlling memory access patterns and memory block size.",
                 "min": 1,
             },
         )
@@ -355,19 +304,18 @@ class Scrypt_Derive(KeyDerivationNodes):
             "INT",
             {
                 "default": 1,
-                "tooltip": "The parallel factor parameter. Affects computation costs.",
+                "tooltip": "The parallel factor parameter. Affects the number of mixing functions to run in parallel. Can help in multi-core systems, but also makes it easier for attackers with parallel hardware.",
                 "min": 1,
             },
         )
         return class_input
 
+    def _get_kdf(self, salt, length, n, r, p):
+        n_cost = 2**n
+        return Scrypt(salt, length, n_cost, r, p)
+
     def scrypt_derive(self, message, length, salt, n, r, p):
-        salt = bytes.fromhex(salt)
-        message = message.encode("utf-8")
-        n = 2**n
-        scrypt_key = Scrypt(salt, length, n, r, p)
-        output = scrypt_key.derive(message)
-        output = output.hex()
+        output = self._get_kdf(salt, length, n, r, p).derive(message)
         return (output,)
 
 
@@ -379,21 +327,16 @@ class Scrypt_Verify(Scrypt_Derive):
     def INPUT_TYPES(cls):
         class_input = super().INPUT_TYPES()
         class_input["required"]["expected_key"] = (
-            "STRING",
+            "BYTESLIKE",
             {
-                "default": "",
-                "multiline": False,
+                "forceInput": True,
                 "tooltip": "The expected result of key derivation.",
             },
         )
         return class_input
 
     def scrypt_verify(self, message, length, salt, n, r, p, expected_key):
-        salt = bytes.fromhex(salt)
-        message = message.encode("utf-8")
-        n = 2**n
-        scrypt_key = Scrypt(salt, length, n, r, p)
-        expected_key = bytes.fromhex(expected_key)
+        scrypt_key = self._get_kdf(salt, length, n, r, p)
         try:
             scrypt_key.verify(message, expected_key)
             output = True
@@ -432,28 +375,23 @@ class ConcatKDFHash_Derive(KeyDerivationNodes):
             {"tooltip": "The algorithm to use for hash generation."},
         )
         class_input["optional"]["other_info"] = (
-            "STRING",
+            "BYTESLIKE",
             {
-                "default": "",
-                "multiline": False,
+                "forceInput": True,
                 "tooltip": "Application-specific context information. If left empty, will pass an empty byte string.",
             },
         )
         return class_input
 
+    def _get_kdf(self, length, algorithm, other_info):
+        digest = _get_hash_algorithm(algorithm)
+        if other_info is None:
+            other_info = b""
+        return ConcatKDFHash(length=length, algorithm=digest, otherinfo=other_info)
+
     def concatkdfhash_derive(self, message, length, algorithm, other_info):
-        if algorithm == "BLAKE2b":
-            digest = getattr(hashes, algorithm)(64)
-        elif algorithm == "BLAKE2s":
-            digest = getattr(hashes, algorithm)(32)
-        else:
-            digest = getattr(hashes, algorithm)()
-        message = message.encode("utf-8")
-        other_info = other_info.encode("utf-8")
-        ckdfhash_key = ConcatKDFHash(length=length, algorithm=digest, otherinfo=other_info)
-        output = ckdfhash_key.derive(message)
-        output = output.hex()
-        return (output,)
+        kdf = self._get_kdf(length, algorithm, other_info)
+        return (kdf.derive(message),)
 
 
 class ConcatKDFHash_Verify(ConcatKDFHash_Derive):
@@ -464,26 +402,16 @@ class ConcatKDFHash_Verify(ConcatKDFHash_Derive):
     def INPUT_TYPES(cls):
         class_input = super().INPUT_TYPES()
         class_input["required"]["expected_key"] = (
-            "STRING",
+            "BYTESLIKE",
             {
-                "default": "",
-                "multiline": False,
+                "forceInput": True,
                 "tooltip": "The expected result of key derivation.",
             },
         )
         return class_input
 
     def concatkdfhash_verify(self, message, length, algorithm, other_info, expected_key):
-        if algorithm == "BLAKE2b":
-            digest = getattr(hashes, algorithm)(64)
-        elif algorithm == "BLAKE2s":
-            digest = getattr(hashes, algorithm)(32)
-        else:
-            digest = getattr(hashes, algorithm)()
-        message = message.encode("utf-8")
-        other_info = other_info.encode("utf-8")
-        ckdfhash_key = ConcatKDFHash(length=length, algorithm=digest, otherinfo=other_info)
-        expected_key = bytes.fromhex(expected_key)
+        ckdfhash_key = self._get_kdf(length, algorithm, other_info)
         try:
             ckdfhash_key.verify(message, expected_key)
             output = True
@@ -501,29 +429,23 @@ class ConcatKDFHMAC_Derive(ConcatKDFHash_Derive):
     def INPUT_TYPES(cls):
         class_input = super().INPUT_TYPES()
         class_input["optional"]["salt"] = (
-            "STRING",
+            "BYTESLIKE",
             {
-                "default": "",
-                "multiline": False,
+                "forceInput": True,
                 "tooltip": "A salt. Optional, but highly recommended, ideally with as many bits of entropy as the security level of the hash function.",
             },
         )
         return class_input
 
+    def _get_kdf(self, length, algorithm, other_info, salt):
+        digest = _get_hash_algorithm(algorithm)
+        if other_info is None:
+            other_info = b""
+        return ConcatKDFHMAC(length=length, algorithm=digest, otherinfo=other_info, salt=salt)
+
     def concatkdfhmac_derive(self, message, length, algorithm, other_info, salt):
-        if algorithm == "BLAKE2b":
-            digest = getattr(hashes, algorithm)(64)
-        elif algorithm == "BLAKE2s":
-            digest = getattr(hashes, algorithm)(32)
-        else:
-            digest = getattr(hashes, algorithm)()
-        message = message.encode("utf-8")
-        other_info = other_info.encode("utf-8")
-        salt = bytes.fromhex(salt)
-        ckdfhmac_key = ConcatKDFHMAC(length=length, algorithm=digest, otherinfo=other_info, salt=salt)
-        output = ckdfhmac_key.derive(message)
-        output = output.hex()
-        return (output,)
+        kdf = self._get_kdf(length, algorithm, other_info, salt)
+        return (kdf.derive(message),)
 
 
 class ConcatKDFHMAC_Verify(ConcatKDFHMAC_Derive):
@@ -534,27 +456,16 @@ class ConcatKDFHMAC_Verify(ConcatKDFHMAC_Derive):
     def INPUT_TYPES(cls):
         class_input = super().INPUT_TYPES()
         class_input["required"]["expected_key"] = (
-            "STRING",
+            "BYTESLIKE",
             {
-                "default": "",
-                "multiline": False,
+                "forceInput": True,
                 "tooltip": "The expected result of key derivation.",
             },
         )
         return class_input
 
     def concatkdfhmac_verify(self, message, length, algorithm, other_info, salt, expected_key):
-        if algorithm == "BLAKE2b":
-            digest = getattr(hashes, algorithm)(64)
-        elif algorithm == "BLAKE2s":
-            digest = getattr(hashes, algorithm)(32)
-        else:
-            digest = getattr(hashes, algorithm)()
-        message = message.encode("utf-8")
-        other_info = other_info.encode("utf-8")
-        salt = bytes.fromhex(salt)
-        ckdfhash_key = ConcatKDFHMAC(length=length, algorithm=digest, otherinfo=other_info, salt=salt)
-        expected_key = bytes.fromhex(expected_key)
+        ckdfhash_key = self._get_kdf(length, algorithm, other_info, salt)
         try:
             ckdfhash_key.verify(message, expected_key)
             output = True
@@ -592,39 +503,31 @@ class HKDF_Derive(KeyDerivationNodes):
             {"tooltip": "The algorithm to use for hash generation."},
         )
         class_input["optional"]["salt"] = (
-            "STRING",
+            "BYTESLIKE",
             {
-                "default": "",
-                "multiline": False,
                 "forceInput": True,
                 "tooltip": "A salt to randomize the KDF's output. Optional, but highly recommended.",
             },
         )
         class_input["optional"]["info"] = (
-            "STRING",
+            "BYTESLIKE",
             {
-                "default": "",
-                "multiline": False,
+                "forceInput": True,
                 "tooltip": "Application-specific context information. If left empty, will pass an empty byte string.",
             },
         )
 
         return class_input
 
+    def _get_kdf(self, length, algorithm, salt, info):
+        digest = _get_hash_algorithm(algorithm)
+        if info is None:
+            info = b""
+        return HKDF(algorithm=digest, length=length, salt=salt, info=info)
+
     def hkdf_derive(self, message, length, algorithm, salt, info):
-        if algorithm == "BLAKE2b":
-            digest = getattr(hashes, algorithm)(64)
-        elif algorithm == "BLAKE2s":
-            digest = getattr(hashes, algorithm)(32)
-        else:
-            digest = getattr(hashes, algorithm)()
-        message = message.encode("utf-8")
-        salt = bytes.fromhex(salt)
-        info = info.encode("utf-8")
-        hkdf_key = HKDF(algorithm=digest, length=length, salt=salt, info=info)
-        output = hkdf_key.derive(message)
-        output = output.hex()
-        return (output,)
+        kdf = self._get_kdf(length, algorithm, salt, info)
+        return (kdf.derive(message),)
 
 
 class HKDF_Verify(HKDF_Derive):
@@ -635,27 +538,16 @@ class HKDF_Verify(HKDF_Derive):
     def INPUT_TYPES(cls):
         class_input = super().INPUT_TYPES()
         class_input["required"]["expected_key"] = (
-            "STRING",
+            "BYTESLIKE",
             {
-                "default": "",
-                "multiline": False,
+                "forceInput": True,
                 "tooltip": "The expected result of key derivation.",
             },
         )
         return class_input
 
     def hkdf_verify(self, message, length, algorithm, info, salt, expected_key):
-        if algorithm == "BLAKE2b":
-            digest = getattr(hashes, algorithm)(64)
-        elif algorithm == "BLAKE2s":
-            digest = getattr(hashes, algorithm)(32)
-        else:
-            digest = getattr(hashes, algorithm)()
-        message = message.encode("utf-8")
-        info = info.encode("utf-8")
-        salt = bytes.fromhex(salt)
-        hkdf_key = HKDF(length=length, algorithm=digest, info=info, salt=salt)
-        expected_key = bytes.fromhex(expected_key)
+        hkdf_key = self._get_kdf(length, algorithm, salt, info)
         try:
             hkdf_key.verify(message, expected_key)
             output = True
@@ -693,29 +585,24 @@ class HKDFExpand_Derive(KeyDerivationNodes):
             {"tooltip": "The algorithm to use for hash generation."},
         )
         class_input["optional"]["info"] = (
-            "STRING",
+            "BYTESLIKE",
             {
-                "default": "",
-                "multiline": False,
+                "forceInput": True,
                 "tooltip": "Application-specific context information. If left empty, will pass an empty byte string.",
             },
         )
 
         return class_input
 
+    def _get_kdf(self, length, algorithm, info):
+        digest = _get_hash_algorithm(algorithm)
+        if info is None:
+            info = b""
+        return HKDFExpand(algorithm=digest, length=length, info=info)
+
     def hkdfexpand_derive(self, message, length, algorithm, info):
-        if algorithm == "BLAKE2b":
-            digest = getattr(hashes, algorithm)(64)
-        elif algorithm == "BLAKE2s":
-            digest = getattr(hashes, algorithm)(32)
-        else:
-            digest = getattr(hashes, algorithm)()
-        message = message.encode("utf-8")
-        info = info.encode("utf-8")
-        hkdf_key = HKDFExpand(algorithm=digest, length=length, info=info)
-        output = hkdf_key.derive(message)
-        output = output.hex()
-        return (output,)
+        kdf = self._get_kdf(length, algorithm, info)
+        return (kdf.derive(message),)
 
 
 class HKDFExpand_Verify(HKDFExpand_Derive):
@@ -726,26 +613,16 @@ class HKDFExpand_Verify(HKDFExpand_Derive):
     def INPUT_TYPES(cls):
         class_input = super().INPUT_TYPES()
         class_input["required"]["expected_key"] = (
-            "STRING",
+            "BYTESLIKE",
             {
-                "default": "",
-                "multiline": False,
+                "forceInput": True,
                 "tooltip": "The expected result of key derivation.",
             },
         )
         return class_input
 
     def hkdfexpand_verify(self, message, length, algorithm, info, expected_key):
-        if algorithm == "BLAKE2b":
-            digest = getattr(hashes, algorithm)(64)
-        elif algorithm == "BLAKE2s":
-            digest = getattr(hashes, algorithm)(32)
-        else:
-            digest = getattr(hashes, algorithm)()
-        message = message.encode("utf-8")
-        info = info.encode("utf-8")
-        hkdf_key = HKDF(length=length, algorithm=digest, info=info)
-        expected_key = bytes.fromhex(expected_key)
+        hkdf_key = self._get_kdf(length, algorithm, info)
         try:
             hkdf_key.verify(message, expected_key)
             output = True
@@ -783,29 +660,24 @@ class X963KDF_Derive(KeyDerivationNodes):
             {"tooltip": "The algorithm to use for hash generation."},
         )
         class_input["optional"]["info"] = (
-            "STRING",
+            "BYTESLIKE",
             {
-                "default": "",
-                "multiline": False,
+                "forceInput": True,
                 "tooltip": "Application-specific context information. If left empty, will pass an empty byte string.",
             },
         )
 
         return class_input
 
+    def _get_kdf(self, length, algorithm, info):
+        digest = _get_hash_algorithm(algorithm)
+        if info is None:
+            info = b""
+        return X963KDF(algorithm=digest, length=length, sharedinfo=info)
+
     def x963kdf_derive(self, message, length, algorithm, info):
-        if algorithm == "BLAKE2b":
-            digest = getattr(hashes, algorithm)(64)
-        elif algorithm == "BLAKE2s":
-            digest = getattr(hashes, algorithm)(32)
-        else:
-            digest = getattr(hashes, algorithm)()
-        message = message.encode("utf-8")
-        info = info.encode("utf-8")
-        x963kdf_key = X963KDF(algorithm=digest, length=length, info=info)
-        output = x963kdf_key.derive(message)
-        output = output.hex()
-        return (output,)
+        kdf = self._get_kdf(length, algorithm, info)
+        return (kdf.derive(message),)
 
 
 class X963KDF_Verify(X963KDF_Derive):
@@ -816,26 +688,16 @@ class X963KDF_Verify(X963KDF_Derive):
     def INPUT_TYPES(cls):
         class_input = super().INPUT_TYPES()
         class_input["required"]["expected_key"] = (
-            "STRING",
+            "BYTESLIKE",
             {
-                "default": "",
-                "multiline": False,
+                "forceInput": True,
                 "tooltip": "The expected result of key derivation.",
             },
         )
         return class_input
 
     def x963kdf_verify(self, message, length, algorithm, info, expected_key):
-        if algorithm == "BLAKE2b":
-            digest = getattr(hashes, algorithm)(64)
-        elif algorithm == "BLAKE2s":
-            digest = getattr(hashes, algorithm)(32)
-        else:
-            digest = getattr(hashes, algorithm)()
-        message = message.encode("utf-8")
-        info = info.encode("utf-8")
-        x963kdf_key = X963KDF(length=length, algorithm=digest, info=info)
-        expected_key = bytes.fromhex(expected_key)
+        x963kdf_key = self._get_kdf(length, algorithm, info)
         try:
             x963kdf_key.verify(message, expected_key)
             output = True
@@ -890,26 +752,23 @@ class KBKDF_Derive(KeyDerivationNodes):
             {"default": "KBKDFHMAC", "tooltip": "The operation mode to use."},
         )
         class_input["optional"]["label"] = (
-            "STRING",
+            "BYTESLIKE",
             {
-                "default": "",
-                "multiline": False,
+                "forceInput": True,
                 "tooltip": "Application-specific label information",
             },
         )
         class_input["optional"]["context"] = (
-            "STRING",
+            "BYTESLIKE",
             {
-                "default": "",
-                "multiline": False,
+                "forceInput": True,
                 "tooltip": "Application-specific context information",
             },
         )
         class_input["optional"]["fixed"] = (
-            "STRING",
+            "BYTESLIKE",
             {
-                "default": "",
-                "multiline": False,
+                "forceInput": True,
                 "tooltip": "Instead of supplying `label` and `context`, you can supply fixed data in this field instead. Note that if this is specified, `label` and `context` will be ignored.",
             },
         )
@@ -922,6 +781,35 @@ class KBKDF_Derive(KeyDerivationNodes):
             },
         )
         return class_input
+
+    def _get_kdf(
+        self,
+        length,
+        algorithm,
+        rlen,
+        llen,
+        location,
+        label,
+        context,
+        operation_mode,
+        break_location=None,
+        fixed=None,
+    ):
+        digest = _get_hash_algorithm(algorithm)
+        location_enum = getattr(CounterLocation, location)
+        kdf_class = getattr(cryptography.hazmat.primitives.kdf.kbkdf, operation_mode)
+        return kdf_class(
+            length=length,
+            algorithm=digest,
+            mode=Mode.CounterMode,
+            rlen=rlen,
+            llen=llen,
+            location=location_enum,
+            label=label or b"",
+            context=context or b"",
+            fixed=fixed,
+            break_location=break_location,
+        )
 
     def kbkdf_derive(
         self,
@@ -937,32 +825,8 @@ class KBKDF_Derive(KeyDerivationNodes):
         break_location=None,
         fixed=None,
     ):
-        if algorithm == "BLAKE2b":
-            digest = getattr(hashes, algorithm)(64)
-        elif algorithm == "BLAKE2s":
-            digest = getattr(hashes, algorithm)(32)
-        else:
-            digest = getattr(hashes, algorithm)()
-        message = message.encode("utf-8")
-        label = label.encode("utf-8")
-        context = context.encode("utf-8")
-        fixed = fixed.encode("utf-8")
-        location = getattr(CounterLocation, location)
-        kbkdf_key = getattr(cryptography.hazmat.primitives.kdf.kbkdf, operation_mode)(
-            length=length,
-            algorithm=digest,
-            mode=Mode.CounterMode,
-            rlen=rlen,
-            llen=llen,
-            location=location,
-            label=label,
-            context=context,
-            fixed=fixed,
-            break_location=break_location,
-        )
-        output = kbkdf_key.derive(message)
-        output = output.hex()
-        return (output,)
+        kdf = self._get_kdf(length, algorithm, rlen, llen, location, label, context, operation_mode, break_location, fixed)
+        return (kdf.derive(message),)
 
 
 class KBKDF_Verify(KBKDF_Derive):
@@ -973,10 +837,9 @@ class KBKDF_Verify(KBKDF_Derive):
     def INPUT_TYPES(cls):
         class_input = super().INPUT_TYPES()
         class_input["required"]["expected_key"] = (
-            "STRING",
+            "BYTESLIKE",
             {
-                "default": "",
-                "multiline": False,
+                "forceInput": True,
                 "tooltip": "The expected result of key derivation.",
             },
         )
@@ -997,30 +860,7 @@ class KBKDF_Verify(KBKDF_Derive):
         break_location=None,
         fixed=None,
     ):
-        if algorithm == "BLAKE2b":
-            digest = getattr(hashes, algorithm)(64)
-        elif algorithm == "BLAKE2s":
-            digest = getattr(hashes, algorithm)(32)
-        else:
-            digest = getattr(hashes, algorithm)()
-        message = message.encode("utf-8")
-        label = label.encode("utf-8")
-        context = context.encode("utf-8")
-        fixed = fixed.encode("utf-8")
-        location = getattr(CounterLocation, location)
-        kbkdf_key = getattr(cryptography.hazmat.primitives.kdf.kbkdf, operation_mode)(
-            length=length,
-            algorithm=digest,
-            mode=Mode.CounterMode,
-            rlen=rlen,
-            llen=llen,
-            location=location,
-            label=label,
-            context=context,
-            fixed=fixed,
-            break_location=break_location,
-        )
-        expected_key = bytes.fromhex(expected_key)
+        kbkdf_key = self._get_kdf(length, algorithm, rlen, llen, location, label, context, operation_mode, break_location, fixed)
         try:
             kbkdf_key.verify(message, expected_key)
             output = True
