@@ -22,10 +22,10 @@ class PEMPrivateKey(KeyInitNode):
     @classmethod
     def INPUT_TYPES(cls):
         class_input = super().INPUT_TYPES()
-        class_input["optional"]["password"] = ("BYTESLIKE", {"forceInput": True})
+        class_input["optional"]["password"] = ("BYTESLIKE", {"forceInput": True, "default": None})
         return class_input
 
-    def execute(self, keyfile, password):
+    def execute(self, keyfile, password=None):
         loaded_key = serialization.load_pem_private_key(keyfile, password)
         return (loaded_key,)
 
@@ -40,17 +40,17 @@ class DERPrivateKey(KeyInitNode):
     @classmethod
     def INPUT_TYPES(cls):
         class_input = super().INPUT_TYPES()
-        class_input["optional"]["password"] = ("BYTESLIKE", {"forceInput": True})
+        class_input["optional"]["password"] = ("BYTESLIKE", {"forceInput": True, "default": None})
         return class_input
 
-    def execute(self, keyfile, password):
+    def execute(self, keyfile, password=None):
         loaded_key = serialization.load_der_private_key(keyfile, password)
         return (loaded_key,)
 
 
 class DERPublicKey(KeyInitNode):
     def execute(self, keyfile):
-        loaded_key = serialization.load_pem_public_key(keyfile)
+        loaded_key = serialization.load_der_public_key(keyfile)
         return (loaded_key,)
 
 

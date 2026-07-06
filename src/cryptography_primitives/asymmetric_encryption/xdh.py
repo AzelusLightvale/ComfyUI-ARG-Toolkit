@@ -5,11 +5,7 @@ from cryptography.hazmat.primitives.asymmetric import x25519, x448
 
 class InitNode:
     CATEGORY = "ARG Toolkit/Cryptography/Modern/Asymmetric"
-
-    def __init_subclass__(cls, **kwargs):
-        super().__init_subclass__(**kwargs)
-        # Auto-set FUNCTION to lowercase class name
-        cls.FUNCTION = cls.__name__.lower()
+    FUNCTION = "execute"
 
     @staticmethod
     def get_private_key(key_source, key_type, private_key_bytes=None):
@@ -68,23 +64,13 @@ class XPrivateKeyFormat(InitNode):
             },
         }
 
-    RETURN_TYPES = ("BYTESLIKE",)
-    RETURN_NAMES = ("private_key",)
+    RETURN_TYPES = ("BYTESLIKE", "KEYOBJ")
+    RETURN_NAMES = ("private_bytes", "private_key")
 
-    def xprivatekeyformat(self, key_type, encoding, formatting, encryption: str, encryption_password=""):
-        if key_type == "x25519":
-            private_key = x25519.X25519PrivateKey.generate()
-        elif key_type == "x448":
-            private_key = x448.X448PrivateKey.generate()
-        else:
-            raise ValueError(f"Unsupported key type: {key_type}")
-
+    def execute(self, key_type, encoding, formatting, encryption: str, encryption_password=""):
+        private_key = self.get_private_key(key_source="Fresh Key", key_type=key_type)
         encode = getattr(serialization.Encoding, encoding)
-
-        if formatting == "PKCS8":
-            format_ = serialization.PrivateFormat.PKCS8
-        elif formatting == "Raw":
-            format_ = serialization.PrivateFormat.Raw
+        formatting = getattr(serialization.PrivateFormat, formatting)
 
         if encryption == "Best Available":
             if encryption_password:
@@ -92,8 +78,8 @@ class XPrivateKeyFormat(InitNode):
         else:
             enc_alg = serialization.NoEncryption()
 
-        output = private_key.private_bytes(encoding=encode, format=format_, encryption_algorithm=enc_alg)
-        return (output,)
+        output = private_key.private_bytes(encoding=encode, format=formatting, encryption_algorithm=enc_alg)
+        return (output, private_key)
 
 
 class XPublicKeyFormat(InitNode):
@@ -117,14 +103,14 @@ class XPublicKeyFormat(InitNode):
                     {"default": "x25519", "description": "The key type to use for EdDSA-based asymmetric signing algorithms."},
                 ),
                 "encoding": (
-                    ["PEM", "DER", "OpenSSH", "Raw", "SMIME"],
+                    ["PEM", "DER", "Raw"],
                     {
                         "default": "PEM",
                         "description": "Encoding type for the public key.",
                     },
                 ),
                 "formatting": (
-                    ["SubjectPublicKeyInfo", "Raw", "OpenSSH"],
+                    ["SubjectPublicKeyInfo", "Raw"],
                     {
                         "default": "SubjectPublicKeyInfo",
                         "description": "What format to serialize the key in. OpenSSH requires PEM encoding.",
@@ -141,23 +127,16 @@ class XPublicKeyFormat(InitNode):
             },
         }
 
-    RETURN_TYPES = ("BYTESLIKE",)
-    RETURN_NAMES = ("public_key",)
+    RETURN_TYPES = ("BYTESLIKE", "KEYOBJ")
+    RETURN_NAMES = ("public_bytes", "public_key")
 
-    def xpublickeyformat(self, key_source, key_type, encoding, formatting, private_key=None):
+    def execute(self, key_source, key_type, encoding, formatting, private_key=None):
         private_key_obj = self.get_private_key(key_source, key_type, private_key)
         public_key = private_key_obj.public_key()
         encode = getattr(serialization.Encoding, encoding)
-
-        if formatting == "SubjectPublicKeyInfo":
-            format_ = serialization.PublicFormat.SubjectPublicKeyInfo
-        elif formatting == "Raw":
-            format_ = serialization.PublicFormat.Raw
-        elif formatting == "OpenSSH":
-            format_ = serialization.PublicFormat.OpenSSH
-
-        output = public_key.public_bytes(encoding=encode, format=format_)
-        return (output,)
+        formatting = getattr(serialization.PublicFormat, formatting)
+        output = public_key.public_bytes(encoding=encode, format=formatting)
+        return (output, public_key)
 
 
 class XExchange(InitNode):
@@ -200,7 +179,7 @@ class XExchange(InitNode):
     RETURN_TYPES = ("BYTESLIKE",)
     RETURN_NAMES = ("shared_key",)
 
-    def xexchange(self, key_source, key_type, public_key, private_key=None):
+    def execute(self, key_source, key_type, public_key, private_key=None):
         private_key_obj = self.get_private_key(key_source, key_type, private_key)
 
         if key_type == "x25519":

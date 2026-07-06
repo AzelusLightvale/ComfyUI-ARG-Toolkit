@@ -1,6 +1,7 @@
 # Elliptic curve encryption
 from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives import hashes
 
 
 class EllipticCurve:
@@ -8,6 +9,7 @@ class EllipticCurve:
         pass
 
     CATEGORY = "ARG Toolkit/Cryptography/Modern/Asymmetric"
+    FUNCTION = "execute"
 
     @classmethod
     def INPUT_TYPES(cls):
@@ -17,11 +19,6 @@ class EllipticCurve:
             },
             "optional": {},
         }
-
-    def __init_subclass__(cls, **kwargs):
-        super().__init_subclass__(**kwargs)
-        # Auto-set FUNCTION to lowercase class name
-        cls.FUNCTION = cls.__name__.lower()
 
     def e_curve(self, curve_name: str):
         if curve_name in ["BRAINPOOLP256R1", "BRAINPOOLP384R1", "BRAINPOOLP512R1"]:
@@ -40,10 +37,7 @@ class ECPrivateKey(EllipticCurve):
     def INPUT_TYPES(cls):
         class_input = super().INPUT_TYPES()
         class_input["required"]["formatting"] = (
-            [
-                "Traditional OpenSSL",
-                "PKCS8",
-            ],
+            ["Traditional OpenSSL", "PKCS8", "OpenSSH"],
             {
                 "default": "PKCS8",
                 "description": "What format to serialize the key in. OpenSSH requires PEM encoding.",
@@ -70,13 +64,13 @@ class ECPrivateKey(EllipticCurve):
             {
                 "default": "",
                 "multiline": False,
-                "tooltip": "If `private_value` is defined, this will be the scalar value used to derive the private key. This will not work if `key_source` is From PEM Key",
+                "tooltip": "If `private_value` is defined, this will be the scalar value used to derive the private key.",
             },
         )
         class_input["optional"]["pem_key"] = ("BYTESLIKE", {"force_input": True})
         return class_input
 
-    def ecprivatekey(self, curve_name, formatting, encoding, encryption: str, encryption_password, private_value):
+    def execute(self, curve_name, formatting, encoding, encryption: str, encryption_password, private_value):
         e_curve = self.e_curve(curve_name)
         if private_value == "":
             pkey = ec.generate_private_key(e_curve())
@@ -85,11 +79,7 @@ class ECPrivateKey(EllipticCurve):
             pkey = ec.derive_private_key(private_number, e_curve)
 
         encoding = getattr(serialization.Encoding, encoding)
-
-        if formatting == "Traditional OpenSSL":
-            formatting = serialization.PrivateFormat.TraditionalOpenSSL
-        elif formatting == "PKCS8":
-            formatting = serialization.PrivateFormat.PKCS8
+        formatting = getattr(serialization.PrivateFormat, formatting)
 
         if encryption == "Best Available":
             if encryption_password:
@@ -100,10 +90,9 @@ class ECPrivateKey(EllipticCurve):
         return (p_bytes, pkey)
 
 
-# Stub for now
 class ECPublicKey(EllipticCurve):
-    RETURN_TYPES = ("BYTESLIKE",)
-    RETURN_NAMES = ("public_key",)
+    RETURN_TYPES = ("BYTESLIKE", "KEYOBJ")
+    RETURN_NAMES = ("public_bytes", "public_key")
 
     @classmethod
     def INPUT_TYPES(cls):
@@ -117,13 +106,96 @@ class ECPublicKey(EllipticCurve):
                 "default": True,
             },
         )
-        class_input["required"]
+        class_input["required"]["formatting"] = (
+            [
+                "Traditional OpenSSL",
+                "PKCS8",
+            ],
+            {
+                "default": "PKCS8",
+                "description": "What format to serialize the key in. OpenSSH requires PEM encoding.",
+            },
+        )
+        class_input["required"]["encoding"] = (
+            [
+                "PEM",
+                "DER",
+            ],
+            {"default": "PEM", "description": "Encoding type for the private key."},
+        )
+        class_input["optional"]["serialized_key"] = ("KEYOBJ", {"forceInput": True})
         return class_input
+
+    def execute(self, curve_name, key_source, serialized_key, encoding, formatting):
+        e_curve = self.e_curve(curve_name)
+        if key_source:
+            private_key = ec.generate_private_key(e_curve())
+        elif not key_source:
+            private_key = serialized_key
+        public_key = private_key.public_key()
+
+        encoding = getattr(serialization.Encoding, encoding)
+
+        if formatting == "Traditional OpenSSL":
+            formatting = serialization.PrivateFormat.TraditionalOpenSSL
+        elif formatting == "PKCS8":
+            formatting = serialization.PrivateFormat.PKCS8
+        p_bytes = public_key.public_bytes(encoding, formatting)
+        return (p_bytes, public_key)
+
+
+class ECSign:
+    CATEGORY = "ARG Toolkit/Cryptography/Modern/Asymmetric"
+    FUNCTION = "execute"
+    RETURN_TYPES = ("BYTESLIKE",)
+    RETURN_NAMES = ("signature",)
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "private_key": ("KEYOBJ", {"forceInput": True}),
+                "data": ("BYTESLIKE", {"forceInput": True}),
+                "signature_algorithm": (
+                    [
+                        "SHA224",
+                        "SHA256",
+                        "SHA384",
+                        "SHA512",
+                        "SHA512_224",
+                        "SHA512_256",
+                        "BLAKE2b",
+                        "BLAKE2s",
+                        "SHA3_224",
+                        "SHA3_256",
+                        "SHA3_384",
+                        "SHA3_512",
+                        "SHA1",
+                        "MD5",
+                        "SM3",
+                    ],
+                    {"tooltip": "The hashing algorithm used for the signature."},
+                ),
+            }
+        }
+
+    def execute(self, private_key, data, signature_algorithm):
+        if signature_algorithm == "BLAKE2b":
+            algorithm = getattr(hashes, signature_algorithm)(64)
+        elif signature_algorithm == "BLAKE2s":
+            algorithm = getattr(hashes, signature_algorithm)(32)
+        else:
+            algorithm = getattr(hashes, signature_algorithm)()
+        return (private_key.sign(data, algorithm),)
 
 
 NODE_CLASS_MAPPINGS = {
     "ECPrivateKey": ECPrivateKey,
+    "ECPublicKey": ECPublicKey,
+    "ECSign": ECSign,
 }
 NODE_DISPLAY_NAME_MAPPINGS = {
     "ECPrivateKey": "Elliptic Curve Private Key Bytes",
+    "ECPublicKey": "Elliptic Curve Public Key Bytes",
+    "ECSign": "Elliptic Curve Signature",
 }
