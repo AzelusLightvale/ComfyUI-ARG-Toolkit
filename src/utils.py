@@ -3,8 +3,6 @@ import base64
 import binascii
 import ast
 
-# To save my sanity, all byte array objects are converted to hexadecimal. Do not expect to directly manipulate byte arrays here. This comment will be on top of every Python file that directly interfaces with byte arrays.
-
 
 class SystemRandom:
     def __init__(self):
@@ -472,6 +470,20 @@ class ByteslikeDecode:
             raise ValueError("Unsupported encoding")
 
 
+# Bit counting node, meant for use with AES, but can be used with anything of the byteslike type.
+class BitsCounter:
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {"required": {"text": ("BYTESLIKE",)}}
+
+    RETURN_TYPES = ("STRING",)
+    FUNCTION = "execute"
+    CATEGORY = "ARG Toolkit/Utilities"
+
+    def execute(self, text: bytes):
+        return (len(text) * 8,)
+
+
 # A dictionary that contains all nodes you want to export with their names
 # NOTE: names should be globally unique
 NODE_CLASS_MAPPINGS = {
@@ -491,6 +503,7 @@ NODE_CLASS_MAPPINGS = {
     "StringLooper": StringLooper,
     "ByteslikeEncode": ByteslikeEncode,
     "ByteslikeDecode": ByteslikeDecode,
+    "BitsCounter": BitsCounter,
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
@@ -510,4 +523,5 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "StringLooper": "String Append Looper",
     "ByteslikeEncode": "Bytes-like Object Encode",
     "ByteslikeDecode": "Bytes-like Object Decode",
+    "BitsCounter": "Bits Counter",
 }

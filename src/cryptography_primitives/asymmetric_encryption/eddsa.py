@@ -1,4 +1,4 @@
-from cryptography.hazmat.primitives import asymmetric
+from cryptography.hazmat.primitives.asymmetric import ed25519, ed448
 from cryptography.hazmat.primitives import serialization
 
 from cryptography.exceptions import InvalidSignature
@@ -18,15 +18,15 @@ class InitNode:
     @staticmethod
     def get_private_key(key_source, key_type, private_key_bytes=None):
         if key_type == "Ed25519":
-            pk_cls = asymmetric.ed25519.Ed25519PrivateKey
+            pk_cls = ed25519.Ed25519PrivateKey
         elif key_type == "Ed448":
-            pk_cls = asymmetric.ed448.Ed448PrivateKey
+            pk_cls = ed448.Ed448PrivateKey
         else:
             raise ValueError(f"Unsupported key type: {key_type}")
 
-        if key_source:  # True means "Fresh Key"
+        if key_source == "Fresh Key":
             return pk_cls.generate()
-        else:  # False means "From Private Bytes"
+        elif key_source == "From Private Bytes":
             if private_key_bytes is None:
                 raise ValueError("Private key bytes are required when key_source is 'From Private Bytes'")
             return pk_cls.from_private_bytes(private_key_bytes)
@@ -41,21 +41,25 @@ class EdDSAPrivateKeyFormat(InitNode):
                     ["Ed25519", "Ed448"],
                     {"default": "Ed25519", "description": "The key type to use for EdDSA-based asymmetric signing algorithms."},
                 ),
-                "encoding_format": (
-                    ["PEM", "DER", "Raw"],
+                "encoding": (
+                    [
+                        "PEM",
+                        "DER",
+                        "Raw",
+                    ],
                     {
                         "default": "PEM",
                         "description": "Encoding type for the private key.",
                     },
                 ),
                 "formatting": (
-                    ["PKCS8", "Raw", "OpenSSH"],
+                    ["PKCS8", "Raw"],
                     {
                         "default": "PKCS8",
                         "description": "What format to serialize the key in. OpenSSH requires PEM encoding.",
                     },
                 ),
-                "encryption_algorithm": (["Best Available", "None"], {"default": "Best Available"}),
+                "encryption": (["Best Available", "None"], {"default": "Best Available"}),
             },
             "optional": {
                 "encryption_password": (
@@ -69,40 +73,28 @@ class EdDSAPrivateKeyFormat(InitNode):
             },
         }
 
-    RETURN_TYPES = ("BYTESLIKE",)
-    RETURN_NAMES = ("private_key",)
+    RETURN_TYPES = ("BYTESLIKE", "KEYOBJ")
+    RETURN_NAMES = ("private_bytes", "private_key")
 
-    def eddsaprivatekeyformat(self, key_type, encoding_format, formatting, encryption_algorithm, encryption_password=""):
+    def eddsaprivatekeyformat(self, key_type, encoding, formatting, encryption: str, encryption_password=""):
         if key_type == "Ed25519":
-            private_key = asymmetric.ed25519.Ed25519PrivateKey.generate()
+            private_key = ed25519.Ed25519PrivateKey.generate()
         elif key_type == "Ed448":
-            private_key = asymmetric.ed448.Ed448PrivateKey.generate()
+            private_key = ed448.Ed448PrivateKey.generate()
         else:
             raise ValueError(f"Unsupported key type: {key_type}")
-
-        if formatting == "OpenSSH" and encoding_format != "PEM":
-            raise ValueError("OpenSSH format requires PEM encoding.")
-
-        encode = getattr(serialization.Encoding, encoding_format)
+        encode = getattr(serialization.Encoding, encoding)
 
         if formatting == "PKCS8":
             format_ = serialization.PrivateFormat.PKCS8
         elif formatting == "Raw":
             format_ = serialization.PrivateFormat.Raw
-        elif formatting == "OpenSSH":
-            format_ = serialization.PrivateFormat.OpenSSH
-        else:
-            raise ValueError(f"Unsupported formatting: {formatting}")
 
-        if encryption_algorithm == "Best Available":
+        if encryption == "Best Available":
             if encryption_password:
                 enc_alg = serialization.BestAvailableEncryption(encryption_password.encode("utf-8"))
-            else:
-                enc_alg = serialization.NoEncryption()
-        elif encryption_algorithm == "None":
-            enc_alg = serialization.NoEncryption()
         else:
-            raise ValueError(f"Unsupported encryption algorithm: {encryption_algorithm}")
+            enc_alg = serialization.NoEncryption()
 
         output = private_key.private_bytes(encoding=encode, format=format_, encryption_algorithm=enc_alg)
         return (output,)
@@ -116,12 +108,10 @@ class EdDSASignature(InitNode):
         return {
             "required": {
                 "key_source": (
-                    "BOOLEAN",
+                    ["Fresh Key", "From Private Bytes", "From Loaded Key"],
                     {
-                        "label_on": "Fresh Key",
-                        "label_off": "From Private Bytes",
                         "tooltip": "The source of the private key to be used to sign the message",
-                        "default": True,
+                        "default": "Fresh Key",
                     },
                 ),
                 "key_type": (
@@ -138,20 +128,24 @@ class EdDSASignature(InitNode):
                 ),
             },
             "optional": {
-                "private_key": (
+                "private_bytes": (
                     "BYTESLIKE",
                     {
                         "tooltip": "Only applicable if key_source is 'From Private Bytes'.",
                     },
                 ),
+                "serialized_key": ("KEYOBJ", {"forceInput": True}),
             },
         }
 
     RETURN_TYPES = ("BYTESLIKE",)
     RETURN_NAMES = ("signature",)
 
-    def edssasignature(self, key_source, key_type, message, private_key=None):
-        private_key_obj = self.get_private_key(key_source, key_type, private_key)
+    def edssasignature(self, key_source, key_type, message, serialized_key, private_bytes=None):
+        if key_source == "From Loaded Key":
+            private_key_obj = serialized_key
+        else:
+            private_key_obj = self.get_private_key(key_source, key_type, private_bytes)
         signature = private_key_obj.sign(message.encode("utf-8"))
         return (signature,)
 
@@ -164,20 +158,18 @@ class EdDSAPublicKeyFormat(InitNode):
         return {
             "required": {
                 "key_source": (
-                    "BOOLEAN",
+                    ["Fresh Key", "From Private Bytes", "From Loaded Key"],
                     {
-                        "label_on": "Fresh Key",
-                        "label_off": "From Private Bytes",
-                        "tooltip": "The source of the private key to be used to generate the public key.",
-                        "default": True,
+                        "tooltip": "The source of the private key to be used to sign the message",
+                        "default": "Fresh Key",
                     },
                 ),
                 "key_type": (
                     ["Ed25519", "Ed448"],
                     {"default": "Ed25519", "description": "The key type to use for EdDSA-based asymmetric signing algorithms."},
                 ),
-                "encoding_format": (
-                    ["PEM", "DER", "Raw"],
+                "encoding": (
+                    ["PEM", "DER", "OpenSSH", "Raw", "SMIME"],
                     {
                         "default": "PEM",
                         "description": "Encoding type for the public key.",
@@ -198,20 +190,20 @@ class EdDSAPublicKeyFormat(InitNode):
                         "tooltip": "Only applicable if key_source is 'From Private Bytes'.",
                     },
                 ),
+                "serialized_key": ("KEYOBJ", {"forceInput": True}),
             },
         }
 
-    RETURN_TYPES = ("BYTESLIKE",)
-    RETURN_NAMES = ("public_key",)
+    RETURN_TYPES = ("BYTESLIKE", "KEYOBJ")
+    RETURN_NAMES = ("public_bytes", "public_key")
 
-    def eddsapublickeyformat(self, key_source, key_type, encoding_format, formatting, private_key=None):
-        private_key_obj = self.get_private_key(key_source, key_type, private_key)
+    def eddsapublickeyformat(self, key_source, key_type, encoding, formatting, serialized_key, private_key=None):
+        if key_source == "From Loaded Key":
+            private_key_obj = serialized_key
+        else:
+            private_key_obj = self.get_private_key(key_source, key_type, private_key)
         public_key = private_key_obj.public_key()
-
-        if formatting == "OpenSSH" and encoding_format != "PEM":
-            raise ValueError("OpenSSH format requires PEM encoding.")
-
-        encode = getattr(serialization.Encoding, encoding_format)
+        encode = getattr(serialization.Encoding, encoding)
 
         if formatting == "SubjectPublicKeyInfo":
             format_ = serialization.PublicFormat.SubjectPublicKeyInfo
@@ -219,11 +211,9 @@ class EdDSAPublicKeyFormat(InitNode):
             format_ = serialization.PublicFormat.Raw
         elif formatting == "OpenSSH":
             format_ = serialization.PublicFormat.OpenSSH
-        else:
-            raise ValueError(f"Unsupported formatting: {formatting}")
 
         output = public_key.public_bytes(encoding=encode, format=format_)
-        return (output,)
+        return (output, public_key)
 
 
 class EdDSAVerify(InitNode):
@@ -237,7 +227,14 @@ class EdDSAVerify(InitNode):
                     ["Ed25519", "Ed448"],
                     {"default": "Ed25519", "description": "The key type to use for EdDSA-based asymmetric signing algorithms."},
                 ),
-                "public_key": ("BYTESLIKE", {}),
+                "key_source": (
+                    "BOOLEAN",
+                    {
+                        "label_on": "From Private Bytes",
+                        "label_off": "From Loaded Key",
+                        "tooltip": "The source of the private key to be used to verify the signature of the message",
+                    },
+                ),
                 "message": (
                     "STRING",
                     {
@@ -248,21 +245,23 @@ class EdDSAVerify(InitNode):
                 ),
                 "signature": ("BYTESLIKE",),
             },
+            "optional": {"public_bytes": ("BYTESLIKE", {"forceInput": True}), "public_key": ("KEYOBJ", {"forceInput": True})},
         }
 
     RETURN_TYPES = ("BOOLEAN",)
     RETURN_NAMES = ("verify_status",)
 
-    def eddsaverify(self, key_type, public_key, message, signature):
-        if key_type == "Ed25519":
-            pk_loader = asymmetric.ed25519.Ed25519PublicKey.from_public_bytes
-        elif key_type == "Ed448":
-            pk_loader = asymmetric.ed448.Ed448PublicKey.from_public_bytes
-        else:
-            raise ValueError(f"Unsupported key type: {key_type}")
-
+    def eddsaverify(self, key_type, public_bytes, public_key, message, signature, key_source):
+        if key_source:
+            if key_type == "Ed25519":
+                pk_loader = ed25519.Ed25519PublicKey.from_public_bytes
+                public_key_obj = pk_loader(public_bytes)
+            elif key_type == "Ed448":
+                pk_loader = ed448.Ed448PublicKey.from_public_bytes
+                public_key_obj = pk_loader(public_bytes)
+        elif not key_source:
+            public_key_obj = public_key
         try:
-            public_key_obj = pk_loader(public_key)
             public_key_obj.verify(signature, message.encode("utf-8"))
             output = True
         except (InvalidSignature, ValueError):

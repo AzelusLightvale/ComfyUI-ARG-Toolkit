@@ -37,5 +37,5 @@ Authenticated Encryption with Associated Data (AEAD) is a form of encryption whi
 
 ## Nonce Handling
 
-- **AES-GCM, AES-GCM-SIV, AES-OCB3, AES-CCM**: Require a unique nonce for every encryption operation with the same key. Reusing a nonce can lead to catastrophic security failures. A 12-byte (96-bit) nonce is typically used.
+- **AES-GCM, AES-GCM-SIV, AES-OCB3, AES-CCM**: Require a unique nonce for every encryption operation with the same key. Reusing a nonce can lead to catastrophic security failures in practical applications. A 12-byte (96-bit) nonce is typically used.
 - **AES-SIV**: Does not require a unique nonce, making it more robust against nonce misuse. The `nonce` input is treated as part of the associated data for authentication.

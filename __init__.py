@@ -1,13 +1,13 @@
-"""Top-level package for comfyui-arg-toolkit."""
+"""Top-level package for arg-toolkit."""
+
 import os
 import importlib.util
-
-NODE_CLASS_MAPPINGS = {}
-NODE_DISPLAY_NAME_MAPPINGS = {}
 
 # track which module defined each key
 NODE_CLASS_SOURCES = {}
 NODE_DISPLAY_NAME_SOURCES = {}
+NODE_CLASS_MAPPINGS = {}
+NODE_DISPLAY_NAME_MAPPINGS = {}
 
 BASE_FOLDER = os.path.dirname(__file__)
 SRC_FOLDER = os.path.join(BASE_FOLDER, "src")
@@ -46,6 +46,5 @@ for root, _, files in os.walk(SRC_FOLDER):
                     NODE_DISPLAY_NAME_SOURCES[key] = module_name
 
 __author__ = """AzelusLightvale"""
-__all__ = ["NODE_CLASS_MAPPINGS", "NODE_DISPLAY_NAME_MAPPINGS"]
+__all__ = ["NODE_CLASS_MAPPINGS", "NODE_DISPLAY_NAME_MAPPINGS", "WEB_DIRECTORY"]
 WEB_DIRECTORY = "./web"
-

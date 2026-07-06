@@ -29,14 +29,13 @@ This is a flexible, general-purpose node for performing symmetric encryption. It
 
 ## Algorithm and Mode Compatibility
 
-The `cryptography` library will raise an error if an incompatible algorithm and mode are selected. The following table provides a general guide.
-The `cryptography` library will raise an error if an incompatible algorithm and mode are selected. The following table provides a general guide. Items marked with **(D)** are deprecated according to the `cryptography` library and should be avoided for new projects.
+The `cryptography` library will raise an error if an incompatible algorithm and mode are selected. The following table provides a general guide. Items marked with **(D)** are deprecated according to the `cryptography` library and should be avoided for any serious projects.
 
 | Algorithm      | CBC | CTR | OFB (D) | CFB (D) | CFB8 (D) | GCM | XTS | ECB | None |
 | :------------- | :-: | :-: | :-----: | :-----: | :------: | :-: | :-: | :-: | :--: |
 | AES            |  ✔  |  ✔  |    ✔    |    ✔    |    ✔     |  ✔  |  ✔  |  ✔  |  ❌  |
-| AES128         |  ✔  |  ✔  |    ✔    |    ✔    |    ✔     |  ✔  |  ✔  |  ✔  |  ❌  |
-| AES256         |  ✔  |  ✔  |    ✔    |    ✔    |    ✔     |  ✔  |  ✔  |  ✔  |  ❌  |
+| AES128         |  ✔  |  ✔  |    ✔    |    ✔    |    ✔     |  ✔  |  ❌  |  ✔  |  ❌  |
+| AES256         |  ✔  |  ✔  |    ✔    |    ✔    |    ✔     |  ✔  |  ❌  |  ✔  |  ❌  |
 | Camellia (D)   |  ✔  |  ✔  |    ✔    |    ✔    |    ✔     | ❌  | ❌  |  ✔  |  ❌  |
 | ChaCha20       | ❌  | ❌  |   ❌    |   ❌    |    ❌    | ❌  | ❌  | ❌  |  ✔   |
 | TripleDES (D)  |  ✔  |  ✔  |    ✔    |    ✔    |    ✔     | ❌  | ❌  |  ✔  |  ❌  |
@@ -53,7 +52,7 @@ The `cryptography` library will raise an error if an incompatible algorithm and 
 - **Stream Ciphers**: Stream ciphers like `ChaCha20` and `ARC4` do not use a block mode; select `None`.
 - **GCM**: GCM is an authenticated mode and only works with AES in this implementation. It provides both confidentiality and integrity.
 - **ECB**: Electronic Codebook mode is insecure for most uses and should be avoided. It does not use an IV.
-- **Padding**: Block ciphers in modes like CBC and ECB require padding to handle messages that are not a multiple of the block size. The `cryptography` library handles this automatically.
+- **Padding**: Block ciphers in modes like CBC and ECB require padding to handle messages that are not a multiple of the block size. Use `AES Key Wrap With Padding` to pad keys to the appropriate length.
 
 **Deprecation Warning:**
 As of `cryptography` 47.0.0, several legacy primitives were moved to a `decrepit` module. This includes algorithms like `ARC4`, `Blowfish`, `CAST5`, `IDEA`, `SEED`, `TripleDES`, and `Camellia`, as well as modes like `OFB`, `CFB`, and `CFB8`. These are considered insecure or sub-optimal and are only provided for compatibility with legacy systems. Users are encouraged to use **AES** (with **GCM** or **CTR** mode) or **ChaCha20** for modern applications. For more information, check the latest documentations over at [https://cryptography.io/en/47.0.0/](https://cryptography.io/en/47.0.0/).

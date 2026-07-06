@@ -1,8 +1,6 @@
 from cryptography.hazmat.primitives.ciphers import aead
 import base64
 
-# As of 2.0.0, all byte-like objects now have their own types. To actually input new data, new Byte-to-Format and Format-to-Byte nodes have been created to deal with that demand.
-
 
 class ChaCha20Poly1305:
     def __init__(self):

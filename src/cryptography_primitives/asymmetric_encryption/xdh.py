@@ -1,6 +1,6 @@
 # Elliptic curve (X/EC) Diffie-Hellman (DH) key exchange
-from cryptography.hazmat.primitives import asymmetric
 from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric import x25519, x448
 
 
 class InitNode:
@@ -14,9 +14,9 @@ class InitNode:
     @staticmethod
     def get_private_key(key_source, key_type, private_key_bytes=None):
         if key_type == "x25519":
-            pk_cls = asymmetric.x25519.X25519PrivateKey
+            pk_cls = x25519.X25519PrivateKey
         elif key_type == "x448":
-            pk_cls = asymmetric.x448.X448PrivateKey
+            pk_cls = x448.X448PrivateKey
         else:
             raise ValueError(f"Unsupported key type: {key_type}")
 
@@ -37,7 +37,7 @@ class XPrivateKeyFormat(InitNode):
                     ["x25519", "x448"],
                     {"default": "x25519", "description": "The key type to use for EdDSA-based asymmetric signing algorithms."},
                 ),
-                "encoding_format": (
+                "encoding": (
                     ["PEM", "DER", "Raw"],
                     {
                         "default": "PEM",
@@ -45,13 +45,16 @@ class XPrivateKeyFormat(InitNode):
                     },
                 ),
                 "formatting": (
-                    ["PKCS8", "Raw", "OpenSSH"],
+                    [
+                        "PKCS8",
+                        "Raw",
+                    ],
                     {
                         "default": "PKCS8",
                         "description": "What format to serialize the key in. OpenSSH requires PEM encoding.",
                     },
                 ),
-                "encryption_algorithm": (["Best Available", "None"], {"default": "Best Available"}),
+                "encryption": (["Best Available", "None"], {"default": "Best Available"}),
             },
             "optional": {
                 "encryption_password": (
@@ -68,34 +71,26 @@ class XPrivateKeyFormat(InitNode):
     RETURN_TYPES = ("BYTESLIKE",)
     RETURN_NAMES = ("private_key",)
 
-    def xprivatekeyformat(self, key_type, encoding_format, formatting, encryption_algorithm, encryption_password=""):
+    def xprivatekeyformat(self, key_type, encoding, formatting, encryption: str, encryption_password=""):
         if key_type == "x25519":
-            private_key = asymmetric.x25519.X25519PrivateKey.generate()
+            private_key = x25519.X25519PrivateKey.generate()
         elif key_type == "x448":
-            private_key = asymmetric.x448.X448PrivateKey.generate()
+            private_key = x448.X448PrivateKey.generate()
         else:
             raise ValueError(f"Unsupported key type: {key_type}")
 
-        encode = getattr(serialization.Encoding, encoding_format)
+        encode = getattr(serialization.Encoding, encoding)
 
         if formatting == "PKCS8":
             format_ = serialization.PrivateFormat.PKCS8
         elif formatting == "Raw":
             format_ = serialization.PrivateFormat.Raw
-        elif formatting == "OpenSSH":
-            format_ = serialization.PrivateFormat.OpenSSH
-        else:
-            raise ValueError(f"Unsupported formatting: {formatting}")
 
-        if encryption_algorithm == "Best Available":
+        if encryption == "Best Available":
             if encryption_password:
                 enc_alg = serialization.BestAvailableEncryption(encryption_password.encode("utf-8"))
-            else:
-                enc_alg = serialization.NoEncryption()
-        elif encryption_algorithm == "None":
-            enc_alg = serialization.NoEncryption()
         else:
-            raise ValueError(f"Unsupported encryption algorithm: {encryption_algorithm}")
+            enc_alg = serialization.NoEncryption()
 
         output = private_key.private_bytes(encoding=encode, format=format_, encryption_algorithm=enc_alg)
         return (output,)
@@ -121,8 +116,8 @@ class XPublicKeyFormat(InitNode):
                     ["x25519", "x448"],
                     {"default": "x25519", "description": "The key type to use for EdDSA-based asymmetric signing algorithms."},
                 ),
-                "encoding_format": (
-                    ["PEM", "DER", "Raw"],
+                "encoding": (
+                    ["PEM", "DER", "OpenSSH", "Raw", "SMIME"],
                     {
                         "default": "PEM",
                         "description": "Encoding type for the public key.",
@@ -149,12 +144,10 @@ class XPublicKeyFormat(InitNode):
     RETURN_TYPES = ("BYTESLIKE",)
     RETURN_NAMES = ("public_key",)
 
-    def xpublickeyformat(self, key_source, key_type, encoding_format, formatting, private_key=None):
+    def xpublickeyformat(self, key_source, key_type, encoding, formatting, private_key=None):
         private_key_obj = self.get_private_key(key_source, key_type, private_key)
         public_key = private_key_obj.public_key()
-        encode = getattr(serialization.Encoding, encoding_format)
-
-        # Due to the nature of `cryptography` and its formatting handler, any incompatible schemes are immediately rejected. Therefore, there is no real need to handle it on the node side.
+        encode = getattr(serialization.Encoding, encoding)
 
         if formatting == "SubjectPublicKeyInfo":
             format_ = serialization.PublicFormat.SubjectPublicKeyInfo
@@ -162,8 +155,6 @@ class XPublicKeyFormat(InitNode):
             format_ = serialization.PublicFormat.Raw
         elif formatting == "OpenSSH":
             format_ = serialization.PublicFormat.OpenSSH
-        else:
-            raise ValueError(f"Unsupported formatting: {formatting}")
 
         output = public_key.public_bytes(encoding=encode, format=format_)
         return (output,)
@@ -213,9 +204,9 @@ class XExchange(InitNode):
         private_key_obj = self.get_private_key(key_source, key_type, private_key)
 
         if key_type == "x25519":
-            public_key_obj = asymmetric.x25519.X25519PublicKey.from_public_bytes(public_key)
+            public_key_obj = x25519.X25519PublicKey.from_public_bytes(public_key)
         elif key_type == "x448":
-            public_key_obj = asymmetric.x448.X448PublicKey.from_public_bytes(public_key)
+            public_key_obj = x448.X448PublicKey.from_public_bytes(public_key)
         else:
             raise ValueError(f"Unsupported key type: {key_type}")
 
