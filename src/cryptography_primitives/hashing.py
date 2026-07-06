@@ -212,6 +212,7 @@ NODE_CLASS_MAPPINGS = {
     "MD5": MD5,
     "SM3": SM3,
     "SHAKE": SHAKE,
+    "XOFHash": XOFHash,
 }
 NODE_DISPLAY_NAME_MAPPINGS = {
     "SHA2": "SHA-2 Hashing",
@@ -221,4 +222,5 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "MD5": "MD5 Hashing",
     "SM3": "SM3 Hashing",
     "SHAKE": "SHAKE Hashing",
+    "XOFHash": "Extended Output Function Hashing",
 }

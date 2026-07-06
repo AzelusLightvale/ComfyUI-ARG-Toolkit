@@ -135,11 +135,8 @@ class ECPublicKey(EllipticCurve):
         public_key = private_key.public_key()
 
         encoding = getattr(serialization.Encoding, encoding)
+        formatting = getattr(serialization.PublicFormat, formatting)
 
-        if formatting == "Traditional OpenSSL":
-            formatting = serialization.PrivateFormat.TraditionalOpenSSL
-        elif formatting == "PKCS8":
-            formatting = serialization.PrivateFormat.PKCS8
         p_bytes = public_key.public_bytes(encoding, formatting)
         return (p_bytes, public_key)
 
@@ -176,17 +173,23 @@ class ECSign:
                     ],
                     {"tooltip": "The hashing algorithm used for the signature."},
                 ),
-            }
+            },
+            "optional": {"prehashed": ("BOOLEAN", {"tooltip": "Whether the data is prehashed or not."})},
         }
 
-    def execute(self, private_key, data, signature_algorithm):
+    def execute(self, private_key, data, signature_algorithm, prehashed):
         if signature_algorithm == "BLAKE2b":
             algorithm = getattr(hashes, signature_algorithm)(64)
         elif signature_algorithm == "BLAKE2s":
             algorithm = getattr(hashes, signature_algorithm)(32)
         else:
             algorithm = getattr(hashes, signature_algorithm)()
-        return (private_key.sign(data, algorithm),)
+        if prehashed:
+            from cryptography.hazmat.primitives.asymmetric.utils import Prehashed
+
+            algorithm = Prehashed(algorithm)
+        alg = ec.EllipticCurveSignatureAlgorithm(algorithm)
+        return (private_key.sign(data, alg),)
 
 
 NODE_CLASS_MAPPINGS = {
