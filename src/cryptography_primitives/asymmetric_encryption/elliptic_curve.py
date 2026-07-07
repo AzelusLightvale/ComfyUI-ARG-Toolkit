@@ -2,6 +2,7 @@
 from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives import hashes
+from cryptography.exceptions import InvalidSignature
 
 
 class EllipticCurve:
@@ -107,20 +108,14 @@ class ECPublicKey(EllipticCurve):
             },
         )
         class_input["required"]["formatting"] = (
-            [
-                "Traditional OpenSSL",
-                "PKCS8",
-            ],
+            ["SubjectPublicKeyInfo", "OpenSSH", "PKCS1", "CompressedPoint", "UncompressedPoint"],
             {
                 "default": "PKCS8",
                 "description": "What format to serialize the key in. OpenSSH requires PEM encoding.",
             },
         )
         class_input["required"]["encoding"] = (
-            [
-                "PEM",
-                "DER",
-            ],
+            ["PEM", "DER", "OpenSSH", "X962"],
             {"default": "PEM", "description": "Encoding type for the private key."},
         )
         class_input["optional"]["serialized_key"] = ("KEYOBJ", {"forceInput": True})
@@ -188,17 +183,76 @@ class ECSign:
             from cryptography.hazmat.primitives.asymmetric.utils import Prehashed
 
             algorithm = Prehashed(algorithm)
-        alg = ec.EllipticCurveSignatureAlgorithm(algorithm)
+        alg = ec.ECDSA(algorithm)
         return (private_key.sign(data, alg),)
+
+
+class ECVerify:
+    CATEGORY = "ARG Toolkit/Cryptography/Modern/Asymmetric"
+    FUNCTION = "execute"
+    RETURN_TYPES = ("BOOLEAN",)
+    RETURN_NAMES = ("verification",)
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "public_key": ("KEYOBJ", {"forceInput": True}),
+                "signature": ("BYTESLIKE", {"forceInput": True}),
+                "data": ("BYTESLIKE", {"forceInput": True}),
+                "signature_algorithm": (
+                    [
+                        "SHA224",
+                        "SHA256",
+                        "SHA384",
+                        "SHA512",
+                        "SHA512_224",
+                        "SHA512_256",
+                        "BLAKE2b",
+                        "BLAKE2s",
+                        "SHA3_224",
+                        "SHA3_256",
+                        "SHA3_384",
+                        "SHA3_512",
+                        "SHA1",
+                        "MD5",
+                        "SM3",
+                    ],
+                    {"tooltip": "The hashing algorithm used for the signature."},
+                ),
+            },
+            "optional": {"prehashed": ("BOOLEAN", {"tooltip": "Whether the data is prehashed or not."})},
+        }
+
+    def execute(self, public_key, signature, data, signature_algorithm, prehashed):
+        if signature_algorithm == "BLAKE2b":
+            algorithm = getattr(hashes, signature_algorithm)(64)
+        elif signature_algorithm == "BLAKE2s":
+            algorithm = getattr(hashes, signature_algorithm)(32)
+        else:
+            algorithm = getattr(hashes, signature_algorithm)()
+        if prehashed:
+            from cryptography.hazmat.primitives.asymmetric.utils import Prehashed
+
+            algorithm = Prehashed(algorithm)
+        alg = ec.ECDSA(algorithm)
+        try:
+            public_key.verify(signature, data, alg)
+            verification = True
+        except (InvalidSignature, ValueError):
+            verification = False
+        return (verification,)
 
 
 NODE_CLASS_MAPPINGS = {
     "ECPrivateKey": ECPrivateKey,
     "ECPublicKey": ECPublicKey,
     "ECSign": ECSign,
+    "ECVerify": ECVerify,
 }
 NODE_DISPLAY_NAME_MAPPINGS = {
     "ECPrivateKey": "Elliptic Curve Private Key Bytes",
     "ECPublicKey": "Elliptic Curve Public Key Bytes",
-    "ECSign": "Elliptic Curve Signature",
+    "ECSign": "Elliptic Curve Signature Sign",
+    "ECVerify": "Elliptic Curve Signature Verify",
 }

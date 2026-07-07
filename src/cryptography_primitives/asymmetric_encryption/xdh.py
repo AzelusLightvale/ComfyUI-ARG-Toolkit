@@ -47,7 +47,7 @@ class XPrivateKeyFormat(InitNode):
                     ],
                     {
                         "default": "PKCS8",
-                        "description": "What format to serialize the key in. OpenSSH requires PEM encoding.",
+                        "description": "What format to serialize the key in.",
                     },
                 ),
                 "encryption": (["Best Available", "None"], {"default": "Best Available"}),
