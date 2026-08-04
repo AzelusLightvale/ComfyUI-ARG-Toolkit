@@ -10,10 +10,16 @@ authors = [
   {name = "AzelusLightvale", email = "NexusLightvale@protonmail.com"}
 ]
 readme = "README.md"
-license = {text = "LICENSE"}
+license = "GPL-3.0-only"
 requires-python = ">=3.10"
 classifiers = ["Operating System :: OS Independent",]
-dynamic = ["dependencies"]
+dependencies = [
+    "secretpy",
+    "cryptography",
+    "stegano",
+    "invisible-watermark",
+    "reedsolo",
+]
 
 
 
@@ -45,9 +51,6 @@ includes = []
 [tool.setuptools.package-data]
 "*" = ["*.*"]
 
-[tool.setuptools.dynamic]
-dependencies = {file = ["requirements.txt"]}
-
 [tool.pytest.ini_options]
 minversion = "8.0"
 testpaths = [
@@ -61,12 +64,6 @@ files = "."
 strict = true
 warn_unreachable = true
 warn_no_return = true
-
-[[tool.mypy.overrides]]
-# Don't require test functions to include types
-module = "tests.*"
-allow_untyped_defs = true
-disable_error_code = "attr-defined"
 
 [tool.ruff]
 # extend-exclude = ["static", "ci/templates"]

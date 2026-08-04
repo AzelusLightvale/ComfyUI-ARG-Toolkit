@@ -1,0 +1,30 @@
+name: Sync requirements.txt
+
+on:
+  pull_request:
+    paths:
+      - 'pyproject.toml'
+
+jobs:
+  sync:
+    # Optional: restricts auto-commit behavior to Dependabot PRs for safety
+    if: github.actor == 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+          # Requires a custom PAT or GitHub App token if you want this push 
+          # to trigger other downstream CI workflows.
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+
+      - name: Compile requirements.txt
+        run: uv pip compile pyproject.toml -o requirements.txt
+
+      - name: Commit and push changes
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "chore: recompile requirements.txt"
+          file_pattern: "requirements.txt"
