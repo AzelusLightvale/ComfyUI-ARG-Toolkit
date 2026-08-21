@@ -45,7 +45,7 @@ reedsolo==1.7.0
     # via arg-toolkit (pyproject.toml)
 secretpy==0.12.0
     # via arg-toolkit (pyproject.toml)
-setuptools==83.0.0
+setuptools==84.0.0
     # via torch
 stegano==3.0.0
     # via arg-toolkit (pyproject.toml)
