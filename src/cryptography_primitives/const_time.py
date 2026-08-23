@@ -12,14 +12,14 @@ class ConstantTimeCompare:
                     "BYTESLIKE",
                     {
                         "forceInput": True,
-                        "tooltip": "The first string to compare (in hexadecimal).",
+                        "tooltip": "The first byte-object to compare.",
                     },
                 ),
                 "b": (
                     "BYTESLIKE",
                     {
                         "forceInput": True,
-                        "tooltip": "The second string to compare (in hexadecimal).",
+                        "tooltip": "The second byte-object to compare.",
                     },
                 ),
             }

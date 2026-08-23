@@ -19,6 +19,9 @@ dependencies = [
     "stegano",
     "invisible-watermark",
     "reedsolo",
+    "numpy",
+    "torch",
+    "pillow",
 ]
 
 

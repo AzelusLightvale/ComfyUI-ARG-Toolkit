@@ -18,12 +18,13 @@ jinja2==3.1.6
     # via torch
 markupsafe==3.0.3
     # via jinja2
-mpmath==1.4.1
+mpmath==1.3.0
     # via sympy
 networkx==3.6.1
     # via torch
 numpy==2.5.1
     # via
+    #   arg-toolkit (pyproject.toml)
     #   invisible-watermark
     #   opencv-python
     #   pywavelets
@@ -35,6 +36,7 @@ piexif==1.1.3
     # via stegano
 pillow==12.3.0
     # via
+    #   arg-toolkit (pyproject.toml)
     #   invisible-watermark
     #   stegano
 pycparser==3.0
@@ -52,6 +54,8 @@ stegano==3.0.0
 sympy==1.14.0
     # via torch
 torch==2.13.0
-    # via invisible-watermark
+    # via
+    #   arg-toolkit (pyproject.toml)
+    #   invisible-watermark
 typing-extensions==4.16.0
     # via torch

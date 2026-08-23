@@ -1,8 +1,5 @@
 from cryptography.hazmat.primitives import keywrap
 
-# As of 2.0.0, all byte-like objects now have their own types. To actually input new data, new ByteslikeEncode and ByteslikeDecode nodes have been created to deal with that demand.
-
-
 class WrapKeyNodes:
     def __init__(self):
         pass
@@ -40,15 +37,11 @@ class WrapKeyNodes:
 
     RETURN_TYPES = ("BYTESLIKE",)
     RETURN_NAMES = ("wrapped_key",)
-
-    def __init_subclass__(cls, **kwargs):
-        super().__init_subclass__(**kwargs)
-        # Auto-set FUNCTION to lowercase class name
-        cls.FUNCTION = cls.__name__.lower()
+    FUNCTION = "execute"
 
 
 class AESKeyWrap(WrapKeyNodes):
-    def aeskeywrap(self, wrapping_key: bytes, secondary_key: bytes, mode):
+    def execute(self, wrapping_key: bytes, secondary_key: bytes, mode):
         if mode:  # Wrap
             wrapped_key = keywrap.aes_key_wrap(wrapping_key, secondary_key)
             return (wrapped_key,)
@@ -58,7 +51,7 @@ class AESKeyWrap(WrapKeyNodes):
 
 
 class AESKeyWrapWithPadding(WrapKeyNodes):
-    def aeskeywrapwithpadding(self, wrapping_key: bytes, secondary_key: bytes, mode):
+    def execute(self, wrapping_key: bytes, secondary_key: bytes, mode):
         if mode:  # Wrap
             wrapped_key = keywrap.aes_key_wrap_with_padding(wrapping_key, secondary_key)
             return (wrapped_key,)

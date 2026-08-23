@@ -55,14 +55,9 @@ class BaseCipherNode:
             }
         }
 
-    @classmethod
-    def __init_subclass__(cls, **kwargs):
-        super().__init_subclass__(**kwargs)
-        # Auto-set FUNCTION to lowercase class name
-        cls.FUNCTION = cls.__name__.lower()
-
     RETURN_TYPES = ("STRING",)
     RETURN_NAMES = ("encrypted_txt",)
+    FUNCTION = "execute"
 
     def alphabet_checker(self, alphabet, as_tuple=True):
         if alphabet.strip():
@@ -152,7 +147,7 @@ class ADFGX(BaseCipherNode):
         )
         return class_input
 
-    def adfgx(self, text, alphabet, key, mode, keep_formatting):
+    def execute(self, text, alphabet, key, mode, keep_formatting):
         processed_alphabet = self.alphabet_checker(alphabet, as_tuple=True)
         return self.execute_cipher(text, processed_alphabet, key, mode, keep_formatting)
 
@@ -171,7 +166,7 @@ class ADFGVX(BaseCipherNode):
         )
         return class_input
 
-    def adfgvx(self, text, alphabet, key, mode, keep_formatting):
+    def execute(self, text, alphabet, key, mode, keep_formatting):
         return self.execute_cipher(text, alphabet, key, mode, keep_formatting)
 
 
@@ -197,7 +192,7 @@ class Affine(BaseCipherNode):
         )
         return class_input
 
-    def affine(self, text, alphabet, key_1, key_2, mode, keep_formatting):
+    def execute(self, text, alphabet, key_1, key_2, mode, keep_formatting):
         if len(alphabet) is None or len(alphabet) <= 1:
             raise ValueError("Alphabet size must be >= 2 for Affine.")
         if math.gcd(key_1, key_2) != 1:
@@ -230,7 +225,7 @@ class Autokey(BaseCipherNode):
         )
         return class_input
 
-    def autokey(self, text, alphabet, key, mode, keep_formatting):
+    def execute(self, text, alphabet, key, mode, keep_formatting):
         processed_alphabet = self.alphabet_checker(alphabet, as_tuple=False)
         return self.execute_cipher(text, processed_alphabet, key, mode, keep_formatting)
 
@@ -249,7 +244,7 @@ class Bazeries(BaseCipherNode):
         )
         return class_input
 
-    def bazeries(self, text, alphabet, key, mode, keep_formatting):
+    def execute(self, text, alphabet, key, mode, keep_formatting):
         processed_alphabet = self.alphabet_checker(alphabet, as_tuple=True)
         return self.execute_cipher(text, processed_alphabet, key, mode, keep_formatting)
 
@@ -268,7 +263,7 @@ class Beaufort(BaseCipherNode):
         )
         return class_input
 
-    def beaufort(self, text, alphabet, key, mode, keep_formatting):
+    def execute(self, text, alphabet, key, mode, keep_formatting):
         processed_alphabet = self.alphabet_checker(alphabet, as_tuple=False)
         return self.execute_cipher(text, processed_alphabet, key, mode, keep_formatting)
 
@@ -287,7 +282,7 @@ class Bifid(BaseCipherNode):
         )
         return class_input
 
-    def bifid(self, text, alphabet, key, mode, keep_formatting):
+    def execute(self, text, alphabet, key, mode, keep_formatting):
         processed_alphabet = self.alphabet_checker(alphabet, as_tuple=True)
         return self.execute_cipher(text, processed_alphabet, key, mode, keep_formatting)
 
@@ -306,7 +301,7 @@ class Caesar(BaseCipherNode):
         )
         return class_input
 
-    def caesar(self, text, alphabet, key, mode, keep_formatting):
+    def execute(self, text, alphabet, key, mode, keep_formatting):
         processed_alphabet = self.alphabet_checker(alphabet, as_tuple=False)
         return self.execute_cipher(text, processed_alphabet, key, mode, keep_formatting)
 
@@ -325,7 +320,7 @@ class CaesarProgressive(BaseCipherNode):
         )
         return class_input
 
-    def caesarprogressive(self, text, alphabet, key, mode, keep_formatting):
+    def execute(self, text, alphabet, key, mode, keep_formatting):
         processed_alphabet = self.alphabet_checker(alphabet, as_tuple=False)
         return self.execute_cipher(text, processed_alphabet, key, mode, keep_formatting)
 
@@ -344,7 +339,7 @@ class Chao(BaseCipherNode):
         )
         return class_input
 
-    def chao(self, text, alphabet, key, mode, keep_formatting):
+    def execute(self, text, alphabet, key, mode, keep_formatting):
         processed_alphabet = self.alphabet_checker(alphabet, as_tuple=False)
         return self.execute_cipher(text, processed_alphabet, key, mode, keep_formatting)
 
@@ -363,7 +358,7 @@ class ColTrans(BaseCipherNode):
         )
         return class_input
 
-    def coltrans(self, text, alphabet, key, mode, keep_formatting):
+    def execute(self, text, alphabet, key, mode, keep_formatting):
         processed_alphabet = self.alphabet_checker(alphabet, as_tuple=False)
         return self.execute_cipher(text, processed_alphabet, key, mode, keep_formatting)
 
@@ -390,7 +385,7 @@ class FourSquare(BaseCipherNode):
         )
         return class_input
 
-    def foursquare(self, text, alphabet, key_1, key_2, mode, keep_formatting):
+    def execute(self, text, alphabet, key_1, key_2, mode, keep_formatting):
         processed_alphabet = self.alphabet_checker(alphabet, as_tuple=True)
         key_1 = key_1.lower()
         key_2 = key_2.lower()
@@ -412,7 +407,7 @@ class Gronsfeld(BaseCipherNode):
         )
         return class_input
 
-    def gronsfeld(self, text, alphabet, key, mode, keep_formatting):
+    def execute(self, text, alphabet, key, mode, keep_formatting):
         processed_alphabet = self.alphabet_checker(alphabet, as_tuple=True)
         key_tuple = tuple(int(ch) for ch in key if ch.isdigit())
         if not key_tuple:
@@ -434,7 +429,7 @@ class Keyword(BaseCipherNode):
         )
         return class_input
 
-    def keyword(self, text, alphabet, key, mode, keep_formatting):
+    def execute(self, text, alphabet, key, mode, keep_formatting):
         processed_alphabet = self.alphabet_checker(alphabet, as_tuple=False)
         return self.execute_cipher(text, processed_alphabet, key, mode, keep_formatting)
 
@@ -453,7 +448,7 @@ class MyszkowskiTransposition(BaseCipherNode):
         )
         return class_input
 
-    def myszkowskitransposition(self, text, alphabet, key, mode, keep_formatting):
+    def execute(self, text, alphabet, key, mode, keep_formatting):
         processed_alphabet = self.alphabet_checker(alphabet, as_tuple=False)
         return self.execute_cipher(text, processed_alphabet, key, mode, keep_formatting)
 
@@ -472,7 +467,7 @@ class Nihilist(BaseCipherNode):
         )
         return class_input
 
-    def nihilist(self, text, alphabet, key, mode, keep_formatting):
+    def execute(self, text, alphabet, key, mode, keep_formatting):
         processed_alphabet = self.alphabet_checker(alphabet, as_tuple=False)
         return self.execute_cipher(text, processed_alphabet, key, mode, keep_formatting)
 
@@ -491,7 +486,7 @@ class Playfair(BaseCipherNode):
         )
         return class_input
 
-    def playfair(self, text, alphabet, key, mode, keep_formatting):
+    def execute(self, text, alphabet, key, mode, keep_formatting):
         processed_alphabet = self.alphabet_checker(alphabet, as_tuple=True)
         return self.execute_cipher(text, processed_alphabet, key, mode, keep_formatting)
 
@@ -510,7 +505,7 @@ class Polybius(BaseCipherNode):
         )
         return class_input
 
-    def polybius(self, text, alphabet, key, mode, keep_formatting):
+    def execute(self, text, alphabet, key, mode, keep_formatting):
         if key != math.sqrt(len(alphabet)):
             raise ValueError(
                 f"Your given key length ({len(key)} does not match the square root of your alphabet size ({math.sqrt(len(alphabet))})). Please check your alphabet and key again"
@@ -533,34 +528,34 @@ class Porta(BaseCipherNode):
         )
         return class_input
 
-    def porta(self, text, alphabet, key, mode, keep_formatting):
+    def execute(self, text, alphabet, key, mode, keep_formatting):
         processed_alphabet = self.alphabet_checker(alphabet, as_tuple=False)
         return self.execute_cipher(text, processed_alphabet, key, mode, keep_formatting)
 
 
 class Rot13(BaseCipherNode):
-    def rot13(self, text, alphabet, key, mode, keep_formatting):
+    def execute(self, text, alphabet, key, mode, keep_formatting):
         processed_alphabet = self.alphabet_checker(alphabet, as_tuple=False)
         key = None
         return self.execute_cipher(text, processed_alphabet, key, mode, keep_formatting)
 
 
 class Rot5(BaseCipherNode):
-    def rot5(self, text, alphabet, key, mode, keep_formatting):
+    def execute(self, text, alphabet, key, mode, keep_formatting):
         processed_alphabet = self.alphabet_checker(alphabet, as_tuple=False)
         key = None
         return self.execute_cipher(text, processed_alphabet, key, mode, keep_formatting)
 
 
 class Rot18(BaseCipherNode):
-    def rot18(self, text, alphabet, key, mode, keep_formatting):
+    def execute(self, text, alphabet, key, mode, keep_formatting):
         processed_alphabet = self.alphabet_checker(alphabet, as_tuple=False)
         key = None
         return self.execute_cipher(text, processed_alphabet, key, mode, keep_formatting)
 
 
 class Rot47(BaseCipherNode):
-    def rot47(self, text, alphabet, key, mode, keep_formatting):
+    def execute(self, text, alphabet, key, mode, keep_formatting):
         processed_alphabet = self.alphabet_checker(alphabet, as_tuple=False)
         key = None
         return self.execute_cipher(text, processed_alphabet, key, mode, keep_formatting)
@@ -580,7 +575,7 @@ class Scytale(BaseCipherNode):
         )
         return class_input
 
-    def scytale(self, text, alphabet, key, mode, keep_formatting):
+    def execute(self, text, alphabet, key, mode, keep_formatting):
         processed_alphabet = self.alphabet_checker(alphabet, as_tuple=False)
         return self.execute_cipher(text, processed_alphabet, key, mode, keep_formatting)
 
@@ -599,7 +594,7 @@ class SimpleSubstitution(BaseCipherNode):
         )
         return class_input
 
-    def simplesubstitution(self, text, alphabet, key, mode, keep_formatting):
+    def execute(self, text, alphabet, key, mode, keep_formatting):
         processed_alphabet = self.alphabet_checker(alphabet, as_tuple=True)
         return self.execute_cipher(text, processed_alphabet, key, mode, keep_formatting)
 
@@ -634,7 +629,7 @@ class ThreeSquare(BaseCipherNode):
         )
         return class_input
 
-    def threesquare(self, text, alphabet, key_1, key_2, key_3, mode, keep_formatting):
+    def execute(self, text, alphabet, key_1, key_2, key_3, mode, keep_formatting):
         processed_alphabet = self.alphabet_checker(alphabet, as_tuple=True)
         key_1 = key_1.lower()
         key_2 = key_2.lower()
@@ -657,7 +652,7 @@ class Trifid(BaseCipherNode):
         )
         return class_input
 
-    def trifid(self, text, alphabet, key, mode, keep_formatting):
+    def execute(self, text, alphabet, key, mode, keep_formatting):
         processed_alphabet = self.alphabet_checker(alphabet, as_tuple=False)
         allowed_chars = processed_alphabet
         return self.execute_cipher(text, processed_alphabet, key, mode, keep_formatting, allowed_chars)
@@ -685,7 +680,7 @@ class TwoSquare(BaseCipherNode):
         )
         return class_input
 
-    def twosquare(self, text, alphabet, key_1, key_2, mode, keep_formatting):
+    def execute(self, text, alphabet, key_1, key_2, mode, keep_formatting):
         processed_alphabet = self.alphabet_checker(alphabet, as_tuple=True)
         key_1 = key_1.lower()
         key_2 = key_2.lower()
@@ -707,7 +702,7 @@ class Vic(BaseCipherNode):
         )
         return class_input
 
-    def vic(self, text, alphabet, key, mode, keep_formatting):
+    def execute(self, text, alphabet, key, mode, keep_formatting):
         key = str(int(ch) for ch in key if ch.isdigit())
         processed_alphabet = self.alphabet_checker(alphabet, as_tuple=True)
         return self.execute_cipher(text, processed_alphabet, key, mode, keep_formatting)
@@ -727,7 +722,7 @@ class Vigenere(BaseCipherNode):
         )
         return class_input
 
-    def vigenere(self, text, alphabet, key, mode, keep_formatting):
+    def execute(self, text, alphabet, key, mode, keep_formatting):
         processed_alphabet = self.alphabet_checker(alphabet, as_tuple=False)
         return self.execute_cipher(text, processed_alphabet, key, mode, keep_formatting)
 
@@ -746,7 +741,7 @@ class Zigzag(BaseCipherNode):
         )
         return class_input
 
-    def zigzag(self, text, key, mode, keep_formatting):
+    def execute(self, text, key, mode, keep_formatting):
         processed_alphabet = None
         return self.execute_cipher(text, processed_alphabet, key, mode, keep_formatting)
 

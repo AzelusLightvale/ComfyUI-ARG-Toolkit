@@ -1,6 +1,5 @@
 from cryptography.hazmat.primitives import padding
 
-
 class PaddingNode:
     CATEGORY = "ARG Toolkit/Cryptography/Modern/Padding"
 

@@ -34,7 +34,7 @@ class SystemRandom:
         return (os.urandom(byte_num),)
 
 
-# The converter category of Utilities
+# The converter category of Utilities.
 
 
 class ConverterNodes:
@@ -83,14 +83,9 @@ class ConverterNodes:
             },
         }
 
-    @classmethod
-    def __init_subclass__(cls, **kwargs):
-        super().__init_subclass__(**kwargs)
-        # Auto-set FUNCTION to lowercase class name
-        cls.FUNCTION = cls.__name__.lower()
-
     RETURN_TYPES = ("STRING",)
     RETURN_NAMES = ("converted_txt",)
+    FUNCTION = "execute"
 
     def encoding_selector(self, encoding_format, other_encoding_format):
         if encoding_format == "Other":
@@ -99,12 +94,12 @@ class ConverterNodes:
 
 
 class String2Binary(ConverterNodes):
-    def string2binary(self, text, encoding_format, other_encoding_format):
+    def execute(self, text, encoding_format, other_encoding_format):
         return (" ".join(format(c, "08b") for c in bytearray(text, self.encoding_selector(encoding_format, other_encoding_format))),)
 
 
 class Binary2String(ConverterNodes):
-    def binary2string(self, text, encoding_format, other_encoding_format):
+    def execute(self, text, encoding_format, other_encoding_format):
         cleaned = text.replace(" ", "").replace("\n", "")
         if len(cleaned) % 8 != 0:
             raise ValueError("Binary string length must be a multiple of 8")
@@ -115,24 +110,24 @@ class Binary2String(ConverterNodes):
 
 
 class String2Hex(ConverterNodes):
-    def string2hex(self, text, encoding_format, other_encoding_format):
+    def execute(self, text, encoding_format, other_encoding_format):
         return (text.encode(self.encoding_selector(encoding_format, other_encoding_format)).hex(),)
 
 
 class Hex2String(ConverterNodes):
-    def hex2string(self, text, encoding_format, other_encoding_format):
+    def execute(self, text, encoding_format, other_encoding_format):
         return (
             bytes.fromhex(text.replace("0x", "").replace(" ", "")).decode(self.encoding_selector(encoding_format, other_encoding_format)),
         )
 
 
 class String2Base64(ConverterNodes):
-    def string2base64(self, text, encoding_format, other_encoding_format):
+    def execute(self, text, encoding_format, other_encoding_format):
         return (base64.b64encode(text.encode(self.encoding_selector(encoding_format, other_encoding_format))).decode("ascii"),)
 
 
 class Base642String(ConverterNodes):
-    def base642string(self, text, encoding_format, other_encoding_format):
+    def execute(self, text, encoding_format, other_encoding_format):
         return (base64.b64decode(text.encode("ascii")).decode(self.encoding_selector(encoding_format, other_encoding_format)),)
 
 
@@ -167,7 +162,7 @@ class BitwiseNodes:
                         "tooltip": "The secondary string to compare against. Accepts format defined in `datatype`",
                     },
                 ),
-                "datatype": (["String", "Hexadecimal", "Base64", "Integer", "Binary"], {}),
+                "datatype": (["String", "Hexadecimal", "Base64", "Integer", "Binary"], {"default": "Binary", "tooltip": "The datatype that the two texts is assumed to be for comparison purpose. Will also output the final output based on the chosen datatype as well."}),
                 "encoding_format": (
                     [
                         "utf-8",
@@ -196,14 +191,9 @@ class BitwiseNodes:
             },
         }
 
-    @classmethod
-    def __init_subclass__(cls, **kwargs):
-        super().__init_subclass__(**kwargs)
-        # Auto-set FUNCTION to lowercase class name
-        cls.FUNCTION = cls.__name__.lower()
-
     RETURN_TYPES = ("STRING",)
     RETURN_NAMES = ("bitwise_txt",)
+    FUNCTION = "execute"
 
     def encoding_selector(self, encoding_format, other_encoding_format):
         if encoding_format == "Other":
@@ -273,7 +263,7 @@ class BitwiseNodes:
 
 
 class BitwiseAND(BitwiseNodes):
-    def bitwiseand(self, text_1, text_2, encoding_format, other_encoding_format):
+    def execute(self, text_1, text_2, encoding_format, other_encoding_format):
         result_bytes, input_format = self.operate(
             text_1,
             text_2,
@@ -285,7 +275,7 @@ class BitwiseAND(BitwiseNodes):
 
 
 class BitwiseOR(BitwiseNodes):
-    def bitwiseor(self, text_1, text_2, encoding_format, other_encoding_format):
+    def execute(self, text_1, text_2, encoding_format, other_encoding_format):
         result_bytes, input_format = self.operate(
             text_1,
             text_2,
@@ -304,7 +294,7 @@ class BitwiseNOT(BitwiseNodes):
         class_input["required"]["text"] = class_input["required"].pop("text_1")
         return class_input
 
-    def bitwisenot(self, text, encoding_format, other_encoding_format):
+    def execute(self, text, encoding_format, other_encoding_format):
         result_bytes, input_format = self.operate(
             text,
             None,
@@ -316,7 +306,7 @@ class BitwiseNOT(BitwiseNodes):
 
 
 class BitwiseXOR(BitwiseNodes):
-    def bitwisexor(self, text_1, text_2, encoding_format, other_encoding_format):
+    def execute(self, text_1, text_2, encoding_format, other_encoding_format):
         result_bytes, input_format = self.operate(
             text_1,
             text_2,
@@ -328,7 +318,7 @@ class BitwiseXOR(BitwiseNodes):
 
 
 class BitwiseLS(BitwiseNodes):
-    def bitwisels(self, text_1, text_2, encoding_format, other_encoding_format):
+    def execute(self, text_1, text_2, encoding_format, other_encoding_format):
         result_bytes, input_format = self.operate(
             text_1,
             text_2,
@@ -340,7 +330,7 @@ class BitwiseLS(BitwiseNodes):
 
 
 class BitwiseRS(BitwiseNodes):
-    def bitwisers(self, text_1, text_2, encoding_format, other_encoding_format):
+    def execute(self, text_1, text_2, encoding_format, other_encoding_format):
         result_bytes, input_format = self.operate(
             text_1,
             text_2,
@@ -392,7 +382,7 @@ class ByteslikeEncode:
         return {
             "required": {
                 "text": ("STRING", {"multiline": True, "default": "Hello World!", "placeholder": "Type your message here..."}),
-                "encoding": (["Hexadecimal", "Base64", "UTF-8", "Binary", "Raw Bytes"],),
+                "encoding": (["Hexadecimal", "Base64", "UTF-8", "Binary", "Raw Bytes"], {"default": "UTF-8","tooltip": "The type of data to be encoded into bytes."}),
             }
         }
 
@@ -447,7 +437,7 @@ class ByteslikeEncode:
 class ByteslikeDecode:
     @classmethod
     def INPUT_TYPES(cls):
-        return {"required": {"data": ("BYTESLIKE",), "encoding": (["Hexadecimal", "Base64", "UTF-8", "Binary", "Raw Bytes"],)}}
+        return {"required": {"data": ("BYTESLIKE",), "encoding": (["Hexadecimal", "Base64", "UTF-8", "Binary", "Raw Bytes"], {"default": "UTF-8", "tooltip": "The type of data the bytes will be decoded to."})}}
 
     RETURN_TYPES = ("STRING",)
     FUNCTION = "execute"

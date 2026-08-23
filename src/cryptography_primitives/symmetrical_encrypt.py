@@ -2,6 +2,7 @@ from cryptography.hazmat.primitives import ciphers
 from cryptography.hazmat.decrepit.ciphers import algorithms as decrepit_algorithms
 from cryptography.hazmat.decrepit.ciphers import modes as decrepit_modes
 from cryptography.hazmat.primitives.ciphers import algorithms
+import warnings
 
 
 class CipherNodes:
@@ -104,18 +105,13 @@ class CipherNodes:
             },
         }
 
-    @classmethod
-    def __init_subclass__(cls, **kwargs):
-        super().__init_subclass__(**kwargs)
-        # Auto-set FUNCTION to lowercase class name
-        cls.FUNCTION = cls.__name__.lower()
-
     RETURN_TYPES = ("BYTESLIKE", "BYTESLIKE")
     RETURN_NAMES = ("output", "tag")
+    FUNCTION = "execute"
 
 
 class EncryptDecrypt(CipherNodes):
-    def encryptdecrypt(self, text, key, iv, nonce, algorithm, modes, mode, min_tag_length, tag=None):
+    def execute(self, text, key, iv, nonce, algorithm, modes, mode, min_tag_length, tag=None):
         if iv is None:
             iv = b""
         if nonce is None:
@@ -125,6 +121,7 @@ class EncryptDecrypt(CipherNodes):
         if algorithm == "ChaCha20":
             algorithm = algorithms.ChaCha20(key, nonce)
         elif algorithm in ["ARC4", "Blowfish", "CAST5", "SEED", "IDEA", "Camellia"]:
+            warnings.warn(f'[ComfyUI-ARG-Toolkit][WARNING]: Current algorithm used in Symmetric Encrypt/Decrypt ({algorithm}) is a decrepit type and is only meant for full inclusion. Unless you have a specific use case for this, please switch to a more reasonable algorithm.')
             algorithm = getattr(decrepit_algorithms, algorithm)(key)
         else:
             algorithm = getattr(algorithms, algorithm)(key)
@@ -136,6 +133,7 @@ class EncryptDecrypt(CipherNodes):
         elif modes == "XTS":
             modes = ciphers.modes.XTS(tweak=iv)
         elif modes == "ECB":
+            warnings.warn(f'[ComfyUI-ARG-Toolkit][WARNING]: Mode used in Symmetric Encrypt/Decrypt ({modes}) is inherently insecure and should never be used in anything in production. Unless you have a specific use case for this, please switch to a more reasonable mode.')
             modes = ciphers.modes.ECB()
         elif modes == "None":
             modes = None

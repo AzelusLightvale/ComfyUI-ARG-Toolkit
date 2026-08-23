@@ -56,11 +56,7 @@ class KeyDerivationNodes:
 
     RETURN_TYPES = ("BYTESLIKE",)
     RETURN_NAMES = ("derived_key",)
-
-    def __init_subclass__(cls, **kwargs):
-        super().__init_subclass__(**kwargs)
-        # Auto-set FUNCTION to lowercase class name
-        cls.FUNCTION = cls.__name__.lower()
+    FUNCTION = "execute"
 
 
 # The special child with pre-bundled PHC-encoded strings available.
@@ -138,7 +134,7 @@ class Argon2id_Derive(KeyDerivationNodes):
             secret=secret,
         )
 
-    def argon2id_derive(self, message, length, salt, iterations, parallel_lanes, memory_cost, ad, secret, mode):
+    def execute(self, message, length, salt, iterations, parallel_lanes, memory_cost, ad, secret, mode):
         argon2_key = self._get_kdf(salt, length, iterations, parallel_lanes, memory_cost, ad, secret)
         if mode:
             output = argon2_key.derive(message)
@@ -164,7 +160,7 @@ class Argon2id_Verify(Argon2id_Derive):
         )
         return class_input
 
-    def argon2id_verify(self, message, length, salt, iterations, parallel_lanes, memory_cost, ad, secret, mode, expected_key):
+    def execute(self, message, length, salt, iterations, parallel_lanes, memory_cost, ad, secret, mode, expected_key):
         argon2_key = self._get_kdf(salt, length, iterations, parallel_lanes, memory_cost, ad, secret)
 
         if mode:
@@ -237,7 +233,7 @@ class PBKDF2HMAC_Derive(KeyDerivationNodes):
         digest = _get_hash_algorithm(algorithm)
         return PBKDF2HMAC(salt=salt, length=length, iterations=iterations, algorithm=digest)
 
-    def pbkdf2hmac_derive(self, message, length, salt, iterations, algorithm):
+    def execute(self, message, length, salt, iterations, algorithm):
         output = self._get_kdf(salt, length, iterations, algorithm).derive(message)
         return (output,)
 
@@ -258,7 +254,7 @@ class PBKDF2HMAC_Verify(PBKDF2HMAC_Derive):
         )
         return class_input
 
-    def pbkdf2hmac_verify(self, message, length, salt, iterations, algorithm, expected_key):
+    def execute(self, message, length, salt, iterations, algorithm, expected_key):
         pbkdf2hmac_key = self._get_kdf(salt, length, iterations, algorithm)
         try:
             pbkdf2hmac_key.verify(message, expected_key)
@@ -313,7 +309,7 @@ class Scrypt_Derive(KeyDerivationNodes):
         n_cost = 2**n
         return Scrypt(salt, length, n_cost, r, p)
 
-    def scrypt_derive(self, message, length, salt, n, r, p):
+    def execute(self, message, length, salt, n, r, p):
         output = self._get_kdf(salt, length, n, r, p).derive(message)
         return (output,)
 
@@ -334,7 +330,7 @@ class Scrypt_Verify(Scrypt_Derive):
         )
         return class_input
 
-    def scrypt_verify(self, message, length, salt, n, r, p, expected_key):
+    def execute(self, message, length, salt, n, r, p, expected_key):
         scrypt_key = self._get_kdf(salt, length, n, r, p)
         try:
             scrypt_key.verify(message, expected_key)
@@ -388,7 +384,7 @@ class ConcatKDFHash_Derive(KeyDerivationNodes):
             other_info = b""
         return ConcatKDFHash(length=length, algorithm=digest, otherinfo=other_info)
 
-    def concatkdfhash_derive(self, message, length, algorithm, other_info):
+    def executee(self, message, length, algorithm, other_info):
         kdf = self._get_kdf(length, algorithm, other_info)
         return (kdf.derive(message),)
 
@@ -409,7 +405,7 @@ class ConcatKDFHash_Verify(ConcatKDFHash_Derive):
         )
         return class_input
 
-    def concatkdfhash_verify(self, message, length, algorithm, other_info, expected_key):
+    def execute(self, message, length, algorithm, other_info, expected_key):
         ckdfhash_key = self._get_kdf(length, algorithm, other_info)
         try:
             ckdfhash_key.verify(message, expected_key)
@@ -442,7 +438,7 @@ class ConcatKDFHMAC_Derive(ConcatKDFHash_Derive):
             other_info = b""
         return ConcatKDFHMAC(length=length, algorithm=digest, otherinfo=other_info, salt=salt)
 
-    def concatkdfhmac_derive(self, message, length, algorithm, other_info, salt):
+    def execute(self, message, length, algorithm, other_info, salt):
         kdf = self._get_kdf(length, algorithm, other_info, salt)
         return (kdf.derive(message),)
 
@@ -463,7 +459,7 @@ class ConcatKDFHMAC_Verify(ConcatKDFHMAC_Derive):
         )
         return class_input
 
-    def concatkdfhmac_verify(self, message, length, algorithm, other_info, salt, expected_key):
+    def execute(self, message, length, algorithm, other_info, salt, expected_key):
         ckdfhash_key = self._get_kdf(length, algorithm, other_info, salt)
         try:
             ckdfhash_key.verify(message, expected_key)
@@ -524,7 +520,7 @@ class HKDF_Derive(KeyDerivationNodes):
             info = b""
         return HKDF(algorithm=digest, length=length, salt=salt, info=info)
 
-    def hkdf_derive(self, message, length, algorithm, salt, info):
+    def execute(self, message, length, algorithm, salt, info):
         kdf = self._get_kdf(length, algorithm, salt, info)
         return (kdf.derive(message),)
 
@@ -545,7 +541,7 @@ class HKDF_Verify(HKDF_Derive):
         )
         return class_input
 
-    def hkdf_verify(self, message, length, algorithm, info, salt, expected_key):
+    def execute(self, message, length, algorithm, info, salt, expected_key):
         hkdf_key = self._get_kdf(length, algorithm, salt, info)
         try:
             hkdf_key.verify(message, expected_key)
@@ -599,7 +595,7 @@ class HKDFExpand_Derive(KeyDerivationNodes):
             info = b""
         return HKDFExpand(algorithm=digest, length=length, info=info)
 
-    def hkdfexpand_derive(self, message, length, algorithm, info):
+    def execute(self, message, length, algorithm, info):
         kdf = self._get_kdf(length, algorithm, info)
         return (kdf.derive(message),)
 
@@ -620,7 +616,7 @@ class HKDFExpand_Verify(HKDFExpand_Derive):
         )
         return class_input
 
-    def hkdfexpand_verify(self, message, length, algorithm, info, expected_key):
+    def execute(self, message, length, algorithm, info, expected_key):
         hkdf_key = self._get_kdf(length, algorithm, info)
         try:
             hkdf_key.verify(message, expected_key)
@@ -674,7 +670,7 @@ class X963KDF_Derive(KeyDerivationNodes):
             info = b""
         return X963KDF(algorithm=digest, length=length, sharedinfo=info)
 
-    def x963kdf_derive(self, message, length, algorithm, info):
+    def execute(self, message, length, algorithm, info):
         kdf = self._get_kdf(length, algorithm, info)
         return (kdf.derive(message),)
 
@@ -695,7 +691,7 @@ class X963KDF_Verify(X963KDF_Derive):
         )
         return class_input
 
-    def x963kdf_verify(self, message, length, algorithm, info, expected_key):
+    def execute(self, message, length, algorithm, info, expected_key):
         x963kdf_key = self._get_kdf(length, algorithm, info)
         try:
             x963kdf_key.verify(message, expected_key)
@@ -810,7 +806,7 @@ class KBKDF_Derive(KeyDerivationNodes):
             break_location=break_location,
         )
 
-    def kbkdf_derive(
+    def execute(
         self,
         message,
         length,
@@ -844,7 +840,7 @@ class KBKDF_Verify(KBKDF_Derive):
         )
         return class_input
 
-    def kbkdf_verify(
+    def execute(
         self,
         message,
         length,

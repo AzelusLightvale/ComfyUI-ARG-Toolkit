@@ -1,5 +1,4 @@
 from cryptography.hazmat.primitives.ciphers import aead
-import base64
 
 
 class ChaCha20Poly1305:
@@ -13,12 +12,8 @@ class ChaCha20Poly1305:
         return {
             "required": {
                 "text": (
-                    "STRING",
-                    {
-                        "default": "Hello World!",
-                        "multiline": True,
-                        "placeholder": "Type your message here... (if message is a bytes-like object, convert to base64 first)",
-                    },
+                    "BYTESLIKE",
+                    {"forceInput": True, "tooltip": "The text to encrypt with this node."},
                 ),
                 "key": (
                     "BYTESLIKE",
@@ -53,21 +48,17 @@ class ChaCha20Poly1305:
             }
         }
 
-    RETURN_TYPES = ("STRING",)
-    RETURN_NAMES = ("encrypted_txt",)
+    RETURN_TYPES = ("BYTESLIKE",)
+    RETURN_NAMES = ("text",)
     FUNCTION = "cc20"
 
-    def cc20(self, text, key: bytes, nonce: bytes, associated_data: bytes, mode):
+    def cc20(self, text: bytes, key: bytes, nonce: bytes, associated_data: bytes, mode: bool):
         cipher = aead.ChaCha20Poly1305(key)
         if mode:
-            bytetext = text.encode("utf-8")
-            token = cipher.encrypt(nonce, bytetext, associated_data)
-            encrypted_message = base64.b64encode(token).decode("utf-8")
+            message = cipher.encrypt(nonce, text, associated_data)
         else:
-            bytetext = base64.b64decode(text.encode("utf-8"))
-            token = cipher.decrypt(nonce, bytetext, associated_data)
-            encrypted_message = token.decode("utf-8")
-        return (encrypted_message,)
+            message = cipher.decrypt(nonce, text, associated_data)
+        return (message,)
 
 
 class ChaCha20Poly1305Keygen:
@@ -100,11 +91,10 @@ class AESAuth:  # Since all AES-based authenticated encryption techniques are th
         return {
             "required": {
                 "text": (
-                    "STRING",
+                    "BYTESLIKE",
                     {
-                        "default": "Hello World!",
-                        "multiline": True,
-                        "placeholder": "Type your message here...",
+                        "forceInput": True,
+                        "tooltip": "Input message here. Has to be in a bytes-like format.",
                     },
                 ),
                 "key": (
@@ -158,7 +148,7 @@ class AESAuth:  # Since all AES-based authenticated encryption techniques are th
             },
         }
 
-    RETURN_TYPES = ("STRING",)
+    RETURN_TYPES = ("BYTESLIKE",)
     RETURN_NAMES = ("encrypted_txt",)
     FUNCTION = "aesauth"
 
@@ -178,20 +168,16 @@ class AESAuth:  # Since all AES-based authenticated encryption techniques are th
         else:
             raise ValueError("Invalid AES type chosen. Perhaps the node is broken? Try making a new one, as this is normally impossible.")
         if mode:
-            bytetext = text.encode("utf-8")
             if aes_type == "AES-SIV":
-                token = cipher.encrypt(bytetext, associated_data)
+                message = cipher.encrypt(text, associated_data)
             else:
-                token = cipher.encrypt(nonce, bytetext, associated_data)
-            encrypted_message = base64.b64encode(token).decode("utf-8")
+                message = cipher.encrypt(nonce, text, associated_data)
         else:
-            bytetext = base64.b64decode(text.encode("utf-8"))
             if aes_type == "AES-SIV":
-                token = cipher.decrypt(bytetext, associated_data)
+                message = cipher.decrypt(text, associated_data)
             else:
-                token = cipher.decrypt(nonce, bytetext, associated_data)
-            encrypted_message = token.decode("utf-8")
-        return (encrypted_message,)
+                message = cipher.decrypt(nonce, text, associated_data)
+        return (message,)
 
 
 class AESAuthKeygen:

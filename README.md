@@ -2,7 +2,7 @@
 
 A collection of ComfyUI nodes meant mostly for doing cryptography, steganography, encryption, decryption, and everything needed to both make and solve ARGs (Alternative Reality Games) and secret messages hidden within text or images (and hopefully audio) without ever leaving ComfyUI.
 
-Might also double as a poor-man's cryptanalysis and steganography lab
+Might also double as a poor-man's cryptanalysis and steganography lab.
 
 ## Quickstart
 
@@ -11,7 +11,7 @@ Might also double as a poor-man's cryptanalysis and steganography lab
 1. Look up this extension in ComfyUI-Manager. If you are installing manually, clone this repository under `ComfyUI/custom_nodes`.
 1. Restart ComfyUI.
 
-# Features
+## Features
 
 - Classic ciphers and cryptography techniques (Caesar, Playfair, Vigénere, Foursquare,...) - currently powered by [`secretpy`](https://github.com/tigertv/secretpy).
 - Image steganography and invisible watermarking tools - currently powered by [`stegano`](https://github.com/cedricbonhomme/Stegano) and [`invisible-watermark`](https://github.com/ShieldMnt/invisible-watermark/).
@@ -26,13 +26,13 @@ Might also double as a poor-man's cryptanalysis and steganography lab
 - (Planned) Generative steganography models
 - (Far Future plans) Post-quantum cryptography tools.
 
-# Testing methodology
+## Testing methodology
 
-Since this project started as an amateur project, the test files only cover the functions and most common use cases, not the edge cases or any automated testing yet.
+Since this project started as an amateur project, the test files only cover the functions and most common use cases, not the edge cases or any automated testing yet. Many of the tests done are manual functionality tests done on ComfyUI and not unit tests. This can and will change on future releases.
 
-# Others
+## Others
 
-## Related projects
+### Related projects
 
 If you like the idea behind this node pack, want to explore cryptography, steganography, ARGs, and more, please visit these projects and sites:
 
@@ -43,14 +43,14 @@ If you like the idea behind this node pack, want to explore cryptography, stegan
 - [dCode.fr](https://www.dcode.fr/en) - The original and most well known site for all things related to solving math, cryptography, and ARGs as they basically contain the most amount of tools out there.
 - [Game Detectives](https://gamedetectives.net/) - A quite useful site to learn about how ARGs work and get standalone tools for learning and solving ARGs. Unfortunately, many of the tools listed on the [ARG Toolbox](https://wiki.gamedetectives.net/index.php?title=ARG_Toolbox) are dead and either requires the Wayback Machine or finding a sketchy alternative.
 
-## Companion node packs
+### Companion node packs
 
 - [ComfyUI-Custom-Scripts](https://github.com/pythongosssss/ComfyUI-Custom-Scripts) - Provides a lot of useful features and nodes in general for ComfyUI.
 - [ComfyUI-Crystools](https://github.com/crystian/ComfyUI-Crystools) - System monitor extension for ComfyUI.
 - [ComfyUI_Invisible_Watermark](https://github.com/web3nomad/ComfyUI_Invisible_Watermark) - The main reason I even started this project in the first place, for making an "invisible watermark" node that left such an impression on me I decided to make my own.
 - [ComfyLiterals](https://github.com/M1kep/ComfyLiterals) - Optional custom nodes for use with these nodes to provide or bypass certain limitations of ComfyUI.
 
-# License
+## License
 
-This project is licensed under the GNU General Public License 3.0 (GPLv3)
+This project is licensed under the GNU General Public License 3.0 (GPLv3).
 See the LICENSE file for full license details.

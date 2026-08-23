@@ -1,65 +1,31 @@
 from cryptography.hazmat.primitives import hashes
 
 
-class DynamicInputContainer(dict):
-    def __contains__(self, item):
-        return item.startswith("key") and item != "key1"
-
-    def __getitem__(self, key):
-        return ("BYTESLIKE", {})
-
-    def keys(self):
-        return []
-
-    def __iter__(self):
-        return iter(self.keys())
-
-
 class Hash:
     CATEGORY = "ARG Toolkit/Cryptography/Modern/Hashing"
 
     @classmethod
     def INPUT_TYPES(cls):
-        mandatory_inputs = {
-            "key1": (
-                "BYTESLIKE",
-                {"forceInput": True, "default": "", "tooltip": "First key (mandatory)"},
-            )
-        }
-
-        optional_inputs = DynamicInputContainer()
-
         return {
-            "required": mandatory_inputs,
-            "optional": optional_inputs,
-            "hidden": {"unique_id": "UNIQUE_ID", "extra_pnginfo": "EXTRA_PNGINFO"},
+            "required": {
+                "key": (
+                    "BYTESLIKE",
+                    {"forceInput": True, "default": "", "tooltip": "First key (mandatory)"},
+                )
+            }
         }
 
-    def main_method(self, algorithm, digest_size=None, **kwargs):
-        if algorithm == "BLAKE2b" or algorithm == "BLAKE2s":
+    def main_method(self, algorithm, key, digest_size=None):
+        if algorithm in ["BLAKE2b", "BLAKE2s", "SHAKE128", "SHAKE256"]:
             digest = hashes.Hash(getattr(hashes, algorithm)(int(digest_size)))
         else:
             digest = hashes.Hash(getattr(hashes, algorithm)())
-
-        # Process dynamic optional keys
-        for key, value in sorted(kwargs.items()):
-            if key.startswith("key") and value is not None:
-                if isinstance(value, (list, tuple)):
-                    for v in value:
-                        digest.update(v)
-                else:
-                    digest.update(value)
-
+        digest.update(key)
         return (digest.finalize(),)
-
-    @classmethod
-    def __init_subclass__(cls, **kwargs):
-        super().__init_subclass__(**kwargs)
-        # Auto-set FUNCTION to lowercase class name
-        cls.FUNCTION = cls.__name__.lower()
 
     RETURN_TYPES = ("BYTESLIKE",)
     RETURN_NAMES = ("hash_bytes",)
+    FUNCTION = "execute"
 
 
 class SHA2(Hash):
@@ -79,8 +45,8 @@ class SHA2(Hash):
         )
         return class_input
 
-    def sha2(self, algorithm, **kwargs):
-        return self.main_method(algorithm, **kwargs)
+    def execute(self, algorithm, key):
+        return self.main_method(algorithm, key)
 
 
 class BLAKE2(Hash):
@@ -96,12 +62,12 @@ class BLAKE2(Hash):
         )
         return class_input
 
-    def blake2(self, algorithm, **kwargs):
+    def execute(self, algorithm, key):
         if algorithm == "BLAKE2b":
             digest_size = 32
         elif algorithm == "BLAKE2s":
             digest_size = 64
-        return self.main_method(algorithm, digest_size, **kwargs)
+        return self.main_method(algorithm, key, digest_size)
 
 
 class SHA3(Hash):
@@ -119,26 +85,51 @@ class SHA3(Hash):
         )
         return class_input
 
-    def sha3(self, algorithm, **kwargs):
-        return self.main_method(algorithm, **kwargs)
+    def execute(self, algorithm, key):
+        return self.main_method(algorithm, key)
 
 
 class SHA1(Hash):
-    def sha1(self, algorithm=None, **kwargs):
+    def execute(self, key, algorithm=None):
         algorithm = "SHA1"
-        return self.main_method(algorithm, **kwargs)
+        return self.main_method(algorithm, key)
 
 
 class MD5(Hash):
-    def md5(self, algorithm=None, **kwargs):
+    def execute(self, key, algorithm=None):
         algorithm = "MD5"
-        return self.main_method(algorithm, **kwargs)
+        return self.main_method(algorithm, key)
 
 
 class SM3(Hash):
-    def sm3(self, algorithm=None, **kwargs):
+    def execute(self, key, algorithm=None):
         algorithm = "SM3"
-        return self.main_method(algorithm, **kwargs)
+        return self.main_method(algorithm, key)
+
+
+class HashSHAKE(Hash):
+    @classmethod
+    def INPUT_TYPES(cls):
+        class_input = super().INPUT_TYPES()
+        class_input["required"]["digest_size"] = (
+            "INT",
+            {
+                "default": 32,
+                "min": 1,
+                "tooltip": "The length of output desired (in bytes)",
+            },
+        )
+        class_input["required"]["algorithm"] = (
+            [
+                "SHAKE128",
+                "SHAKE256",
+            ],
+            {"defaull": "SHAKE128", "tooltip": "The algorithm for hashing."},
+        )
+        return class_input
+
+    def execute(self, key, algorithm, digest_size):
+        return self.main_method(algorithm, key, digest_size)
 
 
 class XOFHash(Hash):
@@ -148,10 +139,6 @@ class XOFHash(Hash):
         class_input["required"]["squeeze_bytes"] = (
             "INT",
             {"default": 16, "tooltip": "The amount of bytes to squeeze."},
-        )
-        class_input["required"]["squeeze_times"] = (
-            "INT",
-            {"default": 1, "tooltip": "The amount of times to squeeze."},
         )
         class_input["required"]["digest_size"] = (
             "INT",
@@ -163,45 +150,28 @@ class XOFHash(Hash):
         )
         return class_input
 
-    def main_method_xof(self, algorithm, squeeze_bytes, squeeze_times, digest_size, **kwargs):
-        # Initialize hash object
+    def main_method_xof(self, squeeze_bytes, algorithm, key, digest_size):
         digest = hashes.XOFHash(getattr(hashes, algorithm)(digest_size))
-        x = 0
-
-        # Sort kwargs keys to ensure deterministic order (optional)
-        for key, value in sorted(kwargs.items()):
-            if key.startswith("key") and key != "key1" and value is not None:
-                if isinstance(value, (list, tuple)):
-                    for v in value:
-                        digest.update(v)
-                else:
-                    digest.update(value)
-
-        # Squeeze loop to define how many keys to output
-        while x != squeeze_times:
-            digest.squeeze(squeeze_bytes)
-            x = x + 1
-
-        # Finalize
-        outputs = hashes.Hash(getattr(hashes, algorithm)(digest_size)).finalize()
-        return (outputs,)
+        digest.update(key)
+        outputs = bytes(digest.squeeze(squeeze_bytes))
+        return outputs
 
 
-class SHAKE(XOFHash):
+class XOFSHAKE(XOFHash):
     @classmethod
     def INPUT_TYPES(cls):
         class_input = super().INPUT_TYPES()
         class_input["required"]["algorithm"] = (
             [
-                "SHAKE_128",
-                "SHAKE_256",
+                "SHAKE128",
+                "SHAKE256",
             ],
-            {},
+            {"defaull": "SHAKE128", "tooltip": "The algorithm for hashing."},
         )
         return class_input
 
-    def shake(self, algorithm, squeeze_bytes, squeeze_times, digest_size, **kwargs):
-        return (self.main_method_xof(algorithm, squeeze_bytes, squeeze_times, digest_size, **kwargs),)
+    def execute(self, algorithm, key, squeeze_bytes, digest_size):
+        return (self.main_method_xof(squeeze_bytes, algorithm, key, digest_size),)
 
 
 NODE_CLASS_MAPPINGS = {
@@ -211,7 +181,8 @@ NODE_CLASS_MAPPINGS = {
     "SHA1": SHA1,
     "MD5": MD5,
     "SM3": SM3,
-    "SHAKE": SHAKE,
+    "XOFSHAKE": XOFSHAKE,
+    "HashSHAKE": HashSHAKE,
 }
 NODE_DISPLAY_NAME_MAPPINGS = {
     "SHA2": "SHA-2 Hashing",
@@ -220,5 +191,6 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "SHA1": "SHA-1 Hashing",
     "MD5": "MD5 Hashing",
     "SM3": "SM3 Hashing",
-    "SHAKE": "SHAKE Hashing",
+    "XOFSHAKE": "SHAKE XOF Hashing",
+    "HashSHAKE": "SHAKE Hashing",
 }

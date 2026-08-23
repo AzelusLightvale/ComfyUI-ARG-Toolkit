@@ -6,6 +6,7 @@ class InitNode:
         pass
 
     CATEGORY = "ARG Toolkit/Utilities/Error Correction"
+    FUNCTION = "execute"
 
     @classmethod
     def INPUT_TYPES(cls):
@@ -20,18 +21,13 @@ class InitNode:
             "optional": {},
         }
 
-    @classmethod
-    def __init_subclass__(cls, **kwargs):
-        super().__init_subclass__(**kwargs)
-        # Auto-set FUNCTION to lowercase class name
-        cls.FUNCTION = cls.__name__.lower()
 
 
 class ReedSolomonEncode(InitNode):
     RETURN_TYPES = ("BYTESLIKE",)
     RETURN_NAMES = ("encoded_data",)
 
-    def reedsolomonencode(self, data, ecc_symbols):
+    def execute(self, data, ecc_symbols):
         rsc = RSCodec(ecc_symbols)
         output = rsc.encode(data)
         return (bytes(output),)
@@ -62,7 +58,7 @@ class ReedSolomonDecode(InitNode):
         )
         return class_method
 
-    def reedsolomondecode(self, data, ecc_symbols, erase_pos=""):
+    def execute(self, data, ecc_symbols, erase_pos=""):
         rsc = RSCodec(ecc_symbols)
         parsed_erase_pos = None
         if erase_pos:
