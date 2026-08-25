@@ -210,15 +210,6 @@ class SpectrogramDecoder:
         return {
             "required": {
                 "image": ("IMAGE", {"forceInput": True,"tooltip": "The spectrogram image to decode into audio."}),
-                "image_type": (
-                    "BOOLEAN",
-                    {
-                        "label_on": "Spectrogram",
-                        "label_off": "Image",
-                        "default": True,
-                        "tooltip": "The type of image fed into the model. `Spectrogram` flips the image to correct for orientation, `Image` does not.",
-                    }
-                ),
                 "channel": (
                     ["colormap", "channel_red", "channel_green", "channel_blue", "luminance"],
                     {
@@ -294,13 +285,9 @@ class SpectrogramDecoder:
         norm_val = torch.where(dist1 < dist2, t1, t2)
         return norm_val
 
-    def execute(self, image, image_type, window_size, hop_size, windowing_func, autogain, max_amp, max_iter, top_db, sampling_rate, gl_momentum, scaling_method, mel_scale, channel, colormap_low, colormap_mid, colormap_high):
-        # Rotate the image in case it's a spectrogram
-        if image_type:
-            image = torch.flip(image, dims=[1])
-        elif not image_type:
-            image = image
-
+    def execute(self, image, window_size, hop_size, windowing_func, autogain, max_amp, max_iter, top_db, sampling_rate, gl_momentum, scaling_method, mel_scale, channel, colormap_low, colormap_mid, colormap_high):
+        # Setup
+        image = torch.flip(image, dims=[1])
         raw_frame_length = int(np.round((window_size / 1000.0) * sampling_rate))
         hop_length = int(np.round((hop_size / 1000.0) * sampling_rate))
         p2_fft = 2 ** int(np.ceil(np.log2(raw_frame_length)))
