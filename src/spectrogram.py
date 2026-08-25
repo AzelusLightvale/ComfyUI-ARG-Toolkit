@@ -226,8 +226,8 @@ class SpectrogramDecoder:
                         "tooltip": "The color channel used to collapse and deconstruct the image. For spectrograms with a known colormap, use `colormap`, otherwise use `luminance` or any of the RGB channels.",
                     }
                 ),
-                "window_size": ("INT", {"default": 25, "step": 1, "tooltip": "The size of each 'frame' in miliseconds."}),
-                "hop_size": ("INT", {"default": 15, "step": 1, "tooltip": "The size of the overlap between each 'frames' in miliseconds"}),
+                "window_size": ("FLOAT", {"default": 25.000, "min": 0.001, "max": 100000.000, "step": 0.0011, "tooltip": "The size of each 'frame' in miliseconds."}),
+                "hop_size": ("FLOAT", {"default": 15.000, "min": 0.001, "max": 100000.000, "step": 0.001, "tooltip": "The size of the overlap between each 'frames' in miliseconds"}),
                 "windowing_func": (
                     ["Hanning", "Bartlett", "Blackman", "Hamming"],
                     {
