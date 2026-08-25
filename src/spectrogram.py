@@ -1,5 +1,6 @@
 import torch
 import torchaudio.transforms as torch_trans
+import torchaudio.functional as torch_fn
 import numpy as np
 
 
@@ -67,6 +68,8 @@ class SpectrogramEncoder:
                         "tooltip": "If `cutoff_switch` is set to True, this will define the active dB range from 0 to not cut off.",
                     },
                 ),
+                "mel_scale": ("BOOLEAN", {"label_off": "htk", "label_on": "slaney", "default": False, "tooltip": "Mel scaling method to use."}),
+                "slaney_norm": ("BOOLEAN", {"default": False, "tooltip": "If mel_scale is set to `slaney` and you know Slaney's area normalization is enabled, switch this to True."}),
             },
         }
 
@@ -127,6 +130,8 @@ class SpectrogramEncoder:
         cutoff_switch: bool,
         scaling_method: str,
         active_db: float,
+        mel_scale: bool,
+        slaney_norm: bool,
     ):
         # Defining the base variables for audio
         waveforms = audio["waveform"]
@@ -160,28 +165,40 @@ class SpectrogramEncoder:
             freq_num = magnitude_spectra.shape[0]
             nyquist = sampling_rate / 2.0
 
-            mel_max = 2595.0 * np.log10(1.0 + nyquist / 700)
+            if not mel_scale:
+                hz_to_mel = lambda f: 2595.0 * np.log10(1.0 + f / 700.0)
+                mel_to_hz = lambda m: 700.0 * (10.0 ** (m / 2595.0) - 1.0)
+            elif mel_scale:
+                f_sp = 200.0 / 15.0
+                min_log_hz = 1000.0
+                min_log_mel = min_log_hz / f_sp  # 75.0
+                logstep = np.log(6.4) / 27.0
+
+                def hz_to_mel(f):
+                    f = np.asarray(f, dtype=np.float64)
+                    return np.where(f < min_log_hz, f / f_sp, min_log_mel + np.log(f / min_log_hz) / logstep)
+
+                def mel_to_hz(m):
+                    m = np.asarray(m, dtype=np.float64)
+                    return np.where(m < min_log_mel, m * f_sp, min_log_hz * np.exp(logstep * (m - min_log_mel)))
             hz_per_bin = sampling_rate / p2_fft
+            mel_max = hz_to_mel(nyquist)
             mel_num = int(np.round(mel_max / (2595.0 * np.log10(1.0 + hz_per_bin / 700.0))))
             mel_num = int(np.clip(mel_num, 32, p2_fft // 2 + 1))
 
             mel_points = np.linspace(0, mel_max, mel_num +2)
-            hz_points = 700.0 * (10.0 ** (mel_points / 2595.0) - 1.0)
-            freq_indices = (hz_points / nyquist) * (freq_num - 1)
+            hz_points = mel_to_hz(mel_points)
 
-            mel_matrix = np.zeros((mel_num, freq_num), dtype=np.float32)
-            for i in range(1, mel_num + 1):
-                left, center, right = freq_indices[i - 1], freq_indices[i], freq_indices[i + 1]
-                bins = np.arange(int(np.floor(left)), int(np.ceil(right)) + 1)
-                bins = bins[(bins >= 0) & (bins < freq_num)]
+            stft_freqs = np.linspace(0.0, nyquist, freq_num, dtype=np.float32)
 
-                up_mask = (bins >= left) & (bins <= center)
-                down_mask = (bins > center) & (bins <= right)
+            left = (stft_freqs[None, :] - hz_points[:-2, None]) / (hz_points[1:-1, None] - hz_points[:-2, None])
+            right = (hz_points[2:, None] - stft_freqs[None, :]) / (hz_points[2:, None] - hz_points[1:-1, None])
 
-                if center > left:
-                    mel_matrix[i - 1, bins[up_mask]] = (bins[up_mask] - left) / (center - left)
-                if right > center:
-                    mel_matrix[i - 1, bins[down_mask]] = (right - bins[down_mask]) / (right - center)
+            mel_matrix = np.maximum(0.0, np.minimum(left, right)).astype(np.float32)
+
+            if slaney_norm:
+                enbw = 2.0 / (hz_points[2:] - hz_points[:-2])
+                mel_matrix *= enbw[:, None].astype(np.float32)
 
             db_spectrogram = np.dot(mel_matrix, magnitude_spectra)
             db_spectrogram = 20 * np.log10(db_spectrogram + 1e-10)
@@ -324,8 +341,17 @@ class SpectrogramDecoder:
         elif scaling_method == "Logarithmic Mel":
             log_mag = torch.pow(10.0, ((norm * top_db) - top_db)/20)
             lin_mag = torch.clamp(log_mag, min=0.0)
-            inverse_scale = torch_trans.InverseMelScale(n_stft=n_stft, n_mels=norm.shape[1], sample_rate=sampling_rate, f_min=0.0, f_max=sampling_rate/2, norm="slaney" if autogain==True else None, mel_scale="htk" if mel_scale==False else "slaney")
-            magnitude = inverse_scale(lin_mag)
+            mel_fb = torch_fn.melscale_fbanks(
+                n_freqs=n_stft,
+                f_min=0.0,
+                f_max=float(sampling_rate//2),
+                n_mels=norm.shape[1],
+                sample_rate=sampling_rate,
+                norm="slaney" if autogain==True else None,
+                mel_scale="htk" if mel_scale==False else "slaney"
+            )
+            mel_pinv = torch.linalg.pinv(mel_fb, rtol=1e-5, atol=1e-8)
+            magnitude = torch.matmul(mel_pinv.T, lin_mag)
 
         # Griffin-Lim
         windowing = {
