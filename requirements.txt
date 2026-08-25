@@ -57,5 +57,7 @@ torch==2.13.0
     # via
     #   arg-toolkit (pyproject.toml)
     #   invisible-watermark
+torchaudio==2.11.0
+    # via arg-toolkit (pyproject.toml)
 typing-extensions==4.16.0
     # via torch

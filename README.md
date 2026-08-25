@@ -19,11 +19,12 @@ Might also double as a poor-man's cryptanalysis and steganography lab.
 - Bytes-like datatype and encoders/decoders for many nodes in the node pack.
 - Error correction codes for more robust operations - currently powered by [`reedsolo`](https://github.com/tomerfiliba-org/reedsolomon)
 - Multi-language Morse code encoder and decoder.
+- Spectrogram to audio and vice versa.
 - (WIP) Modern cryptographic encryption tools and functions - currently powered by [`cryptography`](https://github.com/pyca/cryptography).
 - (Planned) Historical encoding and encrypting formats (Kansas City System, SNOW, SSTV,...) made user-friendly and available through a node interface.
 - (Planned) Recreations of historical cipher machines (Enigma, Lorenz, M-209,...) within ComfyUI.
 - (Planned) Audio spectrogram analysis tools.
-- (Planned) Generative steganography models
+- (Planned) ML-integrated steganography models.
 - (Far Future plans) Post-quantum cryptography tools.
 
 ## Testing methodology
