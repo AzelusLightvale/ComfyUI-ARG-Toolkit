@@ -6,7 +6,7 @@ colorama==0.4.6
     # via crayons
 crayons==0.4.0
     # via stegano
-cryptography==50.0.0
+cryptography==50.0.1
     # via arg-toolkit (pyproject.toml)
 filelock==3.32.4
     # via torch
