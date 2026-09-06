@@ -2,14 +2,15 @@
 
 A collection of ComfyUI nodes meant mostly for doing cryptography, steganography, encryption, decryption, and everything needed to both make and solve ARGs (Alternative Reality Games) and secret messages hidden within text or images (and hopefully audio) without ever leaving ComfyUI.
 
-Might also double as a poor-man's cryptanalysis and steganography lab.
+Might also double as a poor man's cryptanalysis and steganography lab if absolutely necessary.
 
 ## Quickstart
 
 1. Install [ComfyUI](https://docs.comfy.org/get_started).
-1. Install [ComfyUI-Manager](https://github.com/ltdrdata/ComfyUI-Manager).
-1. Look up this extension in ComfyUI-Manager. If you are installing manually, clone this repository under `ComfyUI/custom_nodes`.
-1. Restart ComfyUI.
+2. Install [ComfyUI-Manager](https://github.com/ltdrdata/ComfyUI-Manager) through the [official method](https://github.com/Comfy-Org/ComfyUI#comfyui-manager) or manually installing it by cloning the ComfyUI-Manager repository.
+3. Look up this extension in ComfyUI-Manager. This should be available under the name "ComfyUI ARG Toolkit". If you are installing manually, clone this repository under `ComfyUI/custom_nodes` and install its requirements into the Python environment you use to run ComfyUI.
+4. Restart ComfyUI (and refresh your browser if you use the browser as the client).
+5. Enjoy :)
 
 ## Features
 
@@ -31,7 +32,7 @@ Might also double as a poor-man's cryptanalysis and steganography lab.
 
 Since this project started as an amateur project, the test files only cover the functions and most common use cases, not the edge cases or any automated testing yet. Many of the tests done are manual functionality tests done on ComfyUI and not unit tests. This can and will change on future releases.
 
-## Others
+## Other information
 
 ### Related projects
 

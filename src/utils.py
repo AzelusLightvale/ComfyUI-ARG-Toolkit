@@ -1,3 +1,4 @@
+"""Utilities for use with the ARG Toolkit"""
 import os
 import base64
 import ast
@@ -10,7 +11,7 @@ class SystemRandom:
         pass
 
     CATEGORY = "ARG Toolkit/Utilities/Random"
-    DESCRIPTION = "Generates a random number of bytes using"
+    DESCRIPTION = "Generates a random number of bytes using os.urandom. Required for use with the Cryptography nodes."
 
     @classmethod
     def INPUT_TYPES(cls):
@@ -418,8 +419,8 @@ class ByteslikeEncode:
                         raise ValueError("Input for 'Raw Bytes' must evaluate to a bytes object (e.g., b'text').")
                 case _:
                     raise ValueError(f"Invalid encoding method used: {encoding}.")
-        except Exception as err:
-            logger.warning(f"Bytes-like Object Encode at node ID {unique_id} has failed to encode the string given under the mode of \"{encoding}\" with {err}. Falling back to raw string bytes.")
+        except [ValueError, TypeError, UnicodeDecodeError] as err:
+            logger.warning("Bytes-like Object Encode at node ID %s has failed to encode the string given under the mode of \"%s\" with %s. Falling back to raw string bytes.", unique_id, encoding, err)
             data = text.encode("utf-8")
         return (data,)
 
@@ -455,7 +456,7 @@ class ByteslikeDecode:
                 try:
                     return (data.decode("utf-8"),)
                 except UnicodeDecodeError:
-                    logger.warning(f"Bytes-like Object Decode at node {unique_id} has failed to decode object using UTF-8. Replacing characters that cannot be decoded with hex values.")
+                    logger.warning("Bytes-like Object Decode at node %s has failed to decode object using UTF-8. Replacing characters that cannot be decoded with hex values.", unique_id)
                     return (data.decode("utf-8", errors="backslashreplace"),)
             case "Binary":
                 return ("".join(f"{byte:08b}" for byte in data),)
