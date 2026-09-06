@@ -1,8 +1,9 @@
 import os
 import base64
-import binascii
 import ast
+import logging
 
+logger = logging.getLogger(__name__)
 
 class SystemRandom:
     def __init__(self):
@@ -383,6 +384,10 @@ class ByteslikeEncode:
             "required": {
                 "text": ("STRING", {"multiline": True, "default": "Hello World!", "placeholder": "Type your message here..."}),
                 "encoding": (["Hexadecimal", "Base64", "UTF-8", "Binary", "Raw Bytes"], {"default": "UTF-8","tooltip": "The type of data to be encoded into bytes."}),
+            },
+            "optional": {},
+            "hidden": {
+                "unique_id": "UNIQUE_ID",
             }
         }
 
@@ -390,74 +395,74 @@ class ByteslikeEncode:
     FUNCTION = "execute"
     CATEGORY = "ARG Toolkit/Utilities/Converters"
 
-    def execute(self, text, encoding):
+    def execute(self, text, encoding, unique_id):
         if not isinstance(text, str):
             raise TypeError("Input must be a string")
 
-        if encoding == "Hexadecimal":
-            cleaned = text.strip().replace(" ", "").replace("\n", "")
-            if len(cleaned) % 2 != 0:
-                raise ValueError("Hex input must have even length.")
-            try:
-                data = bytes.fromhex(cleaned)
-            except ValueError:
-                raise ValueError("Invalid hex input.")
-        elif encoding == "Base64":
-            cleaned = text.strip()
-            try:
-                data = base64.b64decode(cleaned, validate=True)
-            except binascii.Error:
-                raise ValueError("Invalid base64 input.")
-        elif encoding == "Binary":
-            cleaned = text.replace(" ", "").replace("\n", "")
-            if len(cleaned) % 8 != 0:
-                raise ValueError("Binary length must be multiple of 8.")
-            if any(c not in "01" for c in cleaned):
-                raise ValueError("Binary input must contain only 0 and 1.")
-            data = bytes(int(cleaned[i : i + 8], 2) for i in range(0, len(cleaned), 8))
-        elif encoding == "UTF-8":
-            try:
-                data = text.encode("utf-8")
-            except UnicodeEncodeError:
-                raise ValueError("UTF-8 encoding failed.")
-        elif encoding == "Raw Bytes":
-            try:
-                data = ast.literal_eval(text)
-                if not isinstance(data, bytes):
-                    raise ValueError("Input for 'Raw Bytes' must evaluate to a bytes object (e.g., b'text').")
-            except (ValueError, SyntaxError, TypeError) as e:
-                raise ValueError(
-                    f"Invalid 'Raw Bytes' input. It must be a valid Python bytes literal string (e.g., b'hello' or b'\\xde\\xad'). Original error: {e}"
-                )
-        else:
-            raise ValueError("Unsupported mode")
+        try:
+            match encoding:
+                case "Hexadecimal":
+                    cleaned = text.strip().replace(" ", "").replace("\n", "")
+                    data = bytes.fromhex(cleaned)
+                case "Base64":
+                    cleaned = text.strip()
+                    data = base64.b64decode(cleaned, validate=True)
+                case "Binary":
+                    cleaned = text.replace(" ", "").replace("\n", "")
+                    data = bytes(int(cleaned[i : i + 8], 2) for i in range(0, len(cleaned), 8))
+                case "UTF-8":
+                    data = text.encode("utf-8")
+                case "Raw Bytes":
+                    data = ast.literal_eval(text)
+                    if not isinstance(data, bytes):
+                        raise ValueError("Input for 'Raw Bytes' must evaluate to a bytes object (e.g., b'text').")
+                case _:
+                    raise ValueError(f"Invalid encoding method used: {encoding}.")
+        except Exception as err:
+            logger.warning(f"Bytes-like Object Encode at node ID {unique_id} has failed to encode the string given under the mode of \"{encoding}\" with {err}. Falling back to raw string bytes.")
+            data = text.encode("utf-8")
         return (data,)
 
 
 class ByteslikeDecode:
     @classmethod
     def INPUT_TYPES(cls):
-        return {"required": {"data": ("BYTESLIKE",), "encoding": (["Hexadecimal", "Base64", "UTF-8", "Binary", "Raw Bytes"], {"default": "UTF-8", "tooltip": "The type of data the bytes will be decoded to."})}}
+        return {
+            "required": {
+                "data": ("BYTESLIKE",{}), 
+                "encoding": (["Hexadecimal", "Base64", "UTF-8", "Binary", "Raw Bytes"], {"default": "UTF-8", "tooltip": "The type of data the bytes will be decoded to."})
+                },
+            "optional": {},
+            "hidden": {
+                "unique_id": "UNIQUE_ID",
+            }
+        }
 
     RETURN_TYPES = ("STRING",)
     FUNCTION = "execute"
     CATEGORY = "ARG Toolkit/Utilities/Converters"
 
-    def execute(self, data, encoding):
+    def execute(self, data, encoding, unique_id):
         if not isinstance(data, (bytes, bytearray)):
             raise TypeError("Expected bytes-like objects. Got a different datatype from `BYTESLIKE`")
-        if encoding == "Hexadecimal":
-            return (data.hex(),)
-        elif encoding == "Base64":
-            return (base64.b64encode(data).decode("utf-8"),)
-        elif encoding == "UTF-8":
-            return (data.decode("utf-8"),)
-        elif encoding == "Binary":
-            return ("".join(f"{byte:08b}" for byte in data),)
-        elif encoding == "Raw Bytes":
-            return (repr(data),)
-        else:
-            raise ValueError("Unsupported encoding")
+
+        match encoding:
+            case "Hexadecimal":
+                return (data.hex(),)
+            case "Base64":
+                return (base64.b64encode(data).decode("utf-8"),)
+            case "UTF-8":
+                try:
+                    return (data.decode("utf-8"),)
+                except UnicodeDecodeError:
+                    logger.warning(f"Bytes-like Object Decode at node {unique_id} has failed to decode object using UTF-8. Replacing characters that cannot be decoded with hex values.")
+                    return (data.decode("utf-8", errors="backslashreplace"),)
+            case "Binary":
+                return ("".join(f"{byte:08b}" for byte in data),)
+            case "Raw Bytes":
+                return (repr(data),)
+            case _:
+                raise ValueError(f"Invalid encoding method used: {encoding}.")
 
 
 # Bit counting node, meant for use with AES, but can be used with anything of the byteslike type.
