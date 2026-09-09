@@ -53,7 +53,7 @@ stegano==3.0.0
     # via arg-toolkit (pyproject.toml)
 sympy==1.14.0
     # via torch
-torch==2.13.0
+torch==2.14.0
     # via
     #   arg-toolkit (pyproject.toml)
     #   invisible-watermark
