@@ -111,13 +111,6 @@ class AESAuth:  # Since all AES-based authenticated encryption techniques are th
                         "tooltip": "A random value to use. Should be 12 bytes in size.",
                     },
                 ),
-                "associated_data": (
-                    "BYTESLIKE",
-                    {
-                        "forceInput": True,
-                        "tooltip": "Additional data that should be authenticated with the key, but does not need to be encrypted. Can be None",
-                    },
-                ),
                 "mode": (
                     "BOOLEAN",
                     {
@@ -145,6 +138,13 @@ class AESAuth:  # Since all AES-based authenticated encryption techniques are th
                         "tooltip": "For AES-CCM specifically, it allows a tag length to be specified. Normally, this defaults to 16, but can be lowered to 4. Unless you know what you're doing, DO NOT CHANGE FROM THE DEFAULTS.",
                     },
                 ),
+                "associated_data": (
+                    "BYTESLIKE",
+                    {
+                        "forceInput": True,
+                        "tooltip": "Additional data that should be authenticated with the key, but does not need to be encrypted. Can be None",
+                    },
+                ),
             },
         }
 
@@ -152,7 +152,7 @@ class AESAuth:  # Since all AES-based authenticated encryption techniques are th
     RETURN_NAMES = ("encrypted_txt",)
     FUNCTION = "aesauth"
 
-    def aesauth(self, text, key: bytes, nonce, associated_data, mode, aes_type, ccm_tag_length):
+    def aesauth(self, text: bytes, key: bytes, nonce: bytes, mode: bool, aes_type: str, ccm_tag_length: int, associated_data: bytes | None):
         cipher_engines = {
             "AES-GCM": aead.AESGCM,
             "AES-GCM-SIV": aead.AESGCMSIV,
@@ -160,7 +160,7 @@ class AESAuth:  # Since all AES-based authenticated encryption techniques are th
         }
         if aes_type == "AES-SIV":
             cipher = aead.AESSIV(key)
-            associated_data = [associated_data, nonce]
+            associated_data = [associated_data, nonce]  # ty: ignore[invalid-assignment]
         elif aes_type == "AES-CCM":
             cipher = aead.AESCCM(key, ccm_tag_length)
         elif aes_type in cipher_engines:
@@ -169,14 +169,14 @@ class AESAuth:  # Since all AES-based authenticated encryption techniques are th
             raise ValueError("Invalid AES type chosen. Perhaps the node is broken? Try making a new one, as this is normally impossible.")
         if mode:
             if aes_type == "AES-SIV":
-                message = cipher.encrypt(text, associated_data)
+                message = cipher.encrypt(text, associated_data)  # ty: ignore[missing-argument, invalid-argument-type]
             else:
-                message = cipher.encrypt(nonce, text, associated_data)
+                message = cipher.encrypt(nonce, text, associated_data)  # ty: ignore[invalid-argument-type, too-many-positional-arguments]
         else:
             if aes_type == "AES-SIV":
-                message = cipher.decrypt(text, associated_data)
+                message = cipher.decrypt(text, associated_data)  # ty: ignore[missing-argument, invalid-argument-type]
             else:
-                message = cipher.decrypt(nonce, text, associated_data)
+                message = cipher.decrypt(nonce, text, associated_data)  # ty: ignore[invalid-argument-type, too-many-positional-arguments]
         return (message,)
 
 

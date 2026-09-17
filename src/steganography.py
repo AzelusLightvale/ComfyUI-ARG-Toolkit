@@ -9,20 +9,7 @@ import torch
 from PIL import Image
 import numpy as np
 
-# folder_path.py solver, just so the complaints will stop.
-current = os.path.dirname(os.path.realpath(__file__))
-while True:
-    candidate = os.path.join(current, "folder_paths.py")
-    if os.path.exists(candidate):
-        target_dir = current
-        break
-    parent = os.path.dirname(current)
-    if parent == current:
-        raise FileNotFoundError("folder_paths.py not found in any parent directories")
-    current = parent
-sys.path.insert(0, target_dir)
-
-import folder_paths  # This import is handled by the solver above looking for it inside the parent directories. This will most likely hit the one from base ComfyUI, assuming no other nodes or .py file carry this namespace.
+import folder_paths  # This import is handled by ComfyUI. This is a very jank solution, but it works, so don't ask.
 
 # Every node is inspired heavily by their reference implementations in their GitHub repository, with changes made to best use PyTorch as possible as it's the main way ComfyUI stores data
 # For more information, check https://docs.comfy.org/custom-nodes/backend/images_and_masks#images
@@ -80,7 +67,7 @@ class Stegano_LSB_Encode:
                     ["None"]
                     + [
                         name
-                        for name, _ in inspect.getmembers(stegano.lsb.generators, inspect.isfunction)
+                        for name, _ in inspect.getmembers(stegano.lsb.generators, inspect.isfunction)  # ty: ignore[possibly-missing-submodule]
                         if name
                         not in [
                             "carmichael",
@@ -117,7 +104,7 @@ class Stegano_LSB_Encode:
             if generator_type == "None":
                 generator_type = None
             else:
-                generator_func = getattr(stegano.lsb.generators, generator_type)
+                generator_func = getattr(stegano.lsb.generators, generator_type)  # ty: ignore[invalid-argument-type] Handled by the None checker above it  # ty: ignore[possibly-missing-submodule]
             if generator_type in ["LFSR", "ackermann", "ackermann_naive"]:
                 generator_type = generator_func(m=m)
             elif generator_type in ["ackermann_fast", "ackermann_slow"]:
@@ -127,7 +114,7 @@ class Stegano_LSB_Encode:
                 temp_path = os.path.join(temp_dir, f"image_{i}.png")
                 img_pil.save(temp_path)
                 generator_type = generator_func(temp_path)
-            img_pil = stegano.lsb.hide(img_pil, message, generator_type, encoding=encoding)
+            img_pil = stegano.lsb.hide(img_pil, message, generator_type, encoding=encoding)  # ty: ignore[invalid-argument-type] If it works, it works. At the backend, Pillow's Image format is also bytes
             img_np_out = np.array(img_pil)
             img_tensor_out = torch.from_numpy(img_np_out).float() / 255.0
             output_images.append(img_tensor_out)
@@ -176,7 +163,7 @@ class Stegano_LSB_Decode:
                     ["None"]
                     + [
                         name
-                        for name, _ in inspect.getmembers(stegano.lsb.generators, inspect.isfunction)
+                        for name, _ in inspect.getmembers(stegano.lsb.generators, inspect.isfunction)  # ty: ignore[possibly-missing-submodule]
                         if name
                         not in [
                             "carmichael",
@@ -213,7 +200,7 @@ class Stegano_LSB_Decode:
             if generator_type == "None":
                 generator_type = None
             else:
-                generator_func = getattr(stegano.lsb.generators, generator_type)
+                generator_func = getattr(stegano.lsb.generators, generator_type)  # ty: ignore[invalid-argument-type, possibly-missing-submodule]
             if generator_type in ["LFSR", "ackermann", "ackermann_naive"]:
                 generator_type = generator_func(m=m)
             elif generator_type in ["ackermann_fast", "ackermann_slow"]:
@@ -223,7 +210,7 @@ class Stegano_LSB_Decode:
                 temp_path = os.path.join(temp_dir, f"image_{i}.png")
                 img_pil.save(temp_path)
                 generator_type = generator_func(temp_path)
-            final_output.append(stegano.lsb.reveal(img_pil, generator_type, encoding=encoding))
+            final_output.append(stegano.lsb.reveal(img_pil, generator_type, encoding=encoding))  # ty: ignore[invalid-argument-type]
         return ("".join(final_output),)
 
 

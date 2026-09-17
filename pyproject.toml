@@ -1,6 +1,6 @@
 [project]
 name = "arg-toolkit"
-version = "2.3.0"
+version = "2.3.1"
 description = "A collection of ComfyUI nodes for cryptography, steganography, encryption, decryption, and tools needed to both make and solve ARGs (Alternative Reality Games) and secret messages."
 readme = "README.md"
 requires-python = ">=3.12"
@@ -34,6 +34,8 @@ dev = [
   "pre-commit",  # runs linting on commit
   "pytest",  # testing
   "ruff",  # lintingclass
+  "ty", # lsp
+  "uv",
 ]
 
 [build-system]
@@ -65,7 +67,7 @@ testpaths = [
 
 [tool.ruff]
 # extend-exclude = ["static", "ci/templates"]
-line-length = 140
+line-length = 320
 src = ["src", "tests"]
 target-version = "py312"
 
@@ -74,9 +76,13 @@ target-version = "py312"
 select = [
   "S102",  # exec-builtin
   "S307",  # eval-used
-  "W293",
+  "W293",  # Blank line with whitespace
   "F",  # The "F" series in Ruff stands for "Pyflakes" rules, which catch various Python syntax errors and undefined names.
   # See all rules here: https://docs.astral.sh/ruff/rules/#pyflakes-f
+  "NPY",  # NumPy-specific rules
+  "SIM",  # flake8-simplify rules, to simplify the code more
+  "B",  # flake8-bugbear rules, to catch patterns with potential bugs
+  "PLR",  # Pylint refactor rules
 ]
 
 [tool.ruff.lint.flake8-quotes]
@@ -84,3 +90,10 @@ inline-quotes = "double"
 
 [tool.setuptools.package-data]
 "*" = ["*.*"]
+
+[tool.ty.analysis]
+# Suppress errors for all `test` modules except `test.foo`
+allowed-unresolved-imports = ["test.**", "!test.foo", "folder_paths"]
+
+[tool.ty.terminal]
+output-format = "concise"

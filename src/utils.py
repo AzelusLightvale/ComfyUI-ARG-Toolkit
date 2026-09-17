@@ -133,7 +133,7 @@ class Base642String(ConverterNodes):
         return (base64.b64decode(text.encode("ascii")).decode(self.encoding_selector(encoding_format, other_encoding_format)),)
 
 
-# The Bitwise category of Utilities. Also has auto-detection for the sake of my sanity.
+# The Bitwise category of Utilities.
 
 
 class BitwiseNodes:
@@ -161,7 +161,7 @@ class BitwiseNodes:
                         "default": "Hello World!",
                         "multiline": True,
                         "placeholder": "Type your message here...",
-                        "tooltip": "The secondary string to compare against. Accepts format defined in `datatype`",
+                        "tooltip": "The secondary string to compare against. Accepts format defined in `datatype`. Will be ignored in bitwise NOT operations.",
                     },
                 ),
                 "datatype": (["String", "Hexadecimal", "Base64", "Integer", "Binary"], {"default": "Binary", "tooltip": "The datatype that the two texts is assumed to be for comparison purpose. Will also output the final output based on the chosen datatype as well."}),
@@ -202,7 +202,7 @@ class BitwiseNodes:
             encoding_format = other_encoding_format
         return encoding_format
 
-    def detect_and_parse(self, text, datatype, encoding_format, other_encoding_format=None):
+    def detect_and_parse(self, text: str, datatype, encoding_format, other_encoding_format=None):
         text = text.strip()
 
         if datatype == "Binary":
@@ -231,12 +231,12 @@ class BitwiseNodes:
         else:
             raise ValueError(f"Unsupported datatype: {datatype}")
 
-    def operate(self, text_1, text_2, datatype, encoding_format, other_encoding_format=None, func=None):
-        b1, return_fmt = self.detect_and_parse(
+    def operate(self, text_1: str, text_2: str, datatype, encoding_format, func, other_encoding_format=None):
+        b1, return_fmt= self.detect_and_parse(
             text=text_1, datatype=datatype, encoding_format=encoding_format, other_encoding_format=other_encoding_format
         )
 
-        if text_2 is not None:
+        if text_2 is not "":
             b2, _ = self.detect_and_parse(
                 text=text_2, datatype=datatype, encoding_format=encoding_format, other_encoding_format=other_encoding_format
             )
@@ -299,7 +299,7 @@ class BitwiseNOT(BitwiseNodes):
     def execute(self, text, encoding_format, other_encoding_format):
         result_bytes, input_format = self.operate(
             text,
-            None,
+            "",
             encoding_format,
             other_encoding_format,
             func=lambda b1: bytes((~x & 0xFF) for x in b1),
@@ -374,8 +374,8 @@ class StringLooper:
     RETURN_NAMES = ("looped_text",)
     FUNCTION = "Looper"
 
-    def Looper(self, text=str, loops=int):
-        return (text * (loops + 1),)
+    def Looper(self, text: str, loops: int):
+        return (text*loops,)
 
 
 class ByteslikeEncode:
@@ -419,7 +419,7 @@ class ByteslikeEncode:
                         raise ValueError("Input for 'Raw Bytes' must evaluate to a bytes object (e.g., b'text').")
                 case _:
                     raise ValueError(f"Invalid encoding method used: {encoding}.")
-        except [ValueError, TypeError, UnicodeDecodeError] as err:
+        except (ValueError, TypeError, UnicodeDecodeError) as err:
             logger.warning("Bytes-like Object Encode at node ID %s has failed to encode the string given under the mode of \"%s\" with %s. Falling back to raw string bytes.", unique_id, encoding, err)
             data = text.encode("utf-8")
         return (data,)
@@ -430,7 +430,7 @@ class ByteslikeDecode:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "data": ("BYTESLIKE",{}), 
+                "data": ("BYTESLIKE",{}),
                 "encoding": (["Hexadecimal", "Base64", "UTF-8", "Binary", "Raw Bytes"], {"default": "UTF-8", "tooltip": "The type of data the bytes will be decoded to."})
                 },
             "optional": {},
