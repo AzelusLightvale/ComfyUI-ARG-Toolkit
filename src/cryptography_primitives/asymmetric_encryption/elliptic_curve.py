@@ -1,8 +1,7 @@
 # Elliptic curve encryption
-from cryptography.hazmat.primitives.asymmetric import ec
-from cryptography.hazmat.primitives import serialization
-from cryptography.hazmat.primitives import hashes
 from cryptography.exceptions import InvalidSignature
+from cryptography.hazmat.primitives import hashes, serialization
+from cryptography.hazmat.primitives.asymmetric import ec
 
 
 class EllipticCurve:
@@ -16,7 +15,7 @@ class EllipticCurve:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "curve_name": ([oid for oid in ec.EllipticCurveOID.__dict__.keys() if not oid.startswith("_")], {}),
+                "curve_name": ([oid for oid in ec.EllipticCurveOID.__dict__ if not oid.startswith("_")], {}),
             },
             "optional": {},
         }

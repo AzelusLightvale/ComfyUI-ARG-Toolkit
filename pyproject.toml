@@ -3,7 +3,7 @@ name = "arg-toolkit"
 version = "2.3.0"
 description = "A collection of ComfyUI nodes for cryptography, steganography, encryption, decryption, and tools needed to both make and solve ARGs (Alternative Reality Games) and secret messages."
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.12"
 license = "GPL-3.0-only"
 authors = [{ name = "AzelusLightvale", email = "NexusLightvale@protonmail.com" }]
 classifiers = [
@@ -67,7 +67,7 @@ testpaths = [
 # extend-exclude = ["static", "ci/templates"]
 line-length = 140
 src = ["src", "tests"]
-target-version = "py39"
+target-version = "py312"
 
 # Add rules to ban exec/eval
 [tool.ruff.lint]
