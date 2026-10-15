@@ -6,8 +6,8 @@ class TestCiphers:
         atbash_cipher = ciphers.Atbash()
         text = "Hello World"
         alphabet = "ENGLISH"
-        encrypted_text = atbash_cipher.atbash(text, alphabet, True, False)
-        decrypted_text = atbash_cipher.atbash(encrypted_text[0], alphabet, False, False)
+        encrypted_text = atbash_cipher.execute(text, alphabet, True, False)
+        decrypted_text = atbash_cipher.execute(encrypted_text[0], alphabet, False, False)
         assert decrypted_text[0] == text.lower().replace(" ", "")
 
     def test_caesar_cipher(self):
@@ -15,8 +15,8 @@ class TestCiphers:
         text = "Hello World"
         alphabet = "ENGLISH"
         key = 3
-        encrypted_text = caesar_cipher.caesar(text, alphabet, key, True, False)
-        decrypted_text = caesar_cipher.caesar(encrypted_text[0], alphabet, key, False, False)
+        encrypted_text = caesar_cipher.execute(text, alphabet, key, True, False)
+        decrypted_text = caesar_cipher.execute(encrypted_text[0], alphabet, key, False, False)
         assert decrypted_text[0] == text.lower().replace(" ", "")
 
     def test_vigenere_cipher(self):
@@ -24,8 +24,8 @@ class TestCiphers:
         text = "Hello World"
         alphabet = "ENGLISH"
         key = "KEY"
-        encrypted_text = vigenere_cipher.vigenere(text, alphabet, key, True, False)
-        decrypted_text = vigenere_cipher.vigenere(encrypted_text[0], alphabet, key, False, False)
+        encrypted_text = vigenere_cipher.execute(text, alphabet, key, True, False)
+        decrypted_text = vigenere_cipher.execute(encrypted_text[0], alphabet, key, False, False)
         assert decrypted_text[0] == text.lower().replace(" ", "")
 
     def test_adfgx_cipher(self):
@@ -33,8 +33,8 @@ class TestCiphers:
         text = "HelloWorld"
         alphabet = "abcdefghiklmnopqrstuvwxyz"  # 25 chars, no j
         key = "KEY"
-        encrypted_text = adfgx_cipher.adfgx(text, alphabet, key, True, False)
-        decrypted_text = adfgx_cipher.adfgx(encrypted_text[0], alphabet, key, False, False)
+        encrypted_text = adfgx_cipher.execute(text, alphabet, key, True, False)
+        decrypted_text = adfgx_cipher.execute(encrypted_text[0], alphabet, key, False, False)
         assert decrypted_text[0] == text.lower()
 
     def test_autokey_cipher(self):
@@ -42,8 +42,8 @@ class TestCiphers:
         text = "Hello World"
         alphabet = "ENGLISH"
         key = "KEY"
-        encrypted_text = autokey_cipher.autokey(text, alphabet, key, True, False)
-        decrypted_text = autokey_cipher.autokey(encrypted_text[0], alphabet, key, False, False)
+        encrypted_text = autokey_cipher.execute(text, alphabet, key, True, False)
+        decrypted_text = autokey_cipher.execute(encrypted_text[0], alphabet, key, False, False)
         assert decrypted_text[0] == text.lower().replace(" ", "")
 
     def test_beaufort_cipher(self):
@@ -51,8 +51,8 @@ class TestCiphers:
         text = "Hello World"
         alphabet = "ENGLISH"
         key = "KEY"
-        encrypted_text = beaufort_cipher.beaufort(text, alphabet, key, True, False)
-        decrypted_text = beaufort_cipher.beaufort(encrypted_text[0], alphabet, key, False, False)
+        encrypted_text = beaufort_cipher.execute(text, alphabet, key, True, False)
+        decrypted_text = beaufort_cipher.execute(encrypted_text[0], alphabet, key, False, False)
         assert decrypted_text[0] == text.lower().replace(" ", "")
 
     def test_caesarprog_cipher(self):
@@ -60,16 +60,16 @@ class TestCiphers:
         text = "Hello World"
         alphabet = "ENGLISH"
         key = 3
-        encrypted_text = caesarprogessive_cipher.caesarprogressive(text, alphabet, key, True, False)
-        decrypted_text = caesarprogessive_cipher.caesarprogressive(encrypted_text[0], alphabet, key, False, False)
+        encrypted_text = caesarprogessive_cipher.execute(text, alphabet, key, True, False)
+        decrypted_text = caesarprogessive_cipher.execute(encrypted_text[0], alphabet, key, False, False)
         assert decrypted_text[0] == text.lower().replace(" ", "")
 
     def test_rot13_cipher(self):
         rot13_cipher = ciphers.Rot13()
         text = "Hello World"
         alphabet = "ENGLISH"
-        encrypted_text = rot13_cipher.rot13(text, alphabet, 13, True, False)
-        decrypted_text = rot13_cipher.rot13(encrypted_text[0], alphabet, 13, False, False)
+        encrypted_text = rot13_cipher.execute(text, alphabet, 13, True, False)
+        decrypted_text = rot13_cipher.execute(encrypted_text[0], alphabet, 13, False, False)
         assert decrypted_text[0] == text.lower().replace(" ", "")
 
     def test_scytale_cipher(self):
@@ -77,8 +77,8 @@ class TestCiphers:
         text = "Hello World"
         alphabet = "ENGLISH"
         key = 4
-        encrypted_text = scytale_cipher.scytale(text, alphabet, key, True, False)
-        decrypted_text = scytale_cipher.scytale(encrypted_text[0], alphabet, key, False, False)
+        encrypted_text = scytale_cipher.execute(text, alphabet, key, True, False)
+        decrypted_text = scytale_cipher.execute(encrypted_text[0], alphabet, key, False, False)
         assert text.lower().replace(" ", "") in decrypted_text[0]
 
     def test_playfair_cipher(self):
@@ -86,8 +86,8 @@ class TestCiphers:
         text = "Hello World"
         alphabet = "abcdefghiklmnopqrstuvwxyz"  # 25 chars, no j
         key = "KEYWORD"
-        encrypted_text = playfair_cipher.playfair(text, alphabet, key, True, False)
-        decrypted_text = playfair_cipher.playfair(encrypted_text[0], alphabet, key, False, False)
+        encrypted_text = playfair_cipher.execute(text, alphabet, key, True, False)
+        decrypted_text = playfair_cipher.execute(encrypted_text[0], alphabet, key, False, False)
         # secretpy may add padding, so check for inclusion
         assert text.lower().replace(" ", "") in decrypted_text[0]
 
@@ -97,8 +97,8 @@ class TestCiphers:
         alphabet = "abcdefghiklmnopqrstuvwxyz"  # 25 chars, no j
         key_1 = "KEYONE"
         key_2 = "KEYTWO"
-        encrypted_text = foursquare_cipher.foursquare(text, alphabet, key_1, key_2, True, False)
-        decrypted_text = foursquare_cipher.foursquare(encrypted_text[0], alphabet, key_1, key_2, False, False)
+        encrypted_text = foursquare_cipher.execute(text, alphabet, key_1, key_2, True, False)
+        decrypted_text = foursquare_cipher.execute(encrypted_text[0], alphabet, key_1, key_2, False, False)
         # secretpy may add padding, so check for inclusion
         assert text.lower().replace(" ", "") in decrypted_text[0]
 
@@ -108,8 +108,8 @@ class TestCiphers:
         alphabet = "abcdefghiklmnopqrstuvwxyz"  # 25 chars, no j
         key_1 = "KEYONE"
         key_2 = "KEYTWO"
-        encrypted_text = twosquare_cipher.twosquare(text, alphabet, key_1, key_2, True, False)
-        decrypted_text = twosquare_cipher.twosquare(encrypted_text[0], alphabet, key_1, key_2, False, False)
+        encrypted_text = twosquare_cipher.execute(text, alphabet, key_1, key_2, True, False)
+        decrypted_text = twosquare_cipher.execute(encrypted_text[0], alphabet, key_1, key_2, False, False)
         # secretpy may add padding, so check for inclusion
         assert text.lower().replace(" ", "") in decrypted_text[0]
 
@@ -118,8 +118,8 @@ class TestCiphers:
         text = "Hello World"
         alphabet = "ENGLISH"
         key = "1337"
-        encrypted_text = gronsfeld_cipher.gronsfeld(text, alphabet, key, True, False)
-        decrypted_text = gronsfeld_cipher.gronsfeld(encrypted_text[0], alphabet, key, False, False)
+        encrypted_text = gronsfeld_cipher.execute(text, alphabet, key, True, False)
+        decrypted_text = gronsfeld_cipher.execute(encrypted_text[0], alphabet, key, False, False)
         assert decrypted_text[0] == text.lower().replace(" ", "")
 
     def test_trifid_cipher(self):
@@ -128,8 +128,8 @@ class TestCiphers:
         # Trifid in secretpy uses a 27-char alphabet (letters + separator)
         alphabet = "abcdefghijklmnopqrstuvwxyz."
         key = 5  # period
-        encrypted_text = trifid_cipher.trifid(text, alphabet, key, True, False)
-        decrypted_text = trifid_cipher.trifid(encrypted_text[0], alphabet, key, False, False)
+        encrypted_text = trifid_cipher.execute(text, alphabet, key, True, False)
+        decrypted_text = trifid_cipher.execute(encrypted_text[0], alphabet, key, False, False)
         assert decrypted_text[0] == text.lower()
 
     def test_zigzag_cipher(self):
@@ -137,6 +137,6 @@ class TestCiphers:
         text = "Hello World"
         key = 4  # rails
         # The node wrapper for Zigzag doesn't use an alphabet, it's a pure transposition
-        encrypted_text = zigzag_cipher.zigzag(text, key, True, False)
-        decrypted_text = zigzag_cipher.zigzag(encrypted_text[0], key, False, False)
+        encrypted_text = zigzag_cipher.execute(text, key, True, False)
+        decrypted_text = zigzag_cipher.execute(encrypted_text[0], key, False, False)
         assert decrypted_text[0] == text.lower().replace(" ", "")

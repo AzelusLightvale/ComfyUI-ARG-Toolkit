@@ -17,7 +17,7 @@ class Hash:
 
     def main_method(self, algorithm, key, digest_size=None):
         if algorithm in ["BLAKE2b", "BLAKE2s", "SHAKE128", "SHAKE256"]:
-            digest = hashes.Hash(getattr(hashes, algorithm)(int(digest_size)))
+            digest = hashes.Hash(getattr(hashes, algorithm)(digest_size))
         else:
             digest = hashes.Hash(getattr(hashes, algorithm)())
         digest.update(key)
@@ -64,9 +64,9 @@ class BLAKE2(Hash):
 
     def execute(self, algorithm, key):
         if algorithm == "BLAKE2b":
-            digest_size = 32
-        elif algorithm == "BLAKE2s":
             digest_size = 64
+        elif algorithm == "BLAKE2s":
+            digest_size = 32
         return self.main_method(algorithm, key, digest_size)
 
 

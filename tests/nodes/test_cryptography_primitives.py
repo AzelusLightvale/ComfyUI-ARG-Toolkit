@@ -8,15 +8,15 @@ from src.cryptography_primitives import symmetrical_encrypt
 class TestConstantTimeCompare:
     def test_compare_equal(self):
         compare = const_time.ConstantTimeCompare()
-        a = "deadbeef"
-        b = "deadbeef"
+        a = b"deadbeef"
+        b = b"deadbeef"
         result = compare.compare(a, b)
         assert result[0] is True
 
     def test_compare_not_equal(self):
         compare = const_time.ConstantTimeCompare()
-        a = "deadbeef"
-        b = "cafebabe"
+        a = b"deadbeef"
+        b = b"cafebabe"
         result = compare.compare(a, b)
         assert result[0] is False
 
@@ -26,12 +26,12 @@ class TestKeyDerivation:
         derive = kdf.Argon2id_Derive()
         verify = kdf.Argon2id_Verify()
 
-        message = "Hello World"
-        salt = "00" * 16
+        message = b"Hello World"
+        salt = b"00" * 16
 
-        derived_key = derive.argon2id_derive(message, 32, salt, 1, 4, 65536, "", "", True)
+        derived_key = derive.execute(message, 32, salt, 1, 4, 65536, b"", b"", True)
 
-        verified = verify.argon2id_verify(message, 32, salt, 1, 4, 65536, "", "", True, derived_key[0])
+        verified = verify.execute(message, 32, salt, 1, 4, 65536, b"", b"", True, derived_key[0])
 
         assert verified[0] is True
 
@@ -39,12 +39,12 @@ class TestKeyDerivation:
         derive = kdf.PBKDF2HMAC_Derive()
         verify = kdf.PBKDF2HMAC_Verify()
 
-        message = "Hello World"
-        salt = "00" * 16
+        message = b"Hello World"
+        salt = b"00" * 16
 
-        derived_key = derive.pbkdf2hmac_derive(message, 32, salt, 1000, "SHA256")
+        derived_key = derive.execute(message, 32, salt, 1000, "SHA256")
 
-        verified = verify.pbkdf2hmac_verify(message, 32, salt, 1000, "SHA256", derived_key[0])
+        verified = verify.execute(message, 32, salt, 1000, "SHA256", derived_key[0])
 
         assert verified[0] is True
 
@@ -52,12 +52,12 @@ class TestKeyDerivation:
         derive = kdf.Scrypt_Derive()
         verify = kdf.Scrypt_Verify()
 
-        message = "Hello World"
-        salt = "00" * 16
+        message = b"Hello World"
+        salt = b"00" * 16
 
-        derived_key = derive.scrypt_derive(message, 32, salt, 14, 8, 1)
+        derived_key = derive.execute(message, 32, salt, 14, 8, 1)
 
-        verified = verify.scrypt_verify(message, 32, salt, 14, 8, 1, derived_key[0])
+        verified = verify.execute(message, 32, salt, 14, 8, 1, derived_key[0])
 
         assert verified[0] is True
 
@@ -68,8 +68,8 @@ class TestKeyWrapper:
         wrapping_key = bytes.fromhex("00" * 32)
         key_to_wrap = bytes.fromhex("11" * 16)
 
-        wrapped_key = wrapper.aeskeywrap(wrapping_key, key_to_wrap, True)
-        unwrapped_key = wrapper.aeskeywrap(wrapping_key, wrapped_key[0], False)
+        wrapped_key = wrapper.execute(wrapping_key, key_to_wrap, True)
+        unwrapped_key = wrapper.execute(wrapping_key, wrapped_key[0], False)
 
         assert unwrapped_key[0] == key_to_wrap
 
@@ -78,8 +78,8 @@ class TestKeyWrapper:
         wrapping_key = bytes.fromhex("00" * 32)
         key_to_wrap = bytes.fromhex("11" * 20)  # Not a multiple of 8
 
-        wrapped_key = wrapper.aeskeywrapwithpadding(wrapping_key, key_to_wrap, True)
-        unwrapped_key = wrapper.aeskeywrapwithpadding(wrapping_key, wrapped_key[0], False)
+        wrapped_key = wrapper.execute(wrapping_key, key_to_wrap, True)
+        unwrapped_key = wrapper.execute(wrapping_key, wrapped_key[0], False)
 
         assert unwrapped_key[0] == key_to_wrap
 
@@ -116,9 +116,9 @@ class TestSymmetricalEncryption:
         padding_node = symm_padding.PaddingNode()
         padded_text = padding_node.padding(text, 128, "PKCS7", True)
 
-        encrypted_text, _ = enc_dec.encryptdecrypt(padded_text[0], key, iv, None, "AES", "CBC", True, 16, None)
+        encrypted_text, _ = enc_dec.execute(padded_text[0], key, iv, None, "AES", "CBC", True, 16, None)
 
-        decrypted_text_bytes, _ = enc_dec.encryptdecrypt(encrypted_text, key, iv, None, "AES", "CBC", False, 16, None)
+        decrypted_text_bytes, _ = enc_dec.execute(encrypted_text, key, iv, None, "AES", "CBC", False, 16, None)
 
         # Unpad the decrypted text
         unpadded_data = padding_node.padding(decrypted_text_bytes, 128, "PKCS7", False)

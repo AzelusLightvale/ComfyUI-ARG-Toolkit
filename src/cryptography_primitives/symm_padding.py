@@ -46,7 +46,7 @@ class PaddingNode:
         else:
             unpadder = padding_algorithm.unpadder()
             unpadded_data = unpadder.update(padding_data)
-            unpadded_data += padder.finalize()
+            unpadded_data += unpadder.finalize()
             return (unpadded_data,)
 
 

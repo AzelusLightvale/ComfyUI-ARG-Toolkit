@@ -81,11 +81,12 @@ class ECPrivateKey(EllipticCurve):
         encoding = getattr(serialization.Encoding, encoding)
         formatting = getattr(serialization.PrivateFormat, formatting)
 
-        if encryption == "Best Available":
-            if encryption_password:
+        match encryption:
+            case "Best Available":
                 enc_alg = serialization.BestAvailableEncryption(encryption_password.encode("utf-8"))
-        else:
-            enc_alg = serialization.NoEncryption()
+            case "None":
+                enc_alg = serialization.NoEncryption()
+
         p_bytes = pkey.private_bytes(encoding=encoding, format=formatting, encryption_algorithm=enc_alg)
         return (p_bytes, pkey)
 

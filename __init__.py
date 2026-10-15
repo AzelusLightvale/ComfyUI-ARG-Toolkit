@@ -22,8 +22,8 @@ for root, _, files in os.walk(SRC_FOLDER):
             module_name = rel_path.replace(os.sep, ".")[:-3]
 
             spec = importlib.util.spec_from_file_location(module_name, module_path)
-            module = importlib.util.module_from_spec(spec)
-            spec.loader.exec_module(module)
+            module = importlib.util.module_from_spec(spec)  # ty: ignore[invalid-argument-type]
+            spec.loader.exec_module(module)  # ty: ignore[unresolved-attribute]
 
             if getattr(module, "NODE_CLASS_MAPPINGS", None):
                 for key, value in module.NODE_CLASS_MAPPINGS.items():

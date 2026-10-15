@@ -236,7 +236,7 @@ class BitwiseNodes:
             text=text_1, datatype=datatype, encoding_format=encoding_format, other_encoding_format=other_encoding_format
         )
 
-        if text_2 is not "":
+        if text_2 != "":
             b2, _ = self.detect_and_parse(
                 text=text_2, datatype=datatype, encoding_format=encoding_format, other_encoding_format=other_encoding_format
             )
@@ -250,15 +250,18 @@ class BitwiseNodes:
         return result, return_fmt
 
     def format_output(self, data, output_format, encoding_format, other_encoding_format=None):
-        if output_format == "Binary":
+        # Alias the category names used by detect_and_parse with the legacy output-format
+        # identifiers (e.g., "Hexadecimal" / "Integer" from INPUT_TYPES).
+        normalized = {"Hexadecimal": "Hex", "Integer": "Int"}.get(output_format, output_format)
+        if normalized == "Binary":
             return " ".join(format(b, "08b") for b in data)
-        elif output_format == "Hex":
+        elif normalized == "Hex":
             return data.hex()
-        elif output_format == "Base64":
+        elif normalized == "Base64":
             return base64.b64encode(data).decode()
-        elif output_format == "Int":
+        elif normalized == "Int":
             return str(int.from_bytes(data, "big"))
-        elif output_format == "String":
+        elif normalized == "String":
             return data.decode(self.encoding_selector(encoding_format, other_encoding_format))
         else:
             raise ValueError(f"Unknown output format {output_format}")

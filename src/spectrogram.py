@@ -81,7 +81,7 @@ class SpectrogramEncoder:
         cleaned_hex = hex_str.lstrip("#")
         if len(cleaned_hex) != 6:
             raise ValueError(f"Invalid hex string '{cleaned_hex}'. Must be 6 characters long.")
-        return tuple(int(cleaned_hex[i : i + 2], 16) / 255.0 for i in (0, 2, 4))
+        return tuple(int(cleaned_hex[i : i + 2], 16) / 255.0 for i in (0, 2, 4))  # ty: ignore[invalid-return-type]
 
     def color_mapper(self, matrix: np.ndarray, colormap_low: str, colormap_mid: str, colormap_high: str):
         db_min, db_max = matrix.min(), matrix.max()
@@ -120,8 +120,8 @@ class SpectrogramEncoder:
     def execute(
         self,
         audio,
-        window_size: int,
-        hop_size: int,
+        window_size: float,
+        hop_size: float,
         windowing_func: str,
         db_norm: float,
         colormap_low: str,
@@ -251,7 +251,7 @@ class SpectrogramDecoder:
                     }
                 ),
                 "autogain": (
-                    "BOOLEAN", 
+                    "BOOLEAN",
                     {
                         "tooltip": "For Linear and Quadratic scaling method, dynamically scale the amplitude based on the peak. If disabled, use `max_amp` to define it instead. If used with Logarithmic Mel scaling, will enable area normalization if used with `mel_scale=slaney`.",
                     }
@@ -360,9 +360,9 @@ class SpectrogramDecoder:
             "Blackman": torch.blackman_window,
             "Bartlett": torch.bartlett_window,
         }
-        windowing_func = windowing.get(windowing_func)  
+        windowing_func = windowing.get(windowing_func)
 
-        griffin_lim = torch_trans.GriffinLim(n_fft=p2_fft, win_length=raw_frame_length, hop_length=hop_length, window_fn=windowing_func, n_iter=max_iter, momentum=gl_momentum, power=1.0)
+        griffin_lim = torch_trans.GriffinLim(n_fft=p2_fft, win_length=raw_frame_length, hop_length=hop_length, window_fn=windowing_func, n_iter=max_iter, momentum=gl_momentum, power=1.0)  # ty: ignore[invalid-argument-type]
         waveform = griffin_lim(magnitude)
         max_val = torch.max(torch.abs(waveform))
         if max_val > 1e-8 :

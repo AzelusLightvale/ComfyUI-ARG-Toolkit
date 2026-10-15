@@ -80,12 +80,10 @@ class EdDSAPrivateKeyFormat(InitNode):
             enc_alg = serialization.NoEncryption()
 
         output = private_key.private_bytes(encoding=encode, format=formatting, encryption_algorithm=enc_alg)
-        return (output,)
+        return (output, private_key,)
 
 
 class EdDSASignature(InitNode):
-    CATEGORY = "ARG Toolkit/Cryptography/Modern/Asymmetric"
-
     @classmethod
     def INPUT_TYPES(cls):
         return {
@@ -115,9 +113,10 @@ class EdDSASignature(InitNode):
                     "BYTESLIKE",
                     {
                         "tooltip": "Only applicable if key_source is 'From Private Bytes'.",
+                        "forceInput": True,
                     },
                 ),
-                "serialized_key": ("KEYOBJ", {"forceInput": True}),
+                "serialized_key": ("KEYOBJ", {"forceInput": True, "tooltip": "Only applicable if key_source is `From Key Object`"}),
             },
         }
 
@@ -134,8 +133,6 @@ class EdDSASignature(InitNode):
 
 
 class EdDSAPublicKeyFormat(InitNode):
-    CATEGORY = "ARG Toolkit/Cryptography/Modern/Asymmetric"
-
     @classmethod
     def INPUT_TYPES(cls):
         return {
@@ -176,9 +173,15 @@ class EdDSAPublicKeyFormat(InitNode):
                     "BYTESLIKE",
                     {
                         "tooltip": "Only applicable if key_source is 'From Private Bytes'.",
+                        "forceInput": True,
                     },
                 ),
-                "serialized_key": ("KEYOBJ", {"forceInput": True}),
+                "serialized_key": ("KEYOBJ",
+                    {
+                        "forceInput": True,
+                        "tooltip": "Only applicable is key_source is `From Key Object`."
+                    }
+                ),
             },
         }
 
@@ -199,8 +202,6 @@ class EdDSAPublicKeyFormat(InitNode):
 
 
 class EdDSAVerify(InitNode):
-    CATEGORY = "ARG Toolkit/Cryptography/Modern/Asymmetric"
-
     @classmethod
     def INPUT_TYPES(cls):
         return {
@@ -221,9 +222,11 @@ class EdDSAVerify(InitNode):
                     "BYTESLIKE",
                     {"forceInput": True},
                 ),
-                "signature": ("BYTESLIKE",),
+                "signature": ("BYTESLIKE", {"forceInput": True,}),
             },
-            "optional": {"public_bytes": ("BYTESLIKE", {"forceInput": True}), "public_key": ("KEYOBJ", {"forceInput": True})},
+            "optional": {
+                "public_bytes": ("BYTESLIKE", {"forceInput": True}),
+                "public_key": ("KEYOBJ", {"forceInput": True, "tooltip": "Only applicable if key_source is 'From Loaded Key'."},)},
         }
 
     RETURN_TYPES = ("BOOLEAN",)

@@ -1,7 +1,6 @@
 from cryptography.hazmat.primitives import hashes  # For the algorithm functions
 
 # Import hell
-import cryptography
 from cryptography.hazmat.primitives.kdf.argon2 import Argon2id
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
@@ -160,7 +159,7 @@ class Argon2id_Verify(Argon2id_Derive):
         )
         return class_input
 
-    def execute(self, message, length, salt, iterations, parallel_lanes, memory_cost, ad, secret, mode, expected_key):
+    def execute(self, message, length, salt, iterations, parallel_lanes, memory_cost, ad, secret, mode, expected_key):  # ty: ignore[invalid-method-override]
         argon2_key = self._get_kdf(salt, length, iterations, parallel_lanes, memory_cost, ad, secret)
 
         if mode:
@@ -254,7 +253,7 @@ class PBKDF2HMAC_Verify(PBKDF2HMAC_Derive):
         )
         return class_input
 
-    def execute(self, message, length, salt, iterations, algorithm, expected_key):
+    def execute(self, message, length, salt, iterations, algorithm, expected_key):  # ty: ignore[invalid-method-override]
         pbkdf2hmac_key = self._get_kdf(salt, length, iterations, algorithm)
         try:
             pbkdf2hmac_key.verify(message, expected_key)
@@ -330,7 +329,7 @@ class Scrypt_Verify(Scrypt_Derive):
         )
         return class_input
 
-    def execute(self, message, length, salt, n, r, p, expected_key):
+    def execute(self, message, length, salt, n, r, p, expected_key):  # ty: ignore[invalid-method-override]
         scrypt_key = self._get_kdf(salt, length, n, r, p)
         try:
             scrypt_key.verify(message, expected_key)
@@ -432,7 +431,7 @@ class ConcatKDFHMAC_Derive(ConcatKDFHash_Derive):
         )
         return class_input
 
-    def _get_kdf(self, length, algorithm, other_info, salt):
+    def _get_kdf(self, length, algorithm, other_info, salt):  # ty: ignore[invalid-method-override]
         digest = _get_hash_algorithm(algorithm)
         if other_info is None:
             other_info = b""
@@ -459,7 +458,7 @@ class ConcatKDFHMAC_Verify(ConcatKDFHMAC_Derive):
         )
         return class_input
 
-    def execute(self, message, length, algorithm, other_info, salt, expected_key):
+    def execute(self, message, length, algorithm, other_info, salt, expected_key):  # ty: ignore[invalid-method-override]
         ckdfhash_key = self._get_kdf(length, algorithm, other_info, salt)
         try:
             ckdfhash_key.verify(message, expected_key)
@@ -541,7 +540,7 @@ class HKDF_Verify(HKDF_Derive):
         )
         return class_input
 
-    def execute(self, message, length, algorithm, info, salt, expected_key):
+    def execute(self, message, length, algorithm, info, salt, expected_key):  # ty: ignore[invalid-method-override]
         hkdf_key = self._get_kdf(length, algorithm, salt, info)
         try:
             hkdf_key.verify(message, expected_key)
@@ -616,7 +615,7 @@ class HKDFExpand_Verify(HKDFExpand_Derive):
         )
         return class_input
 
-    def execute(self, message, length, algorithm, info, expected_key):
+    def execute(self, message, length, algorithm, info, expected_key):  # ty: ignore[invalid-method-override]
         hkdf_key = self._get_kdf(length, algorithm, info)
         try:
             hkdf_key.verify(message, expected_key)
@@ -691,7 +690,7 @@ class X963KDF_Verify(X963KDF_Derive):
         )
         return class_input
 
-    def execute(self, message, length, algorithm, info, expected_key):
+    def execute(self, message, length, algorithm, info, expected_key):  # ty: ignore[invalid-method-override]
         x963kdf_key = self._get_kdf(length, algorithm, info)
         try:
             x963kdf_key.verify(message, expected_key)
@@ -792,7 +791,7 @@ class KBKDF_Derive(KeyDerivationNodes):
     ):
         digest = _get_hash_algorithm(algorithm)
         location_enum = getattr(CounterLocation, location)
-        kdf_class = getattr(cryptography.hazmat.primitives.kdf.kbkdf, operation_mode)
+        kdf_class = getattr(Mode, operation_mode)
         return kdf_class(
             length=length,
             algorithm=digest,
@@ -854,7 +853,7 @@ class KBKDF_Verify(KBKDF_Derive):
         operation_mode,
         break_location=None,
         fixed=None,
-    ):
+    ):  # ty: ignore[invalid-method-override]
         kbkdf_key = self._get_kdf(length, algorithm, rlen, llen, location, label, context, operation_mode, break_location, fixed)
         try:
             kbkdf_key.verify(message, expected_key)

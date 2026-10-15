@@ -1,7 +1,7 @@
-from cryptography.hazmat.primitives import ciphers
 from cryptography.hazmat.decrepit.ciphers import algorithms as decrepit_algorithms
 from cryptography.hazmat.decrepit.ciphers import modes as decrepit_modes
-from cryptography.hazmat.primitives.ciphers import algorithms
+from cryptography.hazmat.primitives.ciphers import algorithms, Cipher
+from cryptography.hazmat.primitives.ciphers import modes as cipher_modes
 import warnings
 
 
@@ -127,32 +127,32 @@ class EncryptDecrypt(CipherNodes):
             algorithm = getattr(algorithms, algorithm)(key)
         if modes == "GCM":
             min_tag_length = int(min_tag_length)
-            modes = ciphers.modes.GCM(iv, tag, min_tag_length)
+            modes = modes.GCM(iv, tag, min_tag_length)
         elif modes in ["CFB", "OFB", "CFB8"]:
-            modes = getattr(decrepit_modes)(iv)
+            modes = getattr(decrepit_modes, modes)(iv)
         elif modes == "XTS":
-            modes = ciphers.modes.XTS(tweak=iv)
+            modes = cipher_modes.XTS(tweak=iv)
         elif modes == "ECB":
             warnings.warn(f'[ComfyUI-ARG-Toolkit][WARNING]: Mode used in Symmetric Encrypt/Decrypt ({modes}) is inherently insecure and should never be used in anything in production. Unless you have a specific use case for this, please switch to a more reasonable mode.')
-            modes = ciphers.modes.ECB()
+            modes = cipher_modes.ECB()
         elif modes == "None":
             modes = None
         else:
-            modes = getattr(ciphers.modes, modes)(iv)
-        cipher_engine = ciphers.Cipher(algorithm, modes)
+            modes = getattr(cipher_modes, modes)(iv)
+        cipher_engine = Cipher(algorithm, modes)
         if mode:
             encryptor = cipher_engine.encryptor()
             data = text
             ct = encryptor.update(data) + encryptor.finalize()
             tag_out = b""
-            if isinstance(modes, ciphers.modes.GCM):
-                tag_out = encryptor.tag
+            if isinstance(modes, cipher_modes.GCM):
+                tag_out = encryptor.tag  # ty: ignore[unresolved-attribute] Under this instance, AEADEncryptionContext will be returned instead, which does have `tag`.
             return (ct, tag_out)
         else:
             decryptor = cipher_engine.decryptor()
             data = text
-            if isinstance(modes, ciphers.modes.GCM):
-                pt = decryptor.update(data) + decryptor.finalize_with_tag(tag)
+            if isinstance(modes, cipher_modes.GCM):
+                pt = decryptor.update(data) + decryptor.finalize_with_tag(tag)  # ty: ignore[unresolved-attribute] Under this instance, AEADEncryptionContext will be returned instead, which does have `tag`.
             else:
                 pt = decryptor.update(data) + decryptor.finalize()
             return (pt, b"")

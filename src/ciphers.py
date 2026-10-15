@@ -205,7 +205,7 @@ class Affine(BaseCipherNode):
 
 
 class Atbash(BaseCipherNode):
-    def atbash(self, text, alphabet, mode, keep_formatting):
+    def execute(self, text, alphabet, mode, keep_formatting):
         processed_alphabet = self.alphabet_checker(alphabet, as_tuple=False)
         key = None
         return self.execute_cipher(text, processed_alphabet, key, mode, keep_formatting)
