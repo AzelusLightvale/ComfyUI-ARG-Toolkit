@@ -1,0 +1,11 @@
+# Development-only assets
+docs/
+tests/
+*.psd
+.vscode/
+
+# Leftovers
+.venv/
+.ruff_cache/
+.github/
+.pytest_cache/
