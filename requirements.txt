@@ -8,7 +8,7 @@ crayons==0.4.0
     # via stegano
 cryptography==50.0.1
     # via arg-toolkit (pyproject.toml)
-filelock==4.0.1
+filelock==4.1.1
     # via torch
 fsspec==2026.9.0
     # via torch
