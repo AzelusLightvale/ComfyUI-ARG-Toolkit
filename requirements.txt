@@ -41,7 +41,7 @@ pillow==12.3.0
     #   stegano
 pycparser==3.0
     # via cffi
-pywavelets==1.9.0
+pywavelets==1.10.0
     # via invisible-watermark
 reedsolo==1.7.0
     # via arg-toolkit (pyproject.toml)
