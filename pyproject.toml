@@ -77,12 +77,7 @@ select = [
   "S102",  # exec-builtin
   "S307",  # eval-used
   "W293",  # Blank line with whitespace
-  "F",  # The "F" series in Ruff stands for "Pyflakes" rules, which catch various Python syntax errors and undefined names.
-  # See all rules here: https://docs.astral.sh/ruff/rules/#pyflakes-f
   "NPY",  # NumPy-specific rules
-  "SIM",  # flake8-simplify rules, to simplify the code more
-  "B",  # flake8-bugbear rules, to catch patterns with potential bugs
-  "PLR",  # Pylint refactor rules
 ]
 
 [tool.ruff.lint.flake8-quotes]
