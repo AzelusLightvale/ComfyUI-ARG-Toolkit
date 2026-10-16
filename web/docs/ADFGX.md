@@ -12,13 +12,13 @@ The ADFGX cipher was a field cipher used by the German Army on the Western Front
 
 The ADFGX cipher is a fractionating transposition cipher that combines a Polybius square with a columnar transposition.
 
-1.  **Substitution**: A 5x5 Polybius square is created, usually filled with a mixed alphabet based on a keyword. The letters 'I' and 'J' are typically combined to fit the 25-character grid. Each letter of the plaintext is replaced by its two-letter coordinate from the square (one of A, D, F, G, X for the row and one for the column).
+1. **Substitution**: A 5x5 Polybius square is created, usually filled with a mixed alphabet based on a keyword. The letters 'I' and 'J' are typically combined to fit the 25-character grid. Each letter of the plaintext is replaced by its two-letter coordinate from the square (one of A, D, F, G, X for the row and one for the column).
 
     _Example_: If 'p' is at row F, column G, it is replaced by "FG".
 
-2.  **Transposition**: The long string of coordinate letters is written into a grid, with the width of the grid determined by the length of a second keyword. The columns of this grid are then reordered alphabetically based on the letters of the keyword.
+2. **Transposition**: The long string of coordinate letters is written into a grid, with the width of the grid determined by the length of a second keyword. The columns of this grid are then reordered alphabetically based on the letters of the keyword.
 
-3.  **Ciphertext**: The final ciphertext is produced by reading the letters down the reordered columns.
+3. **Ciphertext**: The final ciphertext is produced by reading the letters down the reordered columns.
 
 ## Parameters
 

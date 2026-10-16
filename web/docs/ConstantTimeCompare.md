@@ -6,5 +6,9 @@ Source library: `cryptography`
 
 ## Parameters
 
-- **a**: The first string to compare. Must be a hexadecimal string.
-- **b**: The second string to compare. Must be a hexadecimal string.
+- **a**: The first bytes to compare.
+- **b**: The second bytes to compare.
+
+## Additional information
+
+See [this](https://en.wikipedia.org/wiki/Timing_attack#Constant-time_challenges) for more information on why this is important enough to even be considered for this node in the first place.

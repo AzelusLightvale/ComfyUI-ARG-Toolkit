@@ -3,9 +3,9 @@ docs/
 tests/
 *.psd
 .vscode/
+.markdownlint.json
 
 # Leftovers
 .venv/
 .ruff_cache/
-.github/
 .pytest_cache/

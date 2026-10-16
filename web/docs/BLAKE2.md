@@ -6,6 +6,6 @@ Source library: `cryptography`
 
 ## Parameters
 
-- **key1**: The first key to hash.
+- **key**: The first key to hash.
 - **algorithm**: The BLAKE2 algorithm to use.
 - **digest_size**: The digest size to use.

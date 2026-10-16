@@ -31,20 +31,20 @@ This is a flexible, general-purpose node for performing symmetric encryption. It
 
 The `cryptography` library will raise an error if an incompatible algorithm and mode are selected. The following table provides a general guide. Items marked with **(D)** are deprecated according to the `cryptography` library and should be avoided for any serious projects.
 
-| Algorithm      | CBC | CTR | OFB (D) | CFB (D) | CFB8 (D) | GCM | XTS | ECB | None |
-| :------------- | :-: | :-: | :-----: | :-----: | :------: | :-: | :-: | :-: | :--: |
-| AES            |  ✔  |  ✔  |    ✔    |    ✔    |    ✔     |  ✔  |  ✔  |  ✔  |  ❌  |
-| AES128         |  ✔  |  ✔  |    ✔    |    ✔    |    ✔     |  ✔  |  ❌  |  ✔  |  ❌  |
-| AES256         |  ✔  |  ✔  |    ✔    |    ✔    |    ✔     |  ✔  |  ❌  |  ✔  |  ❌  |
-| Camellia (D)   |  ✔  |  ✔  |    ✔    |    ✔    |    ✔     | ❌  | ❌  |  ✔  |  ❌  |
-| ChaCha20       | ❌  | ❌  |   ❌    |   ❌    |    ❌    | ❌  | ❌  | ❌  |  ✔   |
-| TripleDES (D)  |  ✔  |  ✔  |    ✔    |    ✔    |    ✔     | ❌  | ❌  |  ✔  |  ❌  |
-| SM4            |  ✔  |  ✔  |    ✔    |    ✔    |    ❌    | ❌  | ❌  |  ✔  |  ❌  |
-| ARC4 (D)       | ❌  | ❌  |   ❌    |   ❌    |    ❌    | ❌  | ❌  | ❌  |  ✔   |
-| Blowfish (D)   |  ✔  |  ✔  |    ✔    |    ✔    |    ❌    | ❌  | ❌  |  ✔  |  ❌  |
-| CAST5 (D)      |  ✔  |  ✔  |    ✔    |    ✔    |    ❌    | ❌  | ❌  |  ✔  |  ❌  |
-| SEED (D)       |  ✔  |  ✔  |    ✔    |    ✔    |    ❌    | ❌  | ❌  |  ✔  |  ❌  |
-| IDEA (D)       |  ✔  |  ✔  |    ✔    |    ✔    |    ❌    | ❌  | ❌  |  ✔  |  ❌  |
+| Algorithm     | CBC | CTR | OFB (D) | CFB (D) | CFB8 (D) | GCM | XTS | ECB | None |
+| :------------ | :-: | :-: | :-----: | :-----: | :------: | :-: | :-: | :-: | :--: |
+| AES           |  ✔  |  ✔  |    ✔    |    ✔    |    ✔     |  ✔  |  ✔  |  ✔  |  ❌  |
+| AES128        |  ✔  |  ✔  |    ✔    |    ✔    |    ✔     |  ✔  | ❌  |  ✔  |  ❌  |
+| AES256        |  ✔  |  ✔  |    ✔    |    ✔    |    ✔     |  ✔  | ❌  |  ✔  |  ❌  |
+| Camellia (D)  |  ✔  |  ✔  |    ✔    |    ✔    |    ✔     | ❌  | ❌  |  ✔  |  ❌  |
+| ChaCha20      | ❌  | ❌  |   ❌    |   ❌    |    ❌    | ❌  | ❌  | ❌  |  ✔   |
+| TripleDES (D) |  ✔  |  ✔  |    ✔    |    ✔    |    ✔     | ❌  | ❌  |  ✔  |  ❌  |
+| SM4           |  ✔  |  ✔  |    ✔    |    ✔    |    ❌    | ❌  | ❌  |  ✔  |  ❌  |
+| ARC4 (D)      | ❌  | ❌  |   ❌    |   ❌    |    ❌    | ❌  | ❌  | ❌  |  ✔   |
+| Blowfish (D)  |  ✔  |  ✔  |    ✔    |    ✔    |    ❌    | ❌  | ❌  |  ✔  |  ❌  |
+| CAST5 (D)     |  ✔  |  ✔  |    ✔    |    ✔    |    ❌    | ❌  | ❌  |  ✔  |  ❌  |
+| SEED (D)      |  ✔  |  ✔  |    ✔    |    ✔    |    ❌    | ❌  | ❌  |  ✔  |  ❌  |
+| IDEA (D)      |  ✔  |  ✔  |    ✔    |    ✔    |    ❌    | ❌  | ❌  |  ✔  |  ❌  |
 
 **Notes:**
 

@@ -8,8 +8,8 @@ Source library: `cryptography`
 
 This node implements the full two-step HKDF process from RFC 5869.
 
-1.  **Extract**: Takes the input keying material (`IKM`) and a salt to produce a fixed-length pseudorandom key (`PRK`).
-2.  **Expand**: Takes the `PRK` and expands it to the desired key length.
+1. **Extract**: Takes the input keying material (`IKM`) and a salt to produce a fixed-length pseudorandom key (`PRK`).
+2. **Expand**: Takes the `PRK` and expands it to the desired key length.
 
 HKDF is a standard and secure way to derive one or more keys from a master secret. It is **not** intended for hashing passwords.
 

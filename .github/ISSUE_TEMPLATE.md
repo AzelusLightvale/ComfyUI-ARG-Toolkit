@@ -1,13 +1,17 @@
-* arg_toolkit version:
-* Python version:
-* Operating System:
+# Diagnostic information
 
-### Description
+- arg_toolkit version:
+- cryptography version (for reports related to cryptography primitives):
+- Python version:
+- Operating System:
+- ComfyUI version:
+
+## Description
 
 Describe what you were trying to get done.
 Tell us what happened, what went wrong, and what you expected to happen.
 
-### What I Did
+## What I Did
 
 ```
 Paste the command(s) you ran and the output.

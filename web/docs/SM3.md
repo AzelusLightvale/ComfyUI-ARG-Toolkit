@@ -6,4 +6,4 @@ Source library: `cryptography`
 
 ## Parameters
 
-- **key1**: The first key to hash.
+- **key**: The first key to hash.

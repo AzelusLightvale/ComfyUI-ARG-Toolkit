@@ -81,6 +81,10 @@ class SpectrogramEncoder:
         cleaned_hex = hex_str.lstrip("#")
         if len(cleaned_hex) != 6:
             raise ValueError(f"Invalid hex string '{cleaned_hex}'. Must be 6 characters long.")
+        try:
+            int(cleaned_hex, 16)
+        except ValueError:
+            raise ValueError(f"Invalid hex string '{cleaned_hex}'. Must contain only hexadecimal characters (0-9, A-F).")
         return tuple(int(cleaned_hex[i : i + 2], 16) / 255.0 for i in (0, 2, 4))  # ty: ignore[invalid-return-type]
 
     def color_mapper(self, matrix: np.ndarray, colormap_low: str, colormap_mid: str, colormap_high: str):
@@ -104,10 +108,10 @@ class SpectrogramEncoder:
         threshold = peak_val - active_range_db
 
         row_maxes = np.max(db_spectrogram, axis=1)
-        active_rows = np.where(row_maxes > threshold)[0]
+        active_rows = np.where(row_maxes >= threshold)[0]
 
         col_maxes = np.max(db_spectrogram, axis=0)
-        active_cols = np.where(col_maxes > threshold)[0]
+        active_cols = np.where(col_maxes >= threshold)[0]
         if len(active_rows) == 0 or len(active_cols) == 0:
             return db_spectrogram
 
