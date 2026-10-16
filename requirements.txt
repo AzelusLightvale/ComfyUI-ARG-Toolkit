@@ -39,7 +39,7 @@ pillow==12.3.0
     #   arg-toolkit (pyproject.toml)
     #   invisible-watermark
     #   stegano
-pycparser==3.0
+pycparser==3.11
     # via cffi
 pywavelets==1.10.0
     # via invisible-watermark
