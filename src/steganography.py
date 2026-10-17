@@ -13,9 +13,6 @@ import folder_paths  # This import is handled by ComfyUI. This is a very jank so
 # Every node is inspired heavily by their reference implementations in their GitHub repository, with changes made to best use PyTorch as possible as it's the main way ComfyUI stores data
 # For more information, check https://docs.comfy.org/custom-nodes/backend/images_and_masks#images
 
-# TODO: Deduplicate this entire file and convert it to a more reasonable standard, like the rest of the nodes.
-
-
 class Stegano_LSB_Encode:
     def __init__(self):
         pass

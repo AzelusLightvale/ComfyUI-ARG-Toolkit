@@ -1,3 +1,4 @@
+# Fernet encryption, the basics of basics
 from cryptography import fernet
 
 
@@ -40,9 +41,9 @@ class FernetSimple:
 
     RETURN_TYPES = ("STRING",)
     RETURN_NAMES = ("encrypted_txt",)
-    FUNCTION = "FernetSimple"
+    FUNCTION = "execute"
 
-    def FernetSimple(self, text, key, mode):
+    def execute(self, text, key, mode):
         cipher = fernet.Fernet(key)
         bytetext = text.encode("utf-8")
         if mode:
@@ -65,11 +66,11 @@ class FernetKeygenSimple:
 
     RETURN_TYPES = ("BYTESLIKE",)
     RETURN_NAMES = ("key",)
-    FUNCTION = "FernetKeygenSimple"
+    FUNCTION = "execute"
 
-    def FernetKeygenSimple(self):
+    def execute(self):
         key = fernet.Fernet.generate_key()
-        return (key.decode,)
+        return (key,)
 
 
 # A dictionary that contains all nodes you want to export with their names
