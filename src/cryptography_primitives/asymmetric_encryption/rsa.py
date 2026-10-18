@@ -126,12 +126,15 @@ class RSAPublicKeyFormat(InitNode):
             },
         }
 
-    def execute(self, key_source, encoding, formatting, serialized_key:rsa.RSAPrivateKey, fresh_key_size, public_exponent):
+    def execute(self, key_source, encoding, formatting, serialized_key:rsa.RSAPrivateKey | None, fresh_key_size, public_exponent):
         match key_source:
             case "Fresh Key":
                 p_key = rsa.generate_private_key(public_exponent, fresh_key_size)
             case "From Loaded Key":
-                p_key = serialized_key
+                if isinstance(serialized_key, rsa.RSAPrivateKey):
+                    p_key = serialized_key
+                else:
+                    raise ValueError("Missing private keys for RSA public key generation.")
         public_key = p_key.public_key()
 
         encoding = getattr(serialization.Encoding, encoding)
@@ -183,7 +186,7 @@ class RSASign(InitNode):
         }
 
     def execute(self, private_key, data, salt_length, salt_length_manual, signature_algorithm, padding_alg, prehashed):
-        algorithm = getattr(hashes, signature_algorithm)
+        algorithm = getattr(hashes, signature_algorithm)()
         if padding_alg == "PSS":
             match salt_length:
                 case "Max Length":
@@ -197,8 +200,10 @@ class RSASign(InitNode):
             signature = private_key.sign(data, padder, algorithm)
         elif padding_alg == "PSS" and prehashed:
             signature = private_key.sign(data, padder, utils.Prehashed(algorithm))
-        elif padding_alg == "PKCS1v15":
-            signature = private_key.sign(data, padding.PKCS1v15())
+        elif padding_alg == "PKCS1v15" and not prehashed:
+            signature = private_key.sign(data, padding.PKCS1v15(), algorithm)
+        elif padding_alg == "PKCS1v15" and prehashed:
+            signature = private_key.sign(data, padding.PKCS1v15(), utils.Prehashed(algorithm))
         return (signature,)
 
 class RSAVerify(InitNode):
@@ -243,7 +248,7 @@ class RSAVerify(InitNode):
         }
 
     def execute(self, public_key, data, signature, salt_length, salt_length_manual, signature_algorithm, padding_alg, prehashed):
-        algorithm = getattr(hashes, signature_algorithm)
+        algorithm = getattr(hashes, signature_algorithm)()
         from cryptography.exceptions import InvalidSignature
         if padding_alg == "PSS":
             match salt_length:
@@ -266,9 +271,15 @@ class RSAVerify(InitNode):
                 verify_result = True
             except InvalidSignature:
                 verify_result = False
-        elif padding_alg == "PKCS1v15":
+        elif padding_alg == "PKCS1v15" and not prehashed:
             try:
-                public_key.verify(signature, data, padding.PKCS1v15())
+                public_key.verify(signature, data, padding.PKCS1v15(), algorithm)
+                verify_result = True
+            except InvalidSignature:
+                verify_result = False
+        elif padding_alg == "PKCS1v15" and prehashed:
+            try:
+                public_key.verify(signature, data, padding.PKCS1v15(), utils.Prehashed(algorithm))
                 verify_result = True
             except InvalidSignature:
                 verify_result = False
@@ -312,7 +323,7 @@ class RSAEncrypt(InitNode):
         }
 
     def execute(self, public_key: rsa.RSAPublicKey, data, signature_algorithm, padding_alg, label = None):
-        algorithm = getattr(hashes, signature_algorithm)
+        algorithm = getattr(hashes, signature_algorithm)()
         if padding_alg == "OAEP":
             encrypted_data = public_key.encrypt(data, padding.OAEP(mgf=padding.MGF1(algorithm), algorithm=algorithm, label=label))
         elif padding_alg == "PKCS1v15":
@@ -356,7 +367,7 @@ class RSADecrypt(InitNode):
         }
 
     def execute(self, private_key: rsa.RSAPrivateKey, data, signature_algorithm, padding_alg, label = None):
-        algorithm = getattr(hashes, signature_algorithm)
+        algorithm = getattr(hashes, signature_algorithm)()
         if padding_alg == "OAEP":
             decrypted_data = private_key.decrypt(data, padding.OAEP(mgf=padding.MGF1(algorithm), algorithm=algorithm, label=label))
         elif padding_alg == "PKCS1v15":

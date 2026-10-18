@@ -76,7 +76,7 @@ class ECPrivateKey(EllipticCurve):
             pkey = ec.generate_private_key(e_curve())
         else:
             private_number = int(private_value, base=10)
-            pkey = ec.derive_private_key(private_number, e_curve)
+            pkey = ec.derive_private_key(private_number, e_curve())
 
         encoding = getattr(serialization.Encoding, encoding)
         formatting = getattr(serialization.PrivateFormat, formatting)

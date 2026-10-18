@@ -73,9 +73,8 @@ class EdDSAPrivateKeyFormat(InitNode):
         encode = getattr(serialization.Encoding, encoding)
         formatting = getattr(serialization.PrivateFormat, formatting)
 
-        if encryption == "Best Available":
-            if encryption_password:
-                enc_alg = serialization.BestAvailableEncryption(encryption_password.encode("utf-8"))
+        if encryption == "Best Available" and encryption_password:
+            enc_alg = serialization.BestAvailableEncryption(encryption_password.encode("utf-8"))
         else:
             enc_alg = serialization.NoEncryption()
 
