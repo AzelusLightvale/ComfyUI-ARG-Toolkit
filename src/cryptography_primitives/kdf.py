@@ -383,7 +383,7 @@ class ConcatKDFHash_Derive(KeyDerivationNodes):
             other_info = b""
         return ConcatKDFHash(length=length, algorithm=digest, otherinfo=other_info)
 
-    def executee(self, message, length, algorithm, other_info):
+    def execute(self, message, length, algorithm, other_info):
         kdf = self._get_kdf(length, algorithm, other_info)
         return (kdf.derive(message),)
 
@@ -404,7 +404,7 @@ class ConcatKDFHash_Verify(ConcatKDFHash_Derive):
         )
         return class_input
 
-    def execute(self, message, length, algorithm, other_info, expected_key):
+    def execute(self, message, length, algorithm, other_info, expected_key):  # ty: ignore[invalid-method-override]
         ckdfhash_key = self._get_kdf(length, algorithm, other_info)
         try:
             ckdfhash_key.verify(message, expected_key)
@@ -437,7 +437,7 @@ class ConcatKDFHMAC_Derive(ConcatKDFHash_Derive):
             other_info = b""
         return ConcatKDFHMAC(length=length, algorithm=digest, otherinfo=other_info, salt=salt)
 
-    def execute(self, message, length, algorithm, other_info, salt):
+    def execute(self, message, length, algorithm, other_info, salt):  # ty: ignore[invalid-method-override]
         kdf = self._get_kdf(length, algorithm, other_info, salt)
         return (kdf.derive(message),)
 

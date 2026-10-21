@@ -210,6 +210,7 @@ class RSAVerify(InitNode):
     RETURN_TYPES = ("BOOLEAN",)
     RETURN_NAMES = ("verify_result",)
 
+    @classmethod
     def INPUT_TYPES(cls):
         return {
             "required": {
@@ -290,6 +291,7 @@ class RSAEncrypt(InitNode):
     RETURN_TYPES = ("BYTESLIKE",)
     RETURN_NAMES = ("encrypted_data",)
 
+    @classmethod
     def INPUT_TYPES(cls):
         return {
             "required": {
@@ -334,6 +336,7 @@ class RSADecrypt(InitNode):
     RETURN_TYPES = ("BYTESLIKE",)
     RETURN_NAMES = ("decrypted_data",)
 
+    @classmethod
     def INPUT_TYPES(cls):
         return {
             "required": {
@@ -379,6 +382,7 @@ class RSAPublicNumbersFormat(InitNode):
     RETURN_TYPES = ("KEYOBJ", "NUMOBJ",)
     RETURN_NAMES = ("public_key", "public_numbers")
 
+    @classmethod
     def INPUT_TYPES(cls):
         return {
             "required": {
@@ -395,6 +399,7 @@ class RSAPubNumValue(InitNode):
     RETURN_TYPES = ("INT", "INT")
     RETURN_NAMES = ("public_modulus", "public_exponent")
 
+    @classmethod
     def INPUT_TYPES(cls):
         return {
             "required": {},
@@ -417,6 +422,7 @@ class RSAPrivateNumbersFormat(InitNode):
     RETURN_TYPES = ("KEYOBJ", "NUMOBJ",)
     RETURN_NAMES = ("public_key", "private_numbers",)
 
+    @classmethod
     def INPUT_TYPES(cls):
         return {
             "required": {
@@ -440,6 +446,7 @@ class RSAPrivNumValue(InitNode):
     RETURN_TYPES = ("NUMOBJ", "INT", "INT", "INT", "INT", "INT", "INT",)
     RETURN_NAMES = ("public_numbers", "var_p", "var_q", "private_exponent", "dmp1", "dmq1", "iqmp",)
 
+    @classmethod
     def INPUT_TYPES(cls):
         return {
             "required": {},
@@ -464,6 +471,7 @@ class RSARestoreD(InitNode):
     RETURN_TYPES = ("INT",)
     RETURN_NAMES = ("d",)
 
+    @classmethod
     def INPUT_TYPES(cls):
         return {
             "required": {
@@ -480,6 +488,7 @@ class RSARestorePrime(InitNode):
     RETURN_TYPES = ("INT", "INT")
     RETURN_NAMES = ("p", "q")
 
+    @classmethod
     def INPUT_TYPES(cls):
         return {
             "required": {
