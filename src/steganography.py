@@ -1,3 +1,5 @@
+# Steganography nodes, for hding text in images
+
 import os
 import inspect
 import textwrap
@@ -12,6 +14,7 @@ import folder_paths  # This import is handled by ComfyUI. This is a very jank so
 
 # Every node is inspired heavily by their reference implementations in their GitHub repository, with changes made to best use PyTorch as possible as it's the main way ComfyUI stores data
 # For more information, check https://docs.comfy.org/custom-nodes/backend/images_and_masks#images
+
 
 class Stegano_LSB_Encode:
     def __init__(self):
@@ -413,9 +416,7 @@ class IMWatermarkDecode:
         encoding_format = self.encoding_selector(encoding_format, other_encoding_format)
         if types in ["bytes", "bits", "b16"]:  # Bit-related types
             if length <= 0:
-                raise ValueError(
-                    "Length is required for bytes-based watermark decoding. Please put in a non-zero length fitting to the format chosen."
-                )
+                raise ValueError("Length is required for bytes-based watermark decoding. Please put in a non-zero length fitting to the format chosen.")
             if types == "bytes":
                 length = int(length * 8)
             elif types == "b16":

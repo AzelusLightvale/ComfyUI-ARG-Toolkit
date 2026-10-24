@@ -30,7 +30,11 @@ Might also double as a poor man's cryptanalysis and steganography lab if absolut
 
 ## Testing methodology
 
-Since this project started as an amateur project, the test files only cover the functions and most common use cases, not the edge cases or any automated testing yet. Many of the tests done are manual functionality tests done on ComfyUI and not unit tests. This can and will change on future releases.
+Since this project started as an amateur project, the test files only cover the functions and most common use cases, not the edge cases or any automated testing yet. Many of the tests done are manual functionality tests done on ComfyUI and not unit tests. This can and will change on future releases to add more tests, including workflow tests and examples.
+
+## AI Use Disclosure and Disclaimer
+
+Many of the nodes in this project were made with help of generative AI tools like LLM agents (through Cline) and direct questioning and prompting without agentic access manually. This includes unit tests, documentations, and certain nodes and features. I am not inherently against AI use in coding, and every major changes and code pieces in this project all have human reviews on what they are doing. This project is not something that I can do by myself without help, and especially in any reasonable amount of time without AI assistance cutting down the major code works. If you want to take on similar projects by yourself without AI use, feel free to do so.
 
 ## Other information
 
@@ -47,12 +51,12 @@ If you like the idea behind this node pack, want to explore cryptography, stegan
 
 ### Companion node packs
 
-- [ComfyUI-Custom-Scripts](https://github.com/pythongosssss/ComfyUI-Custom-Scripts) - Provides a lot of useful features and nodes in general for ComfyUI.
-- [ComfyUI-Crystools](https://github.com/crystian/ComfyUI-Crystools) - System monitor extension for ComfyUI.
-- [ComfyUI_Invisible_Watermark](https://github.com/web3nomad/ComfyUI_Invisible_Watermark) - The main reason I even started this project in the first place, for making an "invisible watermark" node that left such an impression on me I decided to make my own.
-- [ComfyLiterals](https://github.com/M1kep/ComfyLiterals) - Optional custom nodes for use with these nodes to provide or bypass certain limitations of ComfyUI.
+- [ComfyUI-Custom-Scripts](https://github.com/pythongosssss/ComfyUI-Custom-Scripts) - Provides a lot of useful features and nodes in general for ComfyUI, though the main standout feature (Show Text) is now less useful thanks to newer releases of ComfyUI utilizing Preview as String.
+- [ComfyUI-Crystools](https://github.com/crystian/ComfyUI-Crystools) - System monitor extension for ComfyUI. Useful to check system status when running certain nodes that has the capability to freeze the workflow for long periods of time.
+- [ComfyUI_Invisible_Watermark](https://github.com/web3nomad/ComfyUI_Invisible_Watermark) - The main reason I even started this project in the first place, for making an "invisible watermark" node that left such a frankly terrible impression on me that I decided to make my own.
+- [ComfyLiterals](https://github.com/M1kep/ComfyLiterals) - Optional custom nodes for use with these nodes to provide or bypass certain limitations of ComfyUI widgets.
 
 ## License
 
-This project is licensed under the GNU General Public License 3.0 (GPLv3).
+This project is licensed under the GNU General Public License 3.0 (GPLv3). Additional libraries upstream of this project follow their own open-source licenses.
 See the LICENSE file for full license details.

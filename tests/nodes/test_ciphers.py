@@ -1,7 +1,26 @@
 from src import ciphers
 
+
 # Test suite for ciphers.py
 class TestCiphers:
+    def test_adfgx_cipher(self):
+        adfgx_cipher = ciphers.ADFGX()
+        text = "HelloWorld"
+        alphabet = "abcdefghiklmnopqrstuvwxyz"  # 25 chars, no j
+        key = "KEY"
+        encrypted_text = adfgx_cipher.execute(text, alphabet, key, True, False)
+        decrypted_text = adfgx_cipher.execute(encrypted_text[0], alphabet, key, False, False)
+        assert decrypted_text[0] == text.lower()
+
+    def test_adfgvx_cipher(self):
+        adfgx_cipher = ciphers.ADFGX()
+        text = "HelloWorld"
+        alphabet = "abcdefghiklmnopqrstuvwxyz"  # 25 chars, no j
+        key = "KEY"
+        encrypted_text = adfgx_cipher.execute(text, alphabet, key, True, False)
+        decrypted_text = adfgx_cipher.execute(encrypted_text[0], alphabet, key, False, False)
+        assert decrypted_text[0] == text.lower()
+
     def test_atbash_cipher(self):
         atbash_cipher = ciphers.Atbash()
         text = "Hello World"
@@ -27,15 +46,6 @@ class TestCiphers:
         encrypted_text = vigenere_cipher.execute(text, alphabet, key, True, False)
         decrypted_text = vigenere_cipher.execute(encrypted_text[0], alphabet, key, False, False)
         assert decrypted_text[0] == text.lower().replace(" ", "")
-
-    def test_adfgx_cipher(self):
-        adfgx_cipher = ciphers.ADFGX()
-        text = "HelloWorld"
-        alphabet = "abcdefghiklmnopqrstuvwxyz"  # 25 chars, no j
-        key = "KEY"
-        encrypted_text = adfgx_cipher.execute(text, alphabet, key, True, False)
-        decrypted_text = adfgx_cipher.execute(encrypted_text[0], alphabet, key, False, False)
-        assert decrypted_text[0] == text.lower()
 
     def test_autokey_cipher(self):
         autokey_cipher = ciphers.Autokey()

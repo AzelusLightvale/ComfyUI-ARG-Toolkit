@@ -1,3 +1,5 @@
+# Serialized key loading and SSH parsing
+
 from cryptography.hazmat.primitives import serialization, hashes
 
 
@@ -12,10 +14,14 @@ class KeyInitNode:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "keyfile": ("BYTESLIKE", {"forceInput": True},),
+                "keyfile": (
+                    "BYTESLIKE",
+                    {"forceInput": True},
+                ),
             },
             "optional": {},
         }
+
 
 # PEM keys
 class PEMPrivateKey(KeyInitNode):
@@ -35,6 +41,7 @@ class PEMPublicKey(KeyInitNode):
         loaded_key = serialization.load_pem_public_key(keyfile)
         return (loaded_key,)
 
+
 # DER keys
 class DERPrivateKey(KeyInitNode):
     @classmethod
@@ -53,11 +60,13 @@ class DERPublicKey(KeyInitNode):
         loaded_key = serialization.load_der_public_key(keyfile)
         return (loaded_key,)
 
-# SSH keys and fingerprint 
+
+# SSH keys and fingerprint
 class SSHPublicKey(KeyInitNode):
     def execute(self, keyfile):
         loaded_key = serialization.load_ssh_public_key(keyfile)
         return (loaded_key,)
+
 
 class SSHPublicKeyFingerprint(KeyInitNode):
     RETURN_TYPES = ("BYTESLIKE",)
@@ -66,7 +75,12 @@ class SSHPublicKeyFingerprint(KeyInitNode):
     @classmethod
     def INPUT_TYPES(cls):
         class_input = super().INPUT_TYPES()
-        class_input["required"]["hash_algorithm"] = (["MD5", "SHA-1", "SHA-256"], {"default": "SHA-256",})
+        class_input["required"]["hash_algorithm"] = (
+            ["MD5", "SHA-1", "SHA-256"],
+            {
+                "default": "SHA-256",
+            },
+        )
         return class_input
 
     def execute(self, keyfile, hash_algorithm):
@@ -81,6 +95,7 @@ class SSHPublicKeyFingerprint(KeyInitNode):
         signature = serialization.ssh_key_fingerprint(loaded_key, algorithm)
         return (bytes(signature),)
 
+
 class SSHPrivateKey(KeyInitNode):
     @classmethod
     def INPUT_TYPES(cls):
@@ -93,8 +108,12 @@ class SSHPrivateKey(KeyInitNode):
         loaded_key = serialization.load_ssh_private_key(keyfile, password, unsafe_skip_rsa_key_validation=skip_rsa_key_validation)
         return (loaded_key,)
 
+
 class SSHPublicIdentity(KeyInitNode):
-    RETURN_TYPES = ("BYTESLIKE", "BYTESLIKE",)
+    RETURN_TYPES = (
+        "BYTESLIKE",
+        "BYTESLIKE",
+    )
     RETURN_NAMES = ("certificate", "key")
 
     def execute(self, keyfile):

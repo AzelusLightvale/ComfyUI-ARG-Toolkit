@@ -28,20 +28,14 @@ for root, _, files in os.walk(SRC_FOLDER):
             if getattr(module, "NODE_CLASS_MAPPINGS", None):
                 for key, value in module.NODE_CLASS_MAPPINGS.items():
                     if key in NODE_CLASS_MAPPINGS:
-                        print(
-                            f"[ComfyUI-ARG-Toolkit] [Duplicate NODE_CLASS_MAPPINGS] '{key}' "
-                            f"overwritten by {module_name} (was {NODE_CLASS_SOURCES[key]})"
-                        )
+                        print(f"[ComfyUI-ARG-Toolkit] [Duplicate NODE_CLASS_MAPPINGS] '{key}' overwritten by {module_name} (was {NODE_CLASS_SOURCES[key]})")
                     NODE_CLASS_MAPPINGS[key] = value
                     NODE_CLASS_SOURCES[key] = module_name
 
             if getattr(module, "NODE_DISPLAY_NAME_MAPPINGS", None):
                 for key, value in module.NODE_DISPLAY_NAME_MAPPINGS.items():
                     if key in NODE_DISPLAY_NAME_MAPPINGS:
-                        print(
-                            f"[ComfyUI-ARG-Toolkit] [Duplicate NODE_DISPLAY_NAME_MAPPINGS] '{key}' "
-                            f"overwritten by {module_name} (was {NODE_DISPLAY_NAME_SOURCES[key]})"
-                        )
+                        print(f"[ComfyUI-ARG-Toolkit] [Duplicate NODE_DISPLAY_NAME_MAPPINGS] '{key}' overwritten by {module_name} (was {NODE_DISPLAY_NAME_SOURCES[key]})")
                     NODE_DISPLAY_NAME_MAPPINGS[key] = value
                     NODE_DISPLAY_NAME_SOURCES[key] = module_name
 

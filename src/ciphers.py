@@ -1,3 +1,5 @@
+# Classical ciphers (pen and paper, ancient ciphers,...)
+
 import secretpy
 from secretpy import alphabets as al
 import math
@@ -507,9 +509,7 @@ class Polybius(BaseCipherNode):
 
     def execute(self, text, alphabet, key, mode, keep_formatting):
         if key != math.sqrt(len(alphabet)):
-            raise ValueError(
-                f"Your given key length ({len(key)} does not match the square root of your alphabet size ({math.sqrt(len(alphabet))})). Please check your alphabet and key again"
-            )
+            raise ValueError(f"Your given key length ({len(key)} does not match the square root of your alphabet size ({math.sqrt(len(alphabet))})). Please check your alphabet and key again")
         processed_alphabet = self.alphabet_checker(alphabet, as_tuple=True)
         return self.execute_cipher(text, processed_alphabet, key, mode, keep_formatting)
 

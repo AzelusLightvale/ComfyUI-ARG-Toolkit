@@ -1,4 +1,5 @@
 """Utilities for use with the ARG Toolkit"""
+
 import os
 import base64
 import ast
@@ -6,10 +7,10 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-class SystemRandom:
-    def __init__(self):
-        pass
+# The Random(pRNG) set of Utilities
 
+
+class SystemRandom:
     CATEGORY = "ARG Toolkit/Utilities/Random"
     DESCRIPTION = "Generates a random number of bytes using os.urandom. Required for use with the Cryptography nodes."
 
@@ -31,6 +32,10 @@ class SystemRandom:
     RETURN_TYPES = ("BYTESLIKE",)
     RETURN_NAMES = ("rand_value",)
     FUNCTION = "SystemRandom"
+
+    @classmethod
+    def IS_CHANGED(self):
+        return float("NaN")  # Due to the nature of os.urandom(), it will always change, to the point of unreproducible. Therefore, this only makes sense for it. Unfortunately, also due to the nature of it, this node will cause massively unoptimized workflows in large workflows as it forces reprocessing on everything.
 
     def SystemRandom(self, byte_num):
         return (os.urandom(byte_num),)
@@ -118,9 +123,7 @@ class String2Hex(ConverterNodes):
 
 class Hex2String(ConverterNodes):
     def execute(self, text, encoding_format, other_encoding_format):
-        return (
-            bytes.fromhex(text.replace("0x", "").replace(" ", "")).decode(self.encoding_selector(encoding_format, other_encoding_format)),
-        )
+        return (bytes.fromhex(text.replace("0x", "").replace(" ", "")).decode(self.encoding_selector(encoding_format, other_encoding_format)),)
 
 
 class String2Base64(ConverterNodes):
@@ -232,14 +235,10 @@ class BitwiseNodes:
             raise ValueError(f"Unsupported datatype: {datatype}")
 
     def operate(self, text_1: str, text_2: str, datatype, encoding_format, func, other_encoding_format=None):
-        b1, return_fmt= self.detect_and_parse(
-            text=text_1, datatype=datatype, encoding_format=encoding_format, other_encoding_format=other_encoding_format
-        )
+        b1, return_fmt = self.detect_and_parse(text=text_1, datatype=datatype, encoding_format=encoding_format, other_encoding_format=other_encoding_format)
 
         if text_2 != "":
-            b2, _ = self.detect_and_parse(
-                text=text_2, datatype=datatype, encoding_format=encoding_format, other_encoding_format=other_encoding_format
-            )
+            b2, _ = self.detect_and_parse(text=text_2, datatype=datatype, encoding_format=encoding_format, other_encoding_format=other_encoding_format)
             # Ensure same length for operations that need it
             if len(b1) != len(b2):
                 raise ValueError("Inputs must be same length for bitwise operations")
@@ -378,7 +377,7 @@ class StringLooper:
     FUNCTION = "Looper"
 
     def Looper(self, text: str, loops: int):
-        return (text*loops,)
+        return (text * loops,)
 
 
 class ByteslikeEncode:
@@ -387,12 +386,12 @@ class ByteslikeEncode:
         return {
             "required": {
                 "text": ("STRING", {"multiline": True, "default": "Hello World!", "placeholder": "Type your message here..."}),
-                "encoding": (["Hexadecimal", "Base64", "UTF-8", "Binary", "Raw Bytes"], {"default": "UTF-8","tooltip": "The type of data to be encoded into bytes."}),
+                "encoding": (["Hexadecimal", "Base64", "UTF-8", "Binary", "Raw Bytes"], {"default": "UTF-8", "tooltip": "The type of data to be encoded into bytes."}),
             },
             "optional": {},
             "hidden": {
                 "unique_id": "UNIQUE_ID",
-            }
+            },
         }
 
     RETURN_TYPES = ("BYTESLIKE",)
@@ -423,7 +422,7 @@ class ByteslikeEncode:
                 case _:
                     raise ValueError(f"Invalid encoding method used: {encoding}.")
         except (ValueError, TypeError, UnicodeDecodeError) as err:
-            logger.warning("Bytes-like Object Encode at node ID %s has failed to encode the string given under the mode of \"%s\" with %s. Falling back to raw string bytes.", unique_id, encoding, err)
+            logger.warning('Bytes-like Object Encode at node ID %s has failed to encode the string given under the mode of "%s" with %s. Falling back to raw string bytes.', unique_id, encoding, err)
             data = text.encode("utf-8")
         return (data,)
 
@@ -432,14 +431,11 @@ class ByteslikeDecode:
     @classmethod
     def INPUT_TYPES(cls):
         return {
-            "required": {
-                "data": ("BYTESLIKE",{}),
-                "encoding": (["Hexadecimal", "Base64", "UTF-8", "Binary", "Raw Bytes"], {"default": "UTF-8", "tooltip": "The type of data the bytes will be decoded to."})
-                },
+            "required": {"data": ("BYTESLIKE", {}), "encoding": (["Hexadecimal", "Base64", "UTF-8", "Binary", "Raw Bytes"], {"default": "UTF-8", "tooltip": "The type of data the bytes will be decoded to."})},
             "optional": {},
             "hidden": {
                 "unique_id": "UNIQUE_ID",
-            }
+            },
         }
 
     RETURN_TYPES = ("STRING",)

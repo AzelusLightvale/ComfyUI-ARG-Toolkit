@@ -1,4 +1,4 @@
-# This implementation is lifted from https://github.com/Aayush9029/encodeDecode, which is left abandoned since 2020. This will attempt to roll that implementation in while implementing more languages that can be supported within reason (so no Chinese telegraph code for Chinese, unfortunately).
+# This implementation of a Morse code encoder/decoder is lifted from https://github.com/Aayush9029/encodeDecode, which is left abandoned since 2020. This will attempt to roll that implementation in while implementing more languages that can be supported within reason (so no Chinese telegraph code for Chinese, unfortunately).
 import unicodedata
 
 

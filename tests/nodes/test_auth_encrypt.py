@@ -1,5 +1,6 @@
 from src.cryptography_primitives import auth_encrypt
 
+
 # Test suite for auth_encrypt.py
 class TestAuthEncrypt:
     def test_chacha20poly1305(self):

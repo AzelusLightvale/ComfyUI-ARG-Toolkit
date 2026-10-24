@@ -1,3 +1,5 @@
+# Spectrogram encoder/decoder that cal also make images into spectrograms
+
 import torch
 import torchaudio.transforms as torch_trans
 import torchaudio.functional as torch_fn
@@ -185,12 +187,13 @@ class SpectrogramEncoder:
                 def mel_to_hz(m):
                     m = np.asarray(m, dtype=np.float64)
                     return np.where(m < min_log_mel, m * f_sp, min_log_hz * np.exp(logstep * (m - min_log_mel)))
+
             hz_per_bin = sampling_rate / p2_fft
             mel_max = hz_to_mel(nyquist)
             mel_num = int(np.round(mel_max / (2595.0 * np.log10(1.0 + hz_per_bin / 700.0))))
             mel_num = int(np.clip(mel_num, 32, p2_fft // 2 + 1))
 
-            mel_points = np.linspace(0, mel_max, mel_num +2)
+            mel_points = np.linspace(0, mel_max, mel_num + 2)
             hz_points = mel_to_hz(mel_points)
 
             stft_freqs = np.linspace(0.0, nyquist, freq_num, dtype=np.float32)
@@ -230,13 +233,13 @@ class SpectrogramDecoder:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "image": ("IMAGE", {"forceInput": True,"tooltip": "The spectrogram image to decode into audio."}),
+                "image": ("IMAGE", {"forceInput": True, "tooltip": "The spectrogram image to decode into audio."}),
                 "channel": (
                     ["colormap", "channel_red", "channel_green", "channel_blue", "luminance"],
                     {
                         "default": "luminance",
                         "tooltip": "The color channel used to collapse and deconstruct the image. For spectrograms with a known colormap, use `colormap`, otherwise use `luminance` or any of the RGB channels.",
-                    }
+                    },
                 ),
                 "window_size": ("FLOAT", {"default": 25.000, "min": 0.001, "max": 100000.000, "step": 0.0011, "tooltip": "The size of each 'frame' in miliseconds."}),
                 "hop_size": ("FLOAT", {"default": 15.000, "min": 0.001, "max": 100000.000, "step": 0.001, "tooltip": "The size of the overlap between each 'frames' in miliseconds"}),
@@ -252,13 +255,13 @@ class SpectrogramDecoder:
                     {
                         "default": "Logarithmic",
                         "tooltip": "The scaling method used for the spectrogram.",
-                    }
+                    },
                 ),
                 "autogain": (
                     "BOOLEAN",
                     {
                         "tooltip": "For Linear and Quadratic scaling method, dynamically scale the amplitude based on the peak. If disabled, use `max_amp` to define it instead. If used with Logarithmic Mel scaling, will enable area normalization if used with `mel_scale=slaney`.",
-                    }
+                    },
                 ),
                 "top_db": (
                     "FLOAT",
@@ -269,15 +272,42 @@ class SpectrogramDecoder:
                         "tooltip": "The dynamic range (in negative dB) to scale against for both Logarithmic scaling methods.",
                     },
                 ),
-                "sampling_rate": ("INT", {"max": 384000, "min":100, "default": 44100, "step": 1, "tooltip": "The target sample rate for the audio file."}),
+                "sampling_rate": ("INT", {"max": 384000, "min": 100, "default": 44100, "step": 1, "tooltip": "The target sample rate for the audio file."}),
                 "max_iter": ("INT", {"min": 1, "max": 1024, "default": 32, "tooltip": "Maximum iteration to run the Griffin-Lim algorithm for."}),
-                "gl_momentum": ("FLOAT", {"min": 0.00, "max": 2.00, "default": 0.99, "step": 0.01, "tooltip": "For use with Fast Griffin-Lim. 0 disables Fast Griffin-Lim."})
+                "gl_momentum": ("FLOAT", {"min": 0.00, "max": 2.00, "default": 0.99, "step": 0.01, "tooltip": "For use with Fast Griffin-Lim. 0 disables Fast Griffin-Lim."}),
             },
             "optional": {
-                "colormap_low": ("STRING", {"default": "#000000", "tooltip": "The color of the lowest point of the spectrogram.",}),
-                "colormap_mid": ("STRING", {"default": "#B73779", "tooltip": "The color of the middle point of the spectrogram.",}),
-                "colormap_high": ("STRING", {"default": "#FCFDBF", "tooltip": "The color of the highest point of the spectrogram.",}),
-                "max_amp": ("FLOAT", {"step": 0.1, "min": 0.0, "max": 1.0, "default": 1.0, "tooltip": "If `autogain is disabled, this defines the maximum amplitude to scale with in Linear and Quadratic scaling.",}),
+                "colormap_low": (
+                    "STRING",
+                    {
+                        "default": "#000000",
+                        "tooltip": "The color of the lowest point of the spectrogram.",
+                    },
+                ),
+                "colormap_mid": (
+                    "STRING",
+                    {
+                        "default": "#B73779",
+                        "tooltip": "The color of the middle point of the spectrogram.",
+                    },
+                ),
+                "colormap_high": (
+                    "STRING",
+                    {
+                        "default": "#FCFDBF",
+                        "tooltip": "The color of the highest point of the spectrogram.",
+                    },
+                ),
+                "max_amp": (
+                    "FLOAT",
+                    {
+                        "step": 0.1,
+                        "min": 0.0,
+                        "max": 1.0,
+                        "default": 1.0,
+                        "tooltip": "If `autogain is disabled, this defines the maximum amplitude to scale with in Linear and Quadratic scaling.",
+                    },
+                ),
                 "mel_scale": ("BOOLEAN", {"label_off": "htk", "label_on": "slaney", "default": False, "tooltip": "Mel scaling method to use."}),
             },
         }
@@ -312,14 +342,13 @@ class SpectrogramDecoder:
         raw_frame_length = int(np.round((window_size / 1000.0) * sampling_rate))
         hop_length = int(np.round((hop_size / 1000.0) * sampling_rate))
         p2_fft = 2 ** int(np.ceil(np.log2(raw_frame_length)))
-        n_stft = (p2_fft//2)+1
-
+        n_stft = (p2_fft // 2) + 1
 
         # Channel collapse
         if channel == "colormap":
             norm = self.colormap_collapse(image, colormap_low, colormap_mid, colormap_high)
         elif channel == "luminance":
-            weights = torch.tensor([0.299, 0.587, 0.114]) # Luminance value based on ITU-R BT.601 perceptual weights.
+            weights = torch.tensor([0.299, 0.587, 0.114])  # Luminance value based on ITU-R BT.601 perceptual weights.
             norm = torch.sum(image * weights, dim=-1)
         elif channel == "channel_red":
             norm = image[..., 0]
@@ -335,25 +364,17 @@ class SpectrogramDecoder:
             elif scaling_method == "Quadratic":
                 image_peak = torch.max(norm**2)
 
-            if autogain and image_peak>0:
-                magnitude = (norm/image_peak) * 1.0
+            if autogain and image_peak > 0:
+                magnitude = (norm / image_peak) * 1.0
             else:
                 magnitude = norm * max_amp
         elif scaling_method == "Logarithmic":
-            log_mag = torch.pow(10.0, ((norm * top_db) - top_db)/20)
+            log_mag = torch.pow(10.0, ((norm * top_db) - top_db) / 20)
             magnitude = torch.clamp(log_mag, min=0.0)
         elif scaling_method == "Logarithmic Mel":
-            log_mag = torch.pow(10.0, ((norm * top_db) - top_db)/20)
+            log_mag = torch.pow(10.0, ((norm * top_db) - top_db) / 20)
             lin_mag = torch.clamp(log_mag, min=0.0)
-            mel_fb = torch_fn.melscale_fbanks(
-                n_freqs=n_stft,
-                f_min=0.0,
-                f_max=float(sampling_rate//2),
-                n_mels=norm.shape[1],
-                sample_rate=sampling_rate,
-                norm="slaney" if autogain==True else None,
-                mel_scale="htk" if mel_scale==False else "slaney"
-            )
+            mel_fb = torch_fn.melscale_fbanks(n_freqs=n_stft, f_min=0.0, f_max=float(sampling_rate // 2), n_mels=norm.shape[1], sample_rate=sampling_rate, norm="slaney" if autogain == True else None, mel_scale="htk" if mel_scale == False else "slaney")
             mel_pinv = torch.linalg.pinv(mel_fb, rtol=1e-5, atol=1e-8)
             magnitude = torch.matmul(mel_pinv.T, lin_mag)
 
@@ -369,7 +390,7 @@ class SpectrogramDecoder:
         griffin_lim = torch_trans.GriffinLim(n_fft=p2_fft, win_length=raw_frame_length, hop_length=hop_length, window_fn=windowing_func, n_iter=max_iter, momentum=gl_momentum, power=1.0)  # ty: ignore[invalid-argument-type]
         waveform = griffin_lim(magnitude)
         max_val = torch.max(torch.abs(waveform))
-        if max_val > 1e-8 :
+        if max_val > 1e-8:
             waveform = waveform / max_val
         waveform = waveform.unsqueeze(0).cpu()
         final_audio = {"waveform": waveform, "sample_rate": sampling_rate}

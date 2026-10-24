@@ -1,11 +1,14 @@
-# RSA asymmetric encryption
+# RSA asymmetric encryption and signing
+
 from cryptography.hazmat.primitives.asymmetric import rsa, padding, utils
 from cryptography.hazmat.primitives import serialization, hashes
+
 
 # Simple init node to deduplicate some bits
 class InitNode:
     CATEGORY = "ARG Toolkit/Cryptography/Modern/Asymmetric"
     FUNCTION = "execute"
+
 
 # Actual RSA functions
 class RSAPrivateKeyFormat(InitNode):
@@ -16,13 +19,23 @@ class RSAPrivateKeyFormat(InitNode):
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "public_exponent": ("INT", {
-                    "min": 1,
-                    "max": 4294967296,
-                    "default": 65537,
-                    }
+                "public_exponent": (
+                    "INT",
+                    {
+                        "min": 1,
+                        "max": 4294967296,
+                        "default": 65537,
+                    },
                 ),
-                "key_size": ("INT", {"min": 512, "max": 8192, "step": 128, "default": 2048,}),
+                "key_size": (
+                    "INT",
+                    {
+                        "min": 512,
+                        "max": 8192,
+                        "step": 128,
+                        "default": 2048,
+                    },
+                ),
                 "encoding": (
                     ["PEM", "DER"],
                     {
@@ -31,7 +44,11 @@ class RSAPrivateKeyFormat(InitNode):
                     },
                 ),
                 "formatting": (
-                    ["PKCS8", "OpenSSH", "TraditionalOpenSSL",],
+                    [
+                        "PKCS8",
+                        "OpenSSH",
+                        "TraditionalOpenSSL",
+                    ],
                     {
                         "default": "PKCS8",
                         "description": "What format to serialize the key in. OpenSSH requires PEM encoding.",
@@ -65,6 +82,7 @@ class RSAPrivateKeyFormat(InitNode):
 
         private_bytes = private_key.private_bytes(encoding=encoding, format=formatting, encryption_algorithm=enc_alg)
         return (private_key, private_bytes, private_key.private_numbers())
+
 
 class RSAPublicKeyFormat(InitNode):
     RETURN_TYPES = ("KEYOBJ", "BYTESLIKE", "NUMOBJ")
@@ -100,33 +118,13 @@ class RSAPublicKeyFormat(InitNode):
                 ),
             },
             "optional": {
-                "serialized_key": ("KEYOBJ",
-                    {
-                        "forceInput": True,
-                        "tooltip": "Only applicable if key_source is `From Loaded Key`."
-                    }
-                ),
-                "fresh_key_size": ("INT",
-                    {
-                        "min": 512,
-                        "max": 8192,
-                        "step": 128,
-                        "default": 2048,
-                        "tooltip": "Only applicable if key_source is `From Fresh Key`."
-                    }
-                ),
-                "public_exponent": ("INT",
-                    {
-                        "min": 1,
-                        "max": 4294967296,
-                        "default": 65537,
-                        "tooltip": "Only applicable if key_sourcce if `From Fresh Key`."
-                    }
-                ),
+                "serialized_key": ("KEYOBJ", {"forceInput": True, "tooltip": "Only applicable if key_source is `From Loaded Key`."}),
+                "fresh_key_size": ("INT", {"min": 512, "max": 8192, "step": 128, "default": 2048, "tooltip": "Only applicable if key_source is `From Fresh Key`."}),
+                "public_exponent": ("INT", {"min": 1, "max": 4294967296, "default": 65537, "tooltip": "Only applicable if key_sourcce if `From Fresh Key`."}),
             },
         }
 
-    def execute(self, key_source, encoding, formatting, serialized_key:rsa.RSAPrivateKey | None, fresh_key_size, public_exponent):
+    def execute(self, key_source, encoding, formatting, serialized_key: rsa.RSAPrivateKey | None, fresh_key_size, public_exponent):
         match key_source:
             case "Fresh Key":
                 p_key = rsa.generate_private_key(public_exponent, fresh_key_size)
@@ -143,6 +141,7 @@ class RSAPublicKeyFormat(InitNode):
         public_bytes = public_key.public_bytes(encoding=encoding, format=formatting)
         return (public_key, public_bytes, public_key.public_numbers())
 
+
 # RSA signing and verifying of signatures
 class RSASign(InitNode):
     RETURN_TYPES = ("SIGNATURE",)
@@ -152,11 +151,14 @@ class RSASign(InitNode):
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "private_key": ("KEYOBJ", {"forceInput": True,}),
-                "data": ("BYTESLIKE", {"forceInput": True}),
-                "salt_length": (
-                    ["Max Length", "Digest Length", "Manual"], {"default": "Max Length", "tooltip": "The length of the salt."}
+                "private_key": (
+                    "KEYOBJ",
+                    {
+                        "forceInput": True,
+                    },
                 ),
+                "data": ("BYTESLIKE", {"forceInput": True}),
+                "salt_length": (["Max Length", "Digest Length", "Manual"], {"default": "Max Length", "tooltip": "The length of the salt."}),
                 "signature_algorithm": (
                     [
                         "SHA224",
@@ -177,12 +179,9 @@ class RSASign(InitNode):
                     ],
                     {"tooltip": "The hashing algorithm used for the signature."},
                 ),
-                "padding_alg": (["PSS", "PKCS1v15"], {"default": "PSS"})
+                "padding_alg": (["PSS", "PKCS1v15"], {"default": "PSS"}),
             },
-            "optional": {
-                "prehashed": ("BOOLEAN", {"tooltip": "Whether the data is prehashed or not."}),
-                "salt_length_manual": ("INT", {"min": 1, "max": 65536, "step": 1, "tooltip": "For only when salt_length is `Manual`."})
-            },
+            "optional": {"prehashed": ("BOOLEAN", {"tooltip": "Whether the data is prehashed or not."}), "salt_length_manual": ("INT", {"min": 1, "max": 65536, "step": 1, "tooltip": "For only when salt_length is `Manual`."})},
         }
 
     def execute(self, private_key, data, salt_length, salt_length_manual, signature_algorithm, padding_alg, prehashed):
@@ -195,7 +194,7 @@ class RSASign(InitNode):
                     salt_length = padding.PSS.DIGEST_LENGTH
                 case "Manual":
                     salt_length = salt_length_manual
-            padder = padding.PSS(mgf=padding.MGF1(algorithm),salt_length=salt_length)
+            padder = padding.PSS(mgf=padding.MGF1(algorithm), salt_length=salt_length)
         if padding_alg == "PSS" and not prehashed:
             signature = private_key.sign(data, padder, algorithm)
         elif padding_alg == "PSS" and prehashed:
@@ -206,6 +205,7 @@ class RSASign(InitNode):
             signature = private_key.sign(data, padding.PKCS1v15(), utils.Prehashed(algorithm))
         return (signature,)
 
+
 class RSAVerify(InitNode):
     RETURN_TYPES = ("BOOLEAN",)
     RETURN_NAMES = ("verify_result",)
@@ -214,12 +214,25 @@ class RSAVerify(InitNode):
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "public_key": ("KEYOBJ", {"forceInput": True,}),
-                "data": ("BYTESLIKE", {"forceInput": True,}),
-                "signature": ("SIGNATURE", {"forceInput": True,}),
-                "salt_length": (
-                    ["Max Length", "Digest Length", "Manual"], {"default": "Max Length", "tooltip": "The length of the salt."}
+                "public_key": (
+                    "KEYOBJ",
+                    {
+                        "forceInput": True,
+                    },
                 ),
+                "data": (
+                    "BYTESLIKE",
+                    {
+                        "forceInput": True,
+                    },
+                ),
+                "signature": (
+                    "SIGNATURE",
+                    {
+                        "forceInput": True,
+                    },
+                ),
+                "salt_length": (["Max Length", "Digest Length", "Manual"], {"default": "Max Length", "tooltip": "The length of the salt."}),
                 "signature_algorithm": (
                     [
                         "SHA224",
@@ -240,17 +253,15 @@ class RSAVerify(InitNode):
                     ],
                     {"tooltip": "The hashing algorithm used for the signature."},
                 ),
-                "padding_alg": (["PSS", "PKCS1v15"], {"default": "PSS"})
+                "padding_alg": (["PSS", "PKCS1v15"], {"default": "PSS"}),
             },
-            "optional": {
-                "prehashed": ("BOOLEAN", {"tooltip": "Whether the data is prehashed or not."}),
-                "salt_length_manual": ("INT", {"min": 1, "max": 65536, "step": 1, "tooltip": "For only when salt_length is `Manual`."})
-            },
+            "optional": {"prehashed": ("BOOLEAN", {"tooltip": "Whether the data is prehashed or not."}), "salt_length_manual": ("INT", {"min": 1, "max": 65536, "step": 1, "tooltip": "For only when salt_length is `Manual`."})},
         }
 
     def execute(self, public_key, data, signature, salt_length, salt_length_manual, signature_algorithm, padding_alg, prehashed):
         algorithm = getattr(hashes, signature_algorithm)()
         from cryptography.exceptions import InvalidSignature
+
         if padding_alg == "PSS":
             match salt_length:
                 case "Max Length":
@@ -259,7 +270,7 @@ class RSAVerify(InitNode):
                     salt_length = padding.PSS.DIGEST_LENGTH
                 case "Manual":
                     salt_length = salt_length_manual
-            padder = padding.PSS(mgf=padding.MGF1(algorithm),salt_length=salt_length)
+            padder = padding.PSS(mgf=padding.MGF1(algorithm), salt_length=salt_length)
         if padding_alg == "PSS" and not prehashed:
             try:
                 public_key.verify(signature, data, padder, algorithm)
@@ -286,6 +297,7 @@ class RSAVerify(InitNode):
                 verify_result = False
         return (verify_result,)
 
+
 # RSA encryption and decryption
 class RSAEncrypt(InitNode):
     RETURN_TYPES = ("BYTESLIKE",)
@@ -295,8 +307,18 @@ class RSAEncrypt(InitNode):
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "public_key": ("KEYOBJ", {"forceInput": True,}),
-                "data": ("BYTESLIKE", {"forceInput": True,}),
+                "public_key": (
+                    "KEYOBJ",
+                    {
+                        "forceInput": True,
+                    },
+                ),
+                "data": (
+                    "BYTESLIKE",
+                    {
+                        "forceInput": True,
+                    },
+                ),
                 "signature_algorithm": (
                     [
                         "SHA224",
@@ -317,20 +339,21 @@ class RSAEncrypt(InitNode):
                     ],
                     {"tooltip": "The hashing algorithm used for the signature."},
                 ),
-                "padding_alg": (["OAEP", "PKCS1v15"], {"default": "OAEP"})
+                "padding_alg": (["OAEP", "PKCS1v15"], {"default": "OAEP"}),
             },
             "optional": {
                 "label": ("BYTESLIKE", {"forceInput": True}),
             },
         }
 
-    def execute(self, public_key: rsa.RSAPublicKey, data, signature_algorithm, padding_alg, label = None):
+    def execute(self, public_key: rsa.RSAPublicKey, data, signature_algorithm, padding_alg, label=None):
         algorithm = getattr(hashes, signature_algorithm)()
         if padding_alg == "OAEP":
             encrypted_data = public_key.encrypt(data, padding.OAEP(mgf=padding.MGF1(algorithm), algorithm=algorithm, label=label))
         elif padding_alg == "PKCS1v15":
             encrypted_data = public_key.encrypt(data, padding.PKCS1v15())
         return (encrypted_data,)
+
 
 class RSADecrypt(InitNode):
     RETURN_TYPES = ("BYTESLIKE",)
@@ -340,8 +363,18 @@ class RSADecrypt(InitNode):
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "private_key": ("KEYOBJ", {"forceInput": True,}),
-                "data": ("BYTESLIKE", {"forceInput": True,}),
+                "private_key": (
+                    "KEYOBJ",
+                    {
+                        "forceInput": True,
+                    },
+                ),
+                "data": (
+                    "BYTESLIKE",
+                    {
+                        "forceInput": True,
+                    },
+                ),
                 "signature_algorithm": (
                     [
                         "SHA224",
@@ -362,14 +395,14 @@ class RSADecrypt(InitNode):
                     ],
                     {"tooltip": "The hashing algorithm used for the signature."},
                 ),
-                "padding_alg": (["OAEP", "PKCS1v15"], {"default": "OAEP"})
+                "padding_alg": (["OAEP", "PKCS1v15"], {"default": "OAEP"}),
             },
             "optional": {
                 "label": ("BYTESLIKE", {"forceInput": True}),
             },
         }
 
-    def execute(self, private_key: rsa.RSAPrivateKey, data, signature_algorithm, padding_alg, label = None):
+    def execute(self, private_key: rsa.RSAPrivateKey, data, signature_algorithm, padding_alg, label=None):
         algorithm = getattr(hashes, signature_algorithm)()
         if padding_alg == "OAEP":
             decrypted_data = private_key.decrypt(data, padding.OAEP(mgf=padding.MGF1(algorithm), algorithm=algorithm, label=label))
@@ -377,9 +410,13 @@ class RSADecrypt(InitNode):
             decrypted_data = private_key.decrypt(data, padding.PKCS1v15())
         return (decrypted_data,)
 
+
 # RSA numbers, for when standard serialized key loading fails
 class RSAPublicNumbersFormat(InitNode):
-    RETURN_TYPES = ("KEYOBJ", "NUMOBJ",)
+    RETURN_TYPES = (
+        "KEYOBJ",
+        "NUMOBJ",
+    )
     RETURN_NAMES = ("public_key", "public_numbers")
 
     @classmethod
@@ -394,6 +431,7 @@ class RSAPublicNumbersFormat(InitNode):
     def execute(self, public_modulus, public_exponent):
         pub_num = rsa.RSAPublicNumbers(n=public_modulus, e=public_exponent)
         return (pub_num.public_key(), pub_num)
+
 
 class RSAPubNumValue(InitNode):
     RETURN_TYPES = ("INT", "INT")
@@ -416,11 +454,21 @@ class RSAPubNumValue(InitNode):
             pnum = public_numbers
         else:
             raise ValueError("Invalid configuration given. Input either the public numbers object or public key object only.")
-        return (pnum.n, pnum.e,)
+        return (
+            pnum.n,
+            pnum.e,
+        )
+
 
 class RSAPrivateNumbersFormat(InitNode):
-    RETURN_TYPES = ("KEYOBJ", "NUMOBJ",)
-    RETURN_NAMES = ("public_key", "private_numbers",)
+    RETURN_TYPES = (
+        "KEYOBJ",
+        "NUMOBJ",
+    )
+    RETURN_NAMES = (
+        "public_key",
+        "private_numbers",
+    )
 
     @classmethod
     def INPUT_TYPES(cls):
@@ -430,7 +478,7 @@ class RSAPrivateNumbersFormat(InitNode):
                 "var_p": ("INT", {"min": 1, "max": 4294967296, "step": 1, "default": 1, "tooltip": "One of the two primes composing the private modulus `n`"}),
                 "var_q": ("INT", {"min": 1, "max": 4294967296, "step": 1, "default": 1, "tooltip": "One of the two primes composing the private modulus `n`"}),
                 "private_exponent": ("INT", {"min": 1, "max": 4294967296, "step": 1, "default": 65537, "tooltip": "The private exponent (d)."}),
-                "skip_rsa_key_validation": ("BOOLEAN", {"default": False, "tooltip": "Unless you know what you're doing, do not change this. Disabling RSA key validation speeds up key loading, but is **unsafe** and may cause OpenSSL to misbehave or crash, potentially dragging ComfyUI down with it."})
+                "skip_rsa_key_validation": ("BOOLEAN", {"default": False, "tooltip": "Unless you know what you're doing, do not change this. Disabling RSA key validation speeds up key loading, but is **unsafe** and may cause OpenSSL to misbehave or crash, potentially dragging ComfyUI down with it."}),
             },
         }
 
@@ -440,11 +488,31 @@ class RSAPrivateNumbersFormat(InitNode):
         pvn_dmq1 = rsa.rsa_crt_dmq1(private_exponent, var_q)
         private_num = rsa.RSAPrivateNumbers(p=var_p, q=var_q, d=private_exponent, dmp1=pvn_dmp1, dmq1=pvn_dmq1, iqmp=pvn_iqmp, public_numbers=public_numbers)
         private_key = private_num.private_key(unsafe_skip_rsa_key_validation=skip_rsa_key_validation)
-        return (private_num, private_key,)
+        return (
+            private_num,
+            private_key,
+        )
+
 
 class RSAPrivNumValue(InitNode):
-    RETURN_TYPES = ("NUMOBJ", "INT", "INT", "INT", "INT", "INT", "INT",)
-    RETURN_NAMES = ("public_numbers", "var_p", "var_q", "private_exponent", "dmp1", "dmq1", "iqmp",)
+    RETURN_TYPES = (
+        "NUMOBJ",
+        "INT",
+        "INT",
+        "INT",
+        "INT",
+        "INT",
+        "INT",
+    )
+    RETURN_NAMES = (
+        "public_numbers",
+        "var_p",
+        "var_q",
+        "private_exponent",
+        "dmp1",
+        "dmq1",
+        "iqmp",
+    )
 
     @classmethod
     def INPUT_TYPES(cls):
@@ -453,7 +521,7 @@ class RSAPrivNumValue(InitNode):
             "optional": {
                 "private_numbers": ("NUMOBJ", {"forceInput": True}),
                 "private_key": ("KEYOBJ", {"forceInput": True}),
-            }
+            },
         }
 
     def execute(self, private_numbers: rsa.RSAPrivateNumbers | None, private_key: rsa.RSAPrivateKey | None):
@@ -463,9 +531,19 @@ class RSAPrivNumValue(InitNode):
             pnum = private_numbers
         else:
             raise ValueError("Invalid configuration given. Input either the private numbers object or private key object only.")
-        return (pnum.public_numbers, pnum.p, pnum.q, pnum.d, pnum.dmp1, pnum.dmq1, pnum.iqmp,)
+        return (
+            pnum.public_numbers,
+            pnum.p,
+            pnum.q,
+            pnum.d,
+            pnum.dmp1,
+            pnum.dmq1,
+            pnum.iqmp,
+        )
+
 
 # Recovery nodes for partial numbers given
+
 
 class RSARestoreD(InitNode):
     RETURN_TYPES = ("INT",)
@@ -484,6 +562,7 @@ class RSARestoreD(InitNode):
     def execute(self, public_exponent, var_p, var_q):
         return (rsa.rsa_recover_private_exponent(public_exponent, var_p, var_q),)
 
+
 class RSARestorePrime(InitNode):
     RETURN_TYPES = ("INT", "INT")
     RETURN_NAMES = ("p", "q")
@@ -500,6 +579,7 @@ class RSARestorePrime(InitNode):
 
     def execute(self, private_modulus, public_exponent, private_exponent):
         return rsa.rsa_recover_prime_factors(private_modulus, public_exponent, private_exponent)
+
 
 NODE_CLASS_MAPPINGS = {
     "RSAPrivateKeyFormat": RSAPrivateKeyFormat,

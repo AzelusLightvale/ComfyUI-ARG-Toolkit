@@ -1,3 +1,5 @@
+# Debugging booleans in case of weirdness
+
 class BooleanOutputter:
     @classmethod
     def INPUT_TYPES(cls):
@@ -23,9 +25,7 @@ class BooleanOutputter:
         elif not boolean:
             return (false_text,)
         else:
-            raise ValueError(
-                "How did this even happen? Unless Python or ComfyUI does not handle booleans properly, *this should never happen*. If this does happen, please report this as a bug immediately."
-            )
+            raise ValueError("How did this even happen? Unless Python or ComfyUI does not handle booleans properly, *this should never happen*. If this does happen, please report this as a bug immediately.")
 
 
 NODE_CLASS_MAPPINGS = {

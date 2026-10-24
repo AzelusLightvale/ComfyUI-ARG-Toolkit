@@ -1,3 +1,5 @@
+# Constant time compare, the cryptography way
+
 from cryptography.hazmat.primitives import constant_time
 
 

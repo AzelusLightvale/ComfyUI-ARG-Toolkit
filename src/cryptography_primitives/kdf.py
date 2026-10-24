@@ -1,3 +1,5 @@
+# Key derivation functions
+
 from cryptography.hazmat.primitives import hashes  # For the algorithm functions
 
 # Import hell
@@ -118,9 +120,7 @@ class Argon2id_Derive(KeyDerivationNodes):
     def _get_kdf(self, salt, length, iterations, parallel_lanes, memory_cost, ad, secret):
         min_memory_cost = 8 * parallel_lanes
         if memory_cost < min_memory_cost:
-            print(
-                f"[ComfyUI ARG Toolkit][WARNING]: Because defined memory cost ({memory_cost} KiB) is lower than the minimum required ({min_memory_cost} KiB), the value will be silently clamped to the minimum."
-            )
+            print(f"[ComfyUI ARG Toolkit][WARNING]: Because defined memory cost ({memory_cost} KiB) is lower than the minimum required ({min_memory_cost} KiB), the value will be silently clamped to the minimum.")
             memory_cost = min_memory_cost
 
         return Argon2id(
@@ -169,9 +169,7 @@ class Argon2id_Verify(Argon2id_Derive):
             except InvalidKey:
                 output = False
             except AlreadyFinalized:
-                raise RuntimeError(
-                    "The verification function is being called more than once on a finalized KDF target. This should not be happening."
-                )
+                raise RuntimeError("The verification function is being called more than once on a finalized KDF target. This should not be happening.")
         else:
             # For some stupid reason, PHC-formatted strings have to be done in string form, not hex or base64...
             try:
@@ -180,9 +178,7 @@ class Argon2id_Verify(Argon2id_Derive):
             except InvalidKey:
                 output = False
             except AlreadyFinalized:
-                raise RuntimeError(
-                    "The verification function is being called more than once on a finalized KDF target. This should not be happening."
-                )
+                raise RuntimeError("The verification function is being called more than once on a finalized KDF target. This should not be happening.")
         return (output,)
 
 
@@ -261,9 +257,7 @@ class PBKDF2HMAC_Verify(PBKDF2HMAC_Derive):
         except InvalidKey:
             output = False
         except AlreadyFinalized:
-            raise RuntimeError(
-                "The verification function is being called more than once on a finalized KDF target. This should not be happening."
-            )
+            raise RuntimeError("The verification function is being called more than once on a finalized KDF target. This should not be happening.")
         return (output,)
 
 
@@ -337,9 +331,7 @@ class Scrypt_Verify(Scrypt_Derive):
         except InvalidKey:
             output = False
         except AlreadyFinalized:
-            raise RuntimeError(
-                "The verification function is being called more than once on a finalized KDF target. This should not be happening."
-            )
+            raise RuntimeError("The verification function is being called more than once on a finalized KDF target. This should not be happening.")
         return (output,)
 
 
@@ -412,9 +404,7 @@ class ConcatKDFHash_Verify(ConcatKDFHash_Derive):
         except InvalidKey:
             output = False
         except AlreadyFinalized:
-            raise RuntimeError(
-                "The verification function is being called more than once on a finalized KDF target. This should not be happening."
-            )
+            raise RuntimeError("The verification function is being called more than once on a finalized KDF target. This should not be happening.")
         return (output,)
 
 
@@ -466,9 +456,7 @@ class ConcatKDFHMAC_Verify(ConcatKDFHMAC_Derive):
         except InvalidKey:
             output = False
         except AlreadyFinalized:
-            raise RuntimeError(
-                "The verification function is being called more than once on a finalized KDF target. This should not be happening."
-            )
+            raise RuntimeError("The verification function is being called more than once on a finalized KDF target. This should not be happening.")
         return (output,)
 
 
@@ -548,9 +536,7 @@ class HKDF_Verify(HKDF_Derive):
         except InvalidKey:
             output = False
         except AlreadyFinalized:
-            raise RuntimeError(
-                "The verification function is being called more than once on a finalized KDF target. This should not be happening."
-            )
+            raise RuntimeError("The verification function is being called more than once on a finalized KDF target. This should not be happening.")
         return (output,)
 
 
@@ -623,9 +609,7 @@ class HKDFExpand_Verify(HKDFExpand_Derive):
         except InvalidKey:
             output = False
         except AlreadyFinalized:
-            raise RuntimeError(
-                "The verification function is being called more than once on a finalized KDF target. This should not be happening."
-            )
+            raise RuntimeError("The verification function is being called more than once on a finalized KDF target. This should not be happening.")
         return (output,)
 
 
@@ -698,9 +682,7 @@ class X963KDF_Verify(X963KDF_Derive):
         except InvalidKey:
             output = False
         except AlreadyFinalized:
-            raise RuntimeError(
-                "The verification function is being called more than once on a finalized KDF target. This should not be happening."
-            )
+            raise RuntimeError("The verification function is being called more than once on a finalized KDF target. This should not be happening.")
         return (output,)
 
 
@@ -861,9 +843,7 @@ class KBKDF_Verify(KBKDF_Derive):
         except InvalidKey:
             output = False
         except AlreadyFinalized:
-            raise RuntimeError(
-                "The verification function is being called more than once on a finalized KDF target. This should not be happening."
-            )
+            raise RuntimeError("The verification function is being called more than once on a finalized KDF target. This should not be happening.")
         return (output,)
 
 

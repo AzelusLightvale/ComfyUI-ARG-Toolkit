@@ -1,3 +1,5 @@
+# Symmetric encryption, including all current decrepit modes and algorithms available
+
 from cryptography.hazmat.decrepit.ciphers import algorithms as decrepit_algorithms
 from cryptography.hazmat.decrepit.ciphers import modes as decrepit_modes
 from cryptography.hazmat.primitives.ciphers import algorithms, Cipher
@@ -121,7 +123,7 @@ class EncryptDecrypt(CipherNodes):
         if algorithm == "ChaCha20":
             algorithm = algorithms.ChaCha20(key, nonce)
         elif algorithm in ["ARC4", "Blowfish", "CAST5", "SEED", "IDEA", "Camellia"]:
-            warnings.warn(f'[ComfyUI-ARG-Toolkit][WARNING]: Current algorithm used in Symmetric Encrypt/Decrypt ({algorithm}) is a decrepit type and is only meant for full inclusion. Unless you have a specific use case for this, please switch to a more reasonable algorithm.')
+            warnings.warn(f"[ComfyUI-ARG-Toolkit][WARNING]: Current algorithm used in Symmetric Encrypt/Decrypt ({algorithm}) is a decrepit type and is only meant for full inclusion. Unless you have a specific use case for this, please switch to a more reasonable algorithm.")
             algorithm = getattr(decrepit_algorithms, algorithm)(key)
         else:
             algorithm = getattr(algorithms, algorithm)(key)
@@ -133,7 +135,7 @@ class EncryptDecrypt(CipherNodes):
         elif modes == "XTS":
             modes = cipher_modes.XTS(tweak=iv)
         elif modes == "ECB":
-            warnings.warn(f'[ComfyUI-ARG-Toolkit][WARNING]: Mode used in Symmetric Encrypt/Decrypt ({modes}) is inherently insecure and should never be used in anything in production. Unless you have a specific use case for this, please switch to a more reasonable mode.')
+            warnings.warn(f"[ComfyUI-ARG-Toolkit][WARNING]: Mode used in Symmetric Encrypt/Decrypt ({modes}) is inherently insecure and should never be used in anything in production. Unless you have a specific use case for this, please switch to a more reasonable mode.")
             modes = cipher_modes.ECB()
         elif modes == "None":
             modes = None

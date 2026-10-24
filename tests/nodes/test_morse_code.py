@@ -1,6 +1,7 @@
 import unicodedata
 from src import morse_code
 
+
 # Test suite for morse_code.py
 class TestMorseCode:
     def setup_method(self):

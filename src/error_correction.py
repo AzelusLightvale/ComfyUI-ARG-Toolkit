@@ -1,3 +1,5 @@
+# Reed-Solomon function on bytes
+
 from reedsolo import RSCodec
 
 
@@ -20,7 +22,6 @@ class InitNode:
             },
             "optional": {},
         }
-
 
 
 class ReedSolomonEncode(InitNode):

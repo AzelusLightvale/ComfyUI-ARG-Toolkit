@@ -1,5 +1,4 @@
-"""Focused tests for the ``asymmetric_encryption`` node suite.
-"""
+"""Focused tests for the ``asymmetric_encryption`` node suite."""
 
 import hashlib
 
@@ -46,18 +45,10 @@ class TestEdDSAKeyFormat:
         loaded = serialization.load_pem_private_key(priv_bytes, b"hunter2")
         assert loaded is not None
 
-    def test_get_private_key_unsupported_type_raises(self):
-        with pytest.raises(ValueError, match="Unsupported key type"):
-            eddsa.InitNode.get_private_key("Fresh Key", "Bogus")
-
-    def test_get_private_key_from_bytes_requires_bytes(self):
-        with pytest.raises(ValueError, match="Private key bytes are required"):
-            eddsa.InitNode.get_private_key("From Private Bytes", "Ed25519", None)
-
-    def test_get_private_key_from_bytes_roundtrip(self):
+    def test_private_key_from_bytes_roundtrip(self):
         _, priv_key = eddsa.EdDSAPrivateKeyFormat().execute("Ed25519", "Raw", "Raw", "None", "")
         raw = priv_key.private_bytes_raw()
-        reloaded = eddsa.InitNode.get_private_key("From Private Bytes", "Ed25519", raw)
+        reloaded = eddsa.InitNode.get_private_format("Ed25519").from_private_bytes(raw)
         assert reloaded.private_bytes_raw() == raw
 
 
@@ -65,61 +56,67 @@ class TestEdDSASignature:
     def _key(self):
         return eddsa.EdDSAPrivateKeyFormat().execute("Ed25519", "PEM", "PKCS8", "None", "")[1]
 
-    def test_sign_fresh_key(self):
-        signature = eddsa.EdDSASignature().execute("Fresh Key", "Ed25519", "Hello World", None, None)[0]
-        assert isinstance(signature, bytes)
-        assert len(signature) == 64
-
     def test_sign_from_private_bytes(self):
         _, priv_key = eddsa.EdDSAPrivateKeyFormat().execute("Ed25519", "Raw", "Raw", "None", "")
-        signature = eddsa.EdDSASignature().execute("From Private Bytes", "Ed25519", "Hello World", None, priv_key.private_bytes_raw())[0]
+        signature = eddsa.EdDSASignature().execute(False, "Ed25519", b"Hello World", None, priv_key.private_bytes_raw())[0]
+        assert isinstance(signature, bytes)
         assert len(signature) == 64
 
     def test_sign_from_loaded_key(self):
         priv_key = self._key()
-        signature = eddsa.EdDSASignature().execute("From Loaded Key", "Ed25519", "Hello World", priv_key, None)[0]
+        signature = eddsa.EdDSASignature().execute(True, "Ed25519", b"Hello World", priv_key, None)[0]
         assert len(signature) == 64
 
     def test_sign_and_verify_roundtrip(self):
         priv_key = self._key()
-        signature = eddsa.EdDSASignature().execute("From Loaded Key", "Ed25519", "Hello World", priv_key, None)[0]
+        signature = eddsa.EdDSASignature().execute(True, "Ed25519", b"Hello World", priv_key, None)[0]
         result = eddsa.EdDSAVerify().execute(
             "Ed25519",
             priv_key.public_key().public_bytes_raw(),
             None,
             b"Hello World",
             signature,
-            True,
+            False,
         )
         assert result[0] is True
 
     def test_verify_rejects_tampered_message(self):
         priv_key = self._key()
-        signature = eddsa.EdDSASignature().execute("From Loaded Key", "Ed25519", "Hello World", priv_key, None)[0]
+        signature = eddsa.EdDSASignature().execute(True, "Ed25519", b"Hello World", priv_key, None)[0]
         result = eddsa.EdDSAVerify().execute(
             "Ed25519",
             priv_key.public_key().public_bytes_raw(),
             None,
             b"Hello World!",
             signature,
-            True,
+            False,
         )
         assert result[0] is False
 
     def test_verify_from_loaded_key(self):
         priv_key = self._key()
-        signature = eddsa.EdDSASignature().execute("From Loaded Key", "Ed25519", "Hello World", priv_key, None)[0]
-        result = eddsa.EdDSAVerify().execute("Ed25519", None, priv_key.public_key(), b"Hello World", signature, False)
+        signature = eddsa.EdDSASignature().execute(True, "Ed25519", b"Hello World", priv_key, None)[0]
+        result = eddsa.EdDSAVerify().execute("Ed25519", None, priv_key.public_key(), b"Hello World", signature, True)
         assert result[0] is True
 
+
+class TestEdDSAPublicKeyFormat:
     def test_public_key_format_raw(self):
-        pub_bytes, pub_key = eddsa.EdDSAPublicKeyFormat().execute("Fresh Key", "Ed25519", "Raw", "Raw", None, None)
+        _, priv_key = eddsa.EdDSAPrivateKeyFormat().execute("Ed25519", "Raw", "Raw", "None", "")
+        pub_bytes, pub_key = eddsa.EdDSAPublicKeyFormat().execute(False, "Ed25519", "Raw", "Raw", None, priv_key.private_bytes_raw())
         assert len(pub_bytes) == 32
         assert pub_key.public_bytes_raw() == pub_bytes
 
     def test_public_key_format_pem(self):
-        pub_bytes, _ = eddsa.EdDSAPublicKeyFormat().execute("Fresh Key", "Ed25519", "PEM", "SubjectPublicKeyInfo", None, None)
+        _, priv_key = eddsa.EdDSAPrivateKeyFormat().execute("Ed25519", "Raw", "Raw", "None", "")
+        pub_bytes, _ = eddsa.EdDSAPublicKeyFormat().execute(False, "Ed25519", "PEM", "SubjectPublicKeyInfo", None, priv_key.private_bytes_raw())
         assert pub_bytes.startswith(b"-----BEGIN PUBLIC KEY-----")
+
+    def test_public_key_format_from_loaded_key(self):
+        _, priv_key = eddsa.EdDSAPrivateKeyFormat().execute("Ed25519", "Raw", "Raw", "None", "")
+        pub_bytes, pub_key = eddsa.EdDSAPublicKeyFormat().execute(True, "Ed25519", "Raw", "Raw", priv_key, None)
+        assert len(pub_bytes) == 32
+        assert pub_key.public_bytes_raw() == pub_bytes
 
 
 # ---------------------------------------------------------------------------
@@ -423,4 +420,3 @@ class TestRSANumbers:
     def test_restore_prime_factors(self):
         p, q = rsa.RSARestorePrime().execute(33, 17, 13)
         assert {p, q} == {3, 11}
-

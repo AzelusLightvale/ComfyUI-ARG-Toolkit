@@ -1,3 +1,5 @@
+# Authenticated encryption with associated data (AEAD)
+
 from cryptography.hazmat.primitives.ciphers import aead
 
 
@@ -222,9 +224,7 @@ class AESAuthKeygen:
         elif aes_type in generators:
             key = generators[aes_type].generate_key(bit_length)
         else:
-            raise ValueError(
-                f"Invalid AES type chosen. Perhaps the node is broken? Try making a new one, as this is normally impossible. Currently, it's {aes_type}, which is wrong."
-            )
+            raise ValueError(f"Invalid AES type chosen. Perhaps the node is broken? Try making a new one, as this is normally impossible. Currently, it's {aes_type}, which is wrong.")
         return (key,)
 
 

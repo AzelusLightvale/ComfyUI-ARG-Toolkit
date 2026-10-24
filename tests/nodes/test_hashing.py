@@ -1,5 +1,6 @@
 from src.cryptography_primitives import hashing
 
+
 # Test suite for hashing.py. Fixed to properly handle bytes
 class TestHashing:
     def test_sha256(self):

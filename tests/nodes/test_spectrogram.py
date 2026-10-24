@@ -2,6 +2,7 @@ from src.spectrogram import SpectrogramEncoder, SpectrogramDecoder
 import torch
 import numpy as np
 
+
 # Test suite for spectrogram.py
 class TestSpectrogramEncoder:
     def setup_method(self):
@@ -52,10 +53,10 @@ class TestSpectrogramEncoder:
 
         # Test with default colormap
         result = self.encoder.color_mapper(
-            matrix, 
+            matrix,
             "#000000",  # low
             "#B73779",  # mid
-            "#FCFDBF"   # high
+            "#FCFDBF",  # high
         )
 
         # Check shape and type
@@ -69,12 +70,14 @@ class TestSpectrogramEncoder:
     # Test crop_spectrogram_dimensions helper method
     def test_crop_spectrogram_dimensions_basic(self):
         # Create a test spectrogram with some active and inactive regions
-        db_spectrogram = np.array([
-            [0.0, 0.0, 0.0, 0.0, 0.0],
-            [0.0, -20.0, -15.0, -10.0, 0.0],
-            [0.0, -30.0, -25.0, -20.0, 0.0],
-            [0.0, 0.0, 0.0, 0.0, 0.0],
-        ])
+        db_spectrogram = np.array(
+            [
+                [0.0, 0.0, 0.0, 0.0, 0.0],
+                [0.0, -20.0, -15.0, -10.0, 0.0],
+                [0.0, -30.0, -25.0, -20.0, 0.0],
+                [0.0, 0.0, 0.0, 0.0, 0.0],
+            ]
+        )
 
         # Test with active_range_db = 20 (should cut off values below -40)
         result = self.encoder.crop_spectrogram_dimensions(db_spectrogram, 20.0)
@@ -86,10 +89,12 @@ class TestSpectrogramEncoder:
 
     def test_crop_spectrogram_dimensions_empty(self):
         # Test with all values below threshold
-        db_spectrogram = np.array([
-            [-50.0, -60.0, -70.0],
-            [-55.0, -65.0, -75.0],
-        ])
+        db_spectrogram = np.array(
+            [
+                [-50.0, -60.0, -70.0],
+                [-55.0, -65.0, -75.0],
+            ]
+        )
 
         result = self.encoder.crop_spectrogram_dimensions(db_spectrogram, 20.0)
         # Should return original when no active region found
@@ -100,25 +105,11 @@ class TestSpectrogramEncoder:
         # Create a minimal mock audio input
         audio = {
             "waveform": torch.randn(1, 1, 22050),  # 1 channel, 1 sec of audio at 22050 Hz
-            "sample_rate": 22050
+            "sample_rate": 22050,
         }
 
         # Test with logarithmic scaling
-        result = self.encoder.execute(
-            audio=audio,
-            window_size=25.0,
-            hop_size=15.0,
-            windowing_func="Hanning",
-            db_norm=80.0,
-            colormap_low="#000000",
-            colormap_mid="#B73779",
-            colormap_high="#FCFDBF",
-            cutoff_switch=False,
-            scaling_method="Logarithmic",
-            active_db=60.0,
-            mel_scale=False,
-            slaney_norm=False
-        )
+        result = self.encoder.execute(audio=audio, window_size=25.0, hop_size=15.0, windowing_func="Hanning", db_norm=80.0, colormap_low="#000000", colormap_mid="#B73779", colormap_high="#FCFDBF", cutoff_switch=False, scaling_method="Logarithmic", active_db=60.0, mel_scale=False, slaney_norm=False)
 
         # Should return a tensor (spectrogram)
         spectrogram_tensor = result[0]
@@ -127,27 +118,10 @@ class TestSpectrogramEncoder:
 
     def test_execute_linear_scaling(self):
         # Create a minimal mock audio input
-        audio = {
-            "waveform": torch.randn(1, 1, 22050),
-            "sample_rate": 22050
-        }
+        audio = {"waveform": torch.randn(1, 1, 22050), "sample_rate": 22050}
 
         # Test with linear scaling
-        result = self.encoder.execute(
-            audio=audio,
-            window_size=25.0,
-            hop_size=15.0,
-            windowing_func="Hanning",
-            db_norm=80.0,
-            colormap_low="#000000",
-            colormap_mid="#B73779",
-            colormap_high="#FCFDBF",
-            cutoff_switch=False,
-            scaling_method="Linear",
-            active_db=60.0,
-            mel_scale=False,
-            slaney_norm=False
-        )
+        result = self.encoder.execute(audio=audio, window_size=25.0, hop_size=15.0, windowing_func="Hanning", db_norm=80.0, colormap_low="#000000", colormap_mid="#B73779", colormap_high="#FCFDBF", cutoff_switch=False, scaling_method="Linear", active_db=60.0, mel_scale=False, slaney_norm=False)
 
         # Should return a tensor
         spectrogram_tensor = result[0]
@@ -155,27 +129,10 @@ class TestSpectrogramEncoder:
 
     def test_execute_quadratic_scaling(self):
         # Create a minimal mock audio input
-        audio = {
-            "waveform": torch.randn(1, 1, 22050),
-            "sample_rate": 22050
-        }
+        audio = {"waveform": torch.randn(1, 1, 22050), "sample_rate": 22050}
 
         # Test with quadratic scaling
-        result = self.encoder.execute(
-            audio=audio,
-            window_size=25.0,
-            hop_size=15.0,
-            windowing_func="Hanning",
-            db_norm=80.0,
-            colormap_low="#000000",
-            colormap_mid="#B73779",
-            colormap_high="#FCFDBF",
-            cutoff_switch=False,
-            scaling_method="Quadratic",
-            active_db=60.0,
-            mel_scale=False,
-            slaney_norm=False
-        )
+        result = self.encoder.execute(audio=audio, window_size=25.0, hop_size=15.0, windowing_func="Hanning", db_norm=80.0, colormap_low="#000000", colormap_mid="#B73779", colormap_high="#FCFDBF", cutoff_switch=False, scaling_method="Quadratic", active_db=60.0, mel_scale=False, slaney_norm=False)
 
         # Should return a tensor
         spectrogram_tensor = result[0]
@@ -183,27 +140,10 @@ class TestSpectrogramEncoder:
 
     def test_execute_logarithmic_mel_scaling(self):
         # Create a minimal mock audio input
-        audio = {
-            "waveform": torch.randn(1, 1, 22050),
-            "sample_rate": 22050
-        }
+        audio = {"waveform": torch.randn(1, 1, 22050), "sample_rate": 22050}
 
         # Test with logarithmic mel scaling
-        result = self.encoder.execute(
-            audio=audio,
-            window_size=25.0,
-            hop_size=15.0,
-            windowing_func="Hanning",
-            db_norm=80.0,
-            colormap_low="#000000",
-            colormap_mid="#B73779",
-            colormap_high="#FCFDBF",
-            cutoff_switch=False,
-            scaling_method="Logarithmic Mel",
-            active_db=60.0,
-            mel_scale=False,
-            slaney_norm=False
-        )
+        result = self.encoder.execute(audio=audio, window_size=25.0, hop_size=15.0, windowing_func="Hanning", db_norm=80.0, colormap_low="#000000", colormap_mid="#B73779", colormap_high="#FCFDBF", cutoff_switch=False, scaling_method="Logarithmic Mel", active_db=60.0, mel_scale=False, slaney_norm=False)
 
         # Should return a tensor
         spectrogram_tensor = result[0]
@@ -211,27 +151,10 @@ class TestSpectrogramEncoder:
 
     def test_execute_with_cutoff(self):
         # Create a minimal mock audio input
-        audio = {
-            "waveform": torch.randn(1, 1, 22050),
-            "sample_rate": 22050
-        }
+        audio = {"waveform": torch.randn(1, 1, 22050), "sample_rate": 22050}
 
         # Test with cutoff enabled
-        result = self.encoder.execute(
-            audio=audio,
-            window_size=25.0,
-            hop_size=15.0,
-            windowing_func="Hanning",
-            db_norm=80.0,
-            colormap_low="#000000",
-            colormap_mid="#B73779",
-            colormap_high="#FCFDBF",
-            cutoff_switch=True,
-            scaling_method="Logarithmic",
-            active_db=60.0,
-            mel_scale=False,
-            slaney_norm=False
-        )
+        result = self.encoder.execute(audio=audio, window_size=25.0, hop_size=15.0, windowing_func="Hanning", db_norm=80.0, colormap_low="#000000", colormap_mid="#B73779", colormap_high="#FCFDBF", cutoff_switch=True, scaling_method="Logarithmic", active_db=60.0, mel_scale=False, slaney_norm=False)
 
         # Should return a tensor
         spectrogram_tensor = result[0]
@@ -239,28 +162,11 @@ class TestSpectrogramEncoder:
 
     def test_execute_different_windowing_functions(self):
         # Create a minimal mock audio input
-        audio = {
-            "waveform": torch.randn(1, 1, 22050),
-            "sample_rate": 22050
-        }
+        audio = {"waveform": torch.randn(1, 1, 22050), "sample_rate": 22050}
 
         # Test with different windowing functions
         for window_func in ["Hanning", "Bartlett", "Blackman", "Hamming"]:
-            result = self.encoder.execute(
-                audio=audio,
-                window_size=25.0,
-                hop_size=15.0,
-                windowing_func=window_func,
-                db_norm=80.0,
-                colormap_low="#000000",
-                colormap_mid="#B73779",
-                colormap_high="#FCFDBF",
-                cutoff_switch=False,
-                scaling_method="Logarithmic",
-                active_db=60.0,
-                mel_scale=False,
-                slaney_norm=False
-            )
+            result = self.encoder.execute(audio=audio, window_size=25.0, hop_size=15.0, windowing_func=window_func, db_norm=80.0, colormap_low="#000000", colormap_mid="#B73779", colormap_high="#FCFDBF", cutoff_switch=False, scaling_method="Logarithmic", active_db=60.0, mel_scale=False, slaney_norm=False)
 
             # Should return a tensor
             spectrogram_tensor = result[0]
@@ -268,27 +174,10 @@ class TestSpectrogramEncoder:
 
     def test_execute_with_mel_scale(self):
         # Create a minimal mock audio input
-        audio = {
-            "waveform": torch.randn(1, 1, 22050),
-            "sample_rate": 22050
-        }
+        audio = {"waveform": torch.randn(1, 1, 22050), "sample_rate": 22050}
 
         # Test with mel_scale enabled
-        result = self.encoder.execute(
-            audio=audio,
-            window_size=25.0,
-            hop_size=15.0,
-            windowing_func="Hanning",
-            db_norm=80.0,
-            colormap_low="#000000",
-            colormap_mid="#B73779",
-            colormap_high="#FCFDBF",
-            cutoff_switch=False,
-            scaling_method="Logarithmic Mel",
-            active_db=60.0,
-            mel_scale=True,
-            slaney_norm=False
-        )
+        result = self.encoder.execute(audio=audio, window_size=25.0, hop_size=15.0, windowing_func="Hanning", db_norm=80.0, colormap_low="#000000", colormap_mid="#B73779", colormap_high="#FCFDBF", cutoff_switch=False, scaling_method="Logarithmic Mel", active_db=60.0, mel_scale=True, slaney_norm=False)
 
         # Should return a tensor
         spectrogram_tensor = result[0]
@@ -296,31 +185,16 @@ class TestSpectrogramEncoder:
 
     def test_execute_with_slaney_norm(self):
         # Create a minimal mock audio input
-        audio = {
-            "waveform": torch.randn(1, 1, 22050),
-            "sample_rate": 22050
-        }
+        audio = {"waveform": torch.randn(1, 1, 22050), "sample_rate": 22050}
 
         # Test with slaney_norm enabled
-        result = self.encoder.execute(
-            audio=audio,
-            window_size=25.0,
-            hop_size=15.0,
-            windowing_func="Hanning",
-            db_norm=80.0,
-            colormap_low="#000000",
-            colormap_mid="#B73779",
-            colormap_high="#FCFDBF",
-            cutoff_switch=False,
-            scaling_method="Logarithmic Mel",
-            active_db=60.0,
-            mel_scale=True,
-            slaney_norm=True
-        )
+        result = self.encoder.execute(audio=audio, window_size=25.0, hop_size=15.0, windowing_func="Hanning", db_norm=80.0, colormap_low="#000000", colormap_mid="#B73779", colormap_high="#FCFDBF", cutoff_switch=False, scaling_method="Logarithmic Mel", active_db=60.0, mel_scale=True, slaney_norm=True)
 
         # Should return a tensor
         spectrogram_tensor = result[0]
         assert isinstance(spectrogram_tensor, torch.Tensor)
+
+
 class TestSpectrogramDecoder:
     def setup_method(self):
         self.decoder = SpectrogramDecoder()
@@ -334,7 +208,7 @@ class TestSpectrogramDecoder:
             image,
             "#000000",  # low
             "#B73779",  # mid
-            "#FCFDBF"   # high
+            "#FCFDBF",  # high
         )
 
         # Should return a normalized value between 0 and 1
@@ -350,7 +224,7 @@ class TestSpectrogramDecoder:
             image,
             "#FF0000",  # red low
             "#00FF00",  # green mid
-            "#0000FF"   # blue high
+            "#0000FF",  # blue high
         )
 
         assert result.shape == (5, 5)
@@ -363,22 +237,7 @@ class TestSpectrogramDecoder:
         image = torch.rand(513, 513, 3)  # Height, Width, RGB
 
         result = self.decoder.execute(
-            image=image,
-            window_size=25.0,
-            hop_size=15.0,
-            windowing_func="Hanning",
-            autogain=False,
-            max_amp=1.0,
-            max_iter=32,
-            top_db=80.0,
-            sampling_rate=22050,
-            gl_momentum=0.99,
-            scaling_method="Linear",
-            mel_scale=False,
-            channel="luminance",
-            colormap_low="#000000",
-            colormap_mid="#B73779",
-            colormap_high="#FCFDBF"
+            image=image, window_size=25.0, hop_size=15.0, windowing_func="Hanning", autogain=False, max_amp=1.0, max_iter=32, top_db=80.0, sampling_rate=22050, gl_momentum=0.99, scaling_method="Linear", mel_scale=False, channel="luminance", colormap_low="#000000", colormap_mid="#B73779", colormap_high="#FCFDBF"
         )
 
         # Should return audio
@@ -393,22 +252,7 @@ class TestSpectrogramDecoder:
         image = torch.rand(513, 513, 3)
 
         result = self.decoder.execute(
-            image=image,
-            window_size=25.0,
-            hop_size=15.0,
-            windowing_func="Hanning",
-            autogain=False,
-            max_amp=1.0,
-            max_iter=32,
-            top_db=80.0,
-            sampling_rate=22050,
-            gl_momentum=0.99,
-            scaling_method="Linear",
-            mel_scale=False,
-            channel="channel_red",
-            colormap_low="#000000",
-            colormap_mid="#B73779",
-            colormap_high="#FCFDBF"
+            image=image, window_size=25.0, hop_size=15.0, windowing_func="Hanning", autogain=False, max_amp=1.0, max_iter=32, top_db=80.0, sampling_rate=22050, gl_momentum=0.99, scaling_method="Linear", mel_scale=False, channel="channel_red", colormap_low="#000000", colormap_mid="#B73779", colormap_high="#FCFDBF"
         )
 
         # Should return audio
@@ -421,22 +265,7 @@ class TestSpectrogramDecoder:
         image = torch.rand(513, 513, 3)
 
         result = self.decoder.execute(
-            image=image,
-            window_size=25.0,
-            hop_size=15.0,
-            windowing_func="Hanning",
-            autogain=False,
-            max_amp=1.0,
-            max_iter=32,
-            top_db=80.0,
-            sampling_rate=22050,
-            gl_momentum=0.99,
-            scaling_method="Linear",
-            mel_scale=False,
-            channel="channel_green",
-            colormap_low="#000000",
-            colormap_mid="#B73779",
-            colormap_high="#FCFDBF"
+            image=image, window_size=25.0, hop_size=15.0, windowing_func="Hanning", autogain=False, max_amp=1.0, max_iter=32, top_db=80.0, sampling_rate=22050, gl_momentum=0.99, scaling_method="Linear", mel_scale=False, channel="channel_green", colormap_low="#000000", colormap_mid="#B73779", colormap_high="#FCFDBF"
         )
 
         # Should return audio
@@ -449,22 +278,7 @@ class TestSpectrogramDecoder:
         image = torch.rand(513, 513, 3)
 
         result = self.decoder.execute(
-            image=image,
-            window_size=25.0,
-            hop_size=15.0,
-            windowing_func="Hanning",
-            autogain=False,
-            max_amp=1.0,
-            max_iter=32,
-            top_db=80.0,
-            sampling_rate=22050,
-            gl_momentum=0.99,
-            scaling_method="Linear",
-            mel_scale=False,
-            channel="channel_blue",
-            colormap_low="#000000",
-            colormap_mid="#B73779",
-            colormap_high="#FCFDBF"
+            image=image, window_size=25.0, hop_size=15.0, windowing_func="Hanning", autogain=False, max_amp=1.0, max_iter=32, top_db=80.0, sampling_rate=22050, gl_momentum=0.99, scaling_method="Linear", mel_scale=False, channel="channel_blue", colormap_low="#000000", colormap_mid="#B73779", colormap_high="#FCFDBF"
         )
 
         # Should return audio
@@ -477,22 +291,7 @@ class TestSpectrogramDecoder:
         image = torch.rand(513, 513, 3)
 
         result = self.decoder.execute(
-            image=image,
-            window_size=25.0,
-            hop_size=15.0,
-            windowing_func="Hanning",
-            autogain=False,
-            max_amp=1.0,
-            max_iter=32,
-            top_db=80.0,
-            sampling_rate=22050,
-            gl_momentum=0.99,
-            scaling_method="Linear",
-            mel_scale=False,
-            channel="colormap",
-            colormap_low="#000000",
-            colormap_mid="#B73779",
-            colormap_high="#FCFDBF"
+            image=image, window_size=25.0, hop_size=15.0, windowing_func="Hanning", autogain=False, max_amp=1.0, max_iter=32, top_db=80.0, sampling_rate=22050, gl_momentum=0.99, scaling_method="Linear", mel_scale=False, channel="colormap", colormap_low="#000000", colormap_mid="#B73779", colormap_high="#FCFDBF"
         )
 
         # Should return audio
@@ -505,22 +304,7 @@ class TestSpectrogramDecoder:
         image = torch.rand(513, 513, 3)
 
         result = self.decoder.execute(
-            image=image,
-            window_size=25.0,
-            hop_size=15.0,
-            windowing_func="Hanning",
-            autogain=True,
-            max_amp=1.0,
-            max_iter=32,
-            top_db=80.0,
-            sampling_rate=22050,
-            gl_momentum=0.99,
-            scaling_method="Linear",
-            mel_scale=False,
-            channel="luminance",
-            colormap_low="#000000",
-            colormap_mid="#B73779",
-            colormap_high="#FCFDBF"
+            image=image, window_size=25.0, hop_size=15.0, windowing_func="Hanning", autogain=True, max_amp=1.0, max_iter=32, top_db=80.0, sampling_rate=22050, gl_momentum=0.99, scaling_method="Linear", mel_scale=False, channel="luminance", colormap_low="#000000", colormap_mid="#B73779", colormap_high="#FCFDBF"
         )
 
         # Should return audio
@@ -533,22 +317,7 @@ class TestSpectrogramDecoder:
         image = torch.rand(513, 513, 3)
 
         result = self.decoder.execute(
-            image=image,
-            window_size=25.0,
-            hop_size=15.0,
-            windowing_func="Hanning",
-            autogain=False,
-            max_amp=1.0,
-            max_iter=32,
-            top_db=80.0,
-            sampling_rate=22050,
-            gl_momentum=0.99,
-            scaling_method="Logarithmic",
-            mel_scale=False,
-            channel="luminance",
-            colormap_low="#000000",
-            colormap_mid="#B73779",
-            colormap_high="#FCFDBF"
+            image=image, window_size=25.0, hop_size=15.0, windowing_func="Hanning", autogain=False, max_amp=1.0, max_iter=32, top_db=80.0, sampling_rate=22050, gl_momentum=0.99, scaling_method="Logarithmic", mel_scale=False, channel="luminance", colormap_low="#000000", colormap_mid="#B73779", colormap_high="#FCFDBF"
         )
 
         # Should return audio
@@ -561,22 +330,7 @@ class TestSpectrogramDecoder:
         image = torch.rand(513, 513, 3)
 
         result = self.decoder.execute(
-            image=image,
-            window_size=25.0,
-            hop_size=15.0,
-            windowing_func="Hanning",
-            autogain=False,
-            max_amp=1.0,
-            max_iter=32,
-            top_db=80.0,
-            sampling_rate=22050,
-            gl_momentum=0.99,
-            scaling_method="Quadratic",
-            mel_scale=False,
-            channel="luminance",
-            colormap_low="#000000",
-            colormap_mid="#B73779",
-            colormap_high="#FCFDBF"
+            image=image, window_size=25.0, hop_size=15.0, windowing_func="Hanning", autogain=False, max_amp=1.0, max_iter=32, top_db=80.0, sampling_rate=22050, gl_momentum=0.99, scaling_method="Quadratic", mel_scale=False, channel="luminance", colormap_low="#000000", colormap_mid="#B73779", colormap_high="#FCFDBF"
         )
 
         # Should return audio
@@ -589,22 +343,7 @@ class TestSpectrogramDecoder:
         image = torch.rand(513, 513, 3)
 
         result = self.decoder.execute(
-            image=image,
-            window_size=25.0,
-            hop_size=15.0,
-            windowing_func="Hanning",
-            autogain=True,
-            max_amp=1.0,
-            max_iter=32,
-            top_db=80.0,
-            sampling_rate=22050,
-            gl_momentum=0.99,
-            scaling_method="Logarithmic Mel",
-            mel_scale=False,
-            channel="luminance",
-            colormap_low="#000000",
-            colormap_mid="#B73779",
-            colormap_high="#FCFDBF"
+            image=image, window_size=25.0, hop_size=15.0, windowing_func="Hanning", autogain=True, max_amp=1.0, max_iter=32, top_db=80.0, sampling_rate=22050, gl_momentum=0.99, scaling_method="Logarithmic Mel", mel_scale=False, channel="luminance", colormap_low="#000000", colormap_mid="#B73779", colormap_high="#FCFDBF"
         )
 
         # Should return audio
@@ -617,22 +356,7 @@ class TestSpectrogramDecoder:
         image = torch.rand(513, 513, 3)
 
         result = self.decoder.execute(
-            image=image,
-            window_size=25.0,
-            hop_size=15.0,
-            windowing_func="Hanning",
-            autogain=False,
-            max_amp=1.0,
-            max_iter=32,
-            top_db=80.0,
-            sampling_rate=22050,
-            gl_momentum=0.99,
-            scaling_method="Logarithmic Mel",
-            mel_scale=True,
-            channel="luminance",
-            colormap_low="#000000",
-            colormap_mid="#B73779",
-            colormap_high="#FCFDBF"
+            image=image, window_size=25.0, hop_size=15.0, windowing_func="Hanning", autogain=False, max_amp=1.0, max_iter=32, top_db=80.0, sampling_rate=22050, gl_momentum=0.99, scaling_method="Logarithmic Mel", mel_scale=True, channel="luminance", colormap_low="#000000", colormap_mid="#B73779", colormap_high="#FCFDBF"
         )
 
         # Should return audio
@@ -645,22 +369,7 @@ class TestSpectrogramDecoder:
         image = torch.rand(513, 513, 3)
 
         result = self.decoder.execute(
-            image=image,
-            window_size=25.0,
-            hop_size=15.0,
-            windowing_func="Hanning",
-            autogain=True,
-            max_amp=1.0,
-            max_iter=32,
-            top_db=80.0,
-            sampling_rate=22050,
-            gl_momentum=0.99,
-            scaling_method="Logarithmic Mel",
-            mel_scale=True,
-            channel="luminance",
-            colormap_low="#000000",
-            colormap_mid="#B73779",
-            colormap_high="#FCFDBF"
+            image=image, window_size=25.0, hop_size=15.0, windowing_func="Hanning", autogain=True, max_amp=1.0, max_iter=32, top_db=80.0, sampling_rate=22050, gl_momentum=0.99, scaling_method="Logarithmic Mel", mel_scale=True, channel="luminance", colormap_low="#000000", colormap_mid="#B73779", colormap_high="#FCFDBF"
         )
 
         # Should return audio
@@ -675,22 +384,7 @@ class TestSpectrogramDecoder:
         # Test with different windowing functions
         for window_func in ["Hanning", "Bartlett", "Blackman", "Hamming"]:
             result = self.decoder.execute(
-                image=image,
-                window_size=25.0,
-                hop_size=15.0,
-                windowing_func=window_func,
-                autogain=False,
-                max_amp=1.0,
-                max_iter=32,
-                top_db=80.0,
-                sampling_rate=22050,
-                gl_momentum=0.99,
-                scaling_method="Linear",
-                mel_scale=False,
-                channel="luminance",
-                colormap_low="#000000",
-                colormap_mid="#B73779",
-                colormap_high="#FCFDBF"
+                image=image, window_size=25.0, hop_size=15.0, windowing_func=window_func, autogain=False, max_amp=1.0, max_iter=32, top_db=80.0, sampling_rate=22050, gl_momentum=0.99, scaling_method="Linear", mel_scale=False, channel="luminance", colormap_low="#000000", colormap_mid="#B73779", colormap_high="#FCFDBF"
             )
 
             # Should return audio
@@ -720,7 +414,7 @@ class TestSpectrogramDecoder:
                 channel="luminance",
                 colormap_low="#000000",
                 colormap_mid="#B73779",
-                colormap_high="#FCFDBF"
+                colormap_high="#FCFDBF",
             )
 
             # Should return audio
@@ -750,7 +444,7 @@ class TestSpectrogramDecoder:
                 channel="luminance",
                 colormap_low="#000000",
                 colormap_mid="#B73779",
-                colormap_high="#FCFDBF"
+                colormap_high="#FCFDBF",
             )
 
             # Should return audio

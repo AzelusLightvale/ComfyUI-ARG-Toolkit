@@ -1,4 +1,5 @@
-# Fernet encryption, the basics of basics
+# Fernet encryption, the basics of basics in modern cryptography
+
 from cryptography import fernet
 
 

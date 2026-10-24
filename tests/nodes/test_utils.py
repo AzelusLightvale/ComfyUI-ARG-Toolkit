@@ -2,6 +2,7 @@ from src import utils
 
 # Test suite for utils.py
 
+
 class TestUtils:
     # Converters
 
