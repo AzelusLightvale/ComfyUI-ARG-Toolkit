@@ -7,11 +7,11 @@ Source library: `secretpy`
 
 ## Historical Context
 
-The Chaocipher is a cipher method invented by John F. Byrne in 1918. He unsuccessfully tried to interest the US government in it for many years.
+The Chao cipher is a cipher method invented by John F. Byrne in 1918. He unsuccessfully tried to interest the US government in it for many years.
 
 ## How it Works
 
-The Chaocipher uses two alphabets, which are permuted after each character is encrypted. The encryption process involves finding the plaintext character in one alphabet and the ciphertext character in the other, and then permuting both alphabets.
+The Chao cipher uses two alphabets, which are permuted after each character is encrypted. The encryption process involves finding the plaintext character in one alphabet and the ciphertext character in the other, and then permuting both alphabets.
 
 ## Parameters
 
