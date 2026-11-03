@@ -463,8 +463,8 @@ class RotorCipherMap(InitNode):
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "src_alphabet": ("STRING", {"default": "ABCEDEFGHIJKLMNOPQRSTUVWXYZ"}),
-                "dst_alphabet": ("STRING", {"default": "ABCEDEFGHIJKLMNOPQRSTUVWXYZ"}),
+                "src_alphabet": ("STRING", {"default": "ABCDEFGHIJKLMNOPQRSTUVWXYZ"}),
+                "dst_alphabet": ("STRING", {"default": "ABCDEFGHIJKLMNOPQRSTUVWXYZ"}),
                 "mapping": ("STRING", {"default": ""})
             }
         }
