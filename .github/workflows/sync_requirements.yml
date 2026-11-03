@@ -5,6 +5,9 @@ on:
     paths:
       - 'pyproject.toml'
 
+permissions:
+  contents: write
+
 jobs:
   sync:
     # Optional: restricts auto-commit behavior to Dependabot PRs for safety
