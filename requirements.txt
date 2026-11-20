@@ -28,7 +28,7 @@ numpy==2.5.4
     #   invisible-watermark
     #   opencv-python
     #   pywavelets
-opencv-python==5.0.0.93
+opencv-python==5.1.0.95
     # via
     #   invisible-watermark
     #   stegano
